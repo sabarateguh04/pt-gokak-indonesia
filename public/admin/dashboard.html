@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<script src="/js/theme.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard — PT Gokak Indonesia</title>
+<link rel="stylesheet" href="/css/style.css">
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
+</head>
+<body class="map-page-body">
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">🏭 PT Gokak Indonesia<small>Portal Admin</small></div>
+      <a href="/admin/dashboard" class="active">📍 Dashboard</a>
+      <a href="/admin/teknisi">🧑‍🔧 Teknisi</a>
+      <a href="/admin/tiket">🎫 Tiket</a>
+      <a href="/admin/kehadiran">📆 Kehadiran</a>
+      <a href="/admin/area">🗺️ Area Pabrik</a>
+      <div class="logout" id="btnLogout">↩ Logout</div>
+    </aside>
+
+    <main class="main main-fullmap">
+      <div id="map" class="fullmap"></div>
+
+      <div class="map-overlay-top">
+        <div class="map-topbar-card">
+          <div>
+            <div class="map-topbar-title">Dashboard Monitoring</div>
+            <div class="map-topbar-sub" id="liveSummary">Memuat data…</div>
+          </div>
+          <div class="map-topbar-actions">
+            <button class="secondary map-topbar-btn" id="btnResetView" title="Reset tampilan peta">⟳ <span class="hide-narrow">Reset</span></button>
+            <button class="secondary map-topbar-btn" id="btnTogglePanel" title="Tampil/sembunyikan panel">☰ <span class="hide-narrow">Panel</span></button>
+            <button class="theme-toggle-btn" title="Ganti tema"><span class="theme-toggle-icon">🌙</span></button>
+            <div class="user-badge" id="userBadge"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="map-legend">
+        <span class="item"><span class="dot dot-ONLINE"></span> Online</span>
+        <span class="item"><span class="dot dot-ON_TASK"></span> Bertugas</span>
+        <span class="item"><span class="dot dot-OFFLINE"></span> Offline</span>
+      </div>
+
+      <aside class="map-side-panel" id="sidePanel">
+        <div class="panel-section">
+          <div class="grid grid-kpi grid-kpi-compact" id="kpiGrid"></div>
+        </div>
+
+        <div class="panel-section panel-grow">
+          <div class="panel-tabs">
+            <button class="panel-tab active" data-tab="teknisi">Teknisi</button>
+            <button class="panel-tab" data-tab="tiket">Tiket Terbaru</button>
+            <button class="panel-tab" data-tab="aktivitas">Aktivitas</button>
+          </div>
+
+          <div class="panel-tab-body" data-tab-body="teknisi">
+            <input id="searchTeknisi" placeholder="Cari nama teknisi…" style="margin-bottom:10px">
+            <div id="teknisiList" class="panel-scroll"></div>
+          </div>
+          <div class="panel-tab-body hidden" data-tab-body="tiket">
+            <div id="recentTiketList" class="panel-scroll"></div>
+          </div>
+          <div class="panel-tab-body hidden" data-tab-body="aktivitas">
+            <div id="activityList" class="panel-scroll"></div>
+          </div>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
+  <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+  <script src="/js/admin-map.js"></script>
+  <script>
+    Api.init('admin');
+    const me = Api.getUser();
+    document.getElementById('userBadge').textContent = me ? `${me.nama} (${me.role})` : '';
+    document.getElementById('btnLogout').onclick = () => Api.logout();
+
+    function statusBadge(status) { return `<span class="badge badge-${status}">${status}</span>`; }
+
+    // ── Panel toggle & tabs (biar peta bisa full-screen tanpa panel kalau mau) ──
+    document.getElementById('btnTogglePanel').onclick = () => document.getElementById('sidePanel').classList.toggle('collapsed');
+    document.querySelectorAll('.panel-tab').forEach(tab => {
+      tab.onclick = () => {
+        document.querySelectorAll('.panel-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.panel-tab-body').forEach(b => b.classList.add('hidden'));
+        tab.classList.add('active');
+        document.querySelector(`[data-tab-body="${tab.dataset.tab}"]`).classList.remove('hidden');
+      };
+    });
+
+    let allTeknisi = [];
+
+    function renderKpi(tiketKpi, teknisiKpi) {
+      const cards = [
+        { label: 'Tiket Baru', value: tiketKpi.baru, cls: 'warn' },
+        { label: 'Dikerjakan', value: tiketKpi.progress, cls: 'warn' },
+        { label: 'Selesai', value: tiketKpi.selesai, cls: 'online' },
+        { label: 'Online', value: teknisiKpi.online, cls: 'online' },
+        { label: 'Bertugas', value: teknisiKpi.on_task, cls: 'warn' },
+        { label: 'Total Karyawan', value: teknisiKpi.total_teknisi, cls: '' },
+      ];
+      document.getElementById('kpiGrid').innerHTML = cards.map(c => `
+        <div class="card kpi-card kpi-card-sm ${c.cls}">
+          <div class="kpi-label">${c.label}</div>
+          <div class="kpi-value">${c.value || 0}</div>
+        </div>`).join('');
+      document.getElementById('liveSummary').textContent =
+        `${teknisiKpi.online || 0} online · ${teknisiKpi.on_task || 0} bertugas · ${tiketKpi.progress || 0} tiket berjalan`;
+    }
+
+    function renderTeknisiList() {
+      const q = document.getElementById('searchTeknisi').value.trim().toLowerCase();
+      const filtered = allTeknisi.filter(t => !q || t.nama.toLowerCase().includes(q));
+      if (!filtered.length) {
+        document.getElementById('teknisiList').innerHTML = '<div class="empty-state">Tidak ada teknisi yang cocok</div>';
+        return;
+      }
+      document.getElementById('teknisiList').innerHTML = filtered.map(t => `
+        <div class="tiket-item">
+          <div class="judul">${t.nama} ${statusBadge(t.status)}</div>
+          <div class="meta">${t.jabatan || '-'}</div>
+          <div class="meta">${t.tugas_sekarang ? 'Tugas: ' + t.tugas_sekarang : 'Tidak ada tugas aktif'}</div>
+        </div>`).join('');
+    }
+    document.getElementById('searchTeknisi').addEventListener('input', renderTeknisiList);
+
+    function renderRecentTiket(list) {
+      document.getElementById('recentTiketList').innerHTML = list.map(t => `
+        <div class="tiket-item" onclick="window.location.href='/admin/tiket-detail?id=${t.id}'" style="cursor:pointer">
+          <div class="judul">${t.judul} ${statusBadge(t.status)}</div>
+          <div class="meta">${t.tiket_no} · ${t.teknisi_nama || 'Belum ada teknisi'}</div>
+        </div>`).join('') || '<div class="empty-state">Belum ada tiket</div>';
+    }
+
+    function renderActivity(list) {
+      document.getElementById('activityList').innerHTML = list.map(a => `
+        <div class="timeline-item">
+          <div>[${a.tiket_no}] ${a.note || a.event_type}</div>
+          <div class="ts">${new Date(a.created_at).toLocaleString('id-ID')}</div>
+        </div>`).join('') || '<div class="empty-state">Belum ada aktivitas</div>';
+    }
+
+    async function loadKpi() {
+      const res = await Api.get('/api/dashboard/kpi');
+      if (res.success) renderKpi(res.tiket_kpi, res.teknisi_kpi);
+    }
+
+    async function loadMonitoring() {
+      const res = await Api.get('/api/dashboard/monitoring');
+      if (!res.success) return;
+      allTeknisi = res.teknisi_lokasi;
+      renderTeknisiList();
+      renderRecentTiket(res.recent_tiket);
+      renderActivity(res.recent_activities);
+      FactoryMap.setTeknisi(res.teknisi_lokasi);
+    }
+
+    document.getElementById('btnResetView').onclick = () => FactoryMap.resetView();
+
+    (async () => {
+      await FactoryMap.init('map');
+      await loadKpi();
+      await loadMonitoring();
+
+      // Realtime: posisi & status teknisi + perubahan tiket
+      const socket = io();
+      socket.emit('register-dashboard');
+      socket.on('teknisi-location', () => loadMonitoring());
+      socket.on('teknisi-status', () => { loadMonitoring(); loadKpi(); });
+      socket.on('tiket-update', () => { loadMonitoring(); loadKpi(); });
+
+      // Fallback polling tiap 20 detik kalau socket putus
+      setInterval(loadMonitoring, 20000);
+    })();
+  </script>
+</body>
+</html>

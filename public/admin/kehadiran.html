@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<script src="/js/theme.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kehadiran — PT Gokak Indonesia</title>
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">🏭 PT Gokak Indonesia<small>Portal Admin</small></div>
+      <a href="/admin/dashboard">📍 Dashboard</a>
+      <a href="/admin/teknisi">🧑‍🔧 Teknisi</a>
+      <a href="/admin/tiket">🎫 Tiket</a>
+      <a href="/admin/kehadiran" class="active">📆 Kehadiran</a>
+      <a href="/admin/area">🗺️ Area Pabrik</a>
+      <div class="logout" id="btnLogout">↩ Logout</div>
+    </aside>
+
+    <main class="main">
+      <div class="main-header">
+        <h1>KPI Kehadiran Karyawan</h1>
+        <div style="display:flex;align-items:center;gap:10px">
+          <button class="theme-toggle-btn" title="Ganti tema"><span class="theme-toggle-icon">🌙</span></button>
+          <div class="user-badge" id="userBadge"></div>
+        </div>
+      </div>
+
+      <div class="split-layout">
+        <div class="split-list">
+          <div class="card">
+            <div class="period-tabs">
+              <button class="secondary active" data-period="today">Hari Ini</button>
+              <button class="secondary" data-period="week">Minggu Ini</button>
+              <button class="secondary" data-period="month">Bulan Ini</button>
+            </div>
+            <input id="searchInput" placeholder="Cari nama karyawan…" style="margin-bottom:10px">
+            <table>
+              <thead><tr><th>Nama</th><th>Online</th><th>Luar Area</th></tr></thead>
+              <tbody id="tbody"></tbody>
+            </table>
+            <div class="pagination">
+              <span id="pageInfo"></span>
+              <div style="display:flex;gap:6px">
+                <button class="secondary" id="btnPrev">← Prev</button>
+                <button class="secondary" id="btnNext">Next →</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="split-detail">
+          <div id="emptyDetail" class="card">
+            <div class="empty-state">Pilih salah satu karyawan di daftar kiri buat lihat detail kehadirannya</div>
+          </div>
+
+          <div id="detailWrap" class="hidden">
+            <div class="card" style="margin-bottom:16px">
+              <div class="main-header" style="margin-bottom:14px">
+                <div>
+                  <h2 id="detailNama" style="margin:0;font-size:18px"></h2>
+                  <div class="meta" style="color:var(--text-dim);font-size:13px" id="detailJabatan"></div>
+                </div>
+                <div style="display:flex;gap:8px;align-items:center">
+                  <span style="font-size:12.5px;color:var(--text-dim)">Rentang kalender:</span>
+                  <select id="heatmapRange">
+                    <option value="90">3 bulan</option>
+                    <option value="180">6 bulan</option>
+                    <option value="365">1 tahun</option>
+                  </select>
+                </div>
+              </div>
+              <div id="heatmapContainer"></div>
+            </div>
+
+            <div class="card">
+              <div class="main-header" style="margin-bottom:10px">
+                <h3 style="margin:0" id="detailDateLabel">Detail Harian</h3>
+                <input type="date" id="detailDateInput">
+              </div>
+
+              <div class="stat-mini-grid">
+                <div class="stat-mini"><div class="v" id="statOnline">-</div><div class="l">Total Online</div></div>
+                <div class="stat-mini"><div class="v" id="statInArea">-</div><div class="l">Di Area Pabrik</div></div>
+                <div class="stat-mini"><div class="v" id="statOutArea">-</div><div class="l">Di Luar Area</div></div>
+              </div>
+
+              <div class="session-section-title session-online"><span class="dot"></span> Rentang Waktu Online</div>
+              <div id="onlineList"></div>
+
+              <div class="session-section-title session-in"><span class="dot"></span> Rentang Waktu di Dalam Area</div>
+              <div id="inAreaList"></div>
+
+              <div class="session-section-title session-out"><span class="dot"></span> Rentang Waktu di Luar Area</div>
+              <div id="outAreaList"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/calendar-heatmap.js"></script>
+  <script>
+    Api.init('admin');
+    const me = Api.getUser();
+    document.getElementById('userBadge').textContent = me ? `${me.nama} (${me.role})` : '';
+    document.getElementById('btnLogout').onclick = () => Api.logout();
+
+    function fmtHours(seconds) { return CalendarHeatmap.fmtHours(seconds || 0); }
+    function todayStr() { return new Date().toISOString().slice(0, 10); }
+
+    function periodRange(period) {
+      const to = todayStr();
+      const now = new Date();
+      if (period === 'today') return { from: to, to };
+      if (period === 'week') {
+        const day = now.getDay() === 0 ? 7 : now.getDay(); // Senin=1..Minggu=7
+        const monday = new Date(now);
+        monday.setDate(now.getDate() - (day - 1));
+        return { from: monday.toISOString().slice(0, 10), to };
+      }
+      // month
+      const first = new Date(now.getFullYear(), now.getMonth(), 1);
+      return { from: first.toISOString().slice(0, 10), to };
+    }
+
+    let state = { period: 'today', page: 1, pageSize: 20, q: '', selectedId: null, selectedNama: '' };
+
+    document.querySelectorAll('.period-tabs button').forEach(btn => {
+      btn.onclick = () => {
+        document.querySelectorAll('.period-tabs button').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        state.period = btn.dataset.period;
+        state.page = 1;
+        loadList();
+      };
+    });
+
+    let searchDebounce;
+    document.getElementById('searchInput').addEventListener('input', (e) => {
+      clearTimeout(searchDebounce);
+      searchDebounce = setTimeout(() => { state.q = e.target.value.trim(); state.page = 1; loadList(); }, 300);
+    });
+
+    document.getElementById('btnPrev').onclick = () => { if (state.page > 1) { state.page--; loadList(); } };
+    document.getElementById('btnNext').onclick = () => { state.page++; loadList(); };
+
+    async function loadList() {
+      const { from, to } = periodRange(state.period);
+      const q = new URLSearchParams({
+        from: `${from} 00:00:00`, to: `${to} 23:59:59`,
+        page: state.page, pageSize: state.pageSize,
+      });
+      if (state.q) q.set('q', state.q);
+
+      const res = await Api.get(`/api/kpi/ringkasan?${q.toString()}`);
+      if (!res.success) return;
+
+      document.getElementById('tbody').innerHTML = res.teknisi.map(t => `
+        <tr class="teknisi-row ${t.id === state.selectedId ? 'selected' : ''}" onclick="selectTeknisi(${t.id}, '${t.nama.replace(/'/g, "\\'")}', '${(t.jabatan || '').replace(/'/g, "\\'")}')">
+          <td>${t.nama}</td>
+          <td>${fmtHours(t.online_seconds)}</td>
+          <td>${t.out_area_seconds > 0 ? `<span style="color:var(--danger)">${fmtHours(t.out_area_seconds)}</span>` : '-'}</td>
+        </tr>`).join('') || '<tr><td colspan="3" class="empty-state">Tidak ada karyawan yang cocok</td></tr>';
+
+      const totalPages = Math.max(Math.ceil(res.total / state.pageSize), 1);
+      document.getElementById('pageInfo').textContent = `Halaman ${state.page} / ${totalPages} · ${res.total} karyawan`;
+      document.getElementById('btnPrev').disabled = state.page <= 1;
+      document.getElementById('btnNext').disabled = state.page >= totalPages;
+    }
+
+    window.selectTeknisi = (id, nama, jabatan) => {
+      state.selectedId = id;
+      state.selectedNama = nama;
+      document.getElementById('emptyDetail').classList.add('hidden');
+      document.getElementById('detailWrap').classList.remove('hidden');
+      document.getElementById('detailNama').textContent = nama;
+      document.getElementById('detailJabatan').textContent = jabatan || '';
+      document.getElementById('detailDateInput').value = todayStr();
+      loadList(); // refresh biar row highlight
+      loadHeatmap();
+      loadHarian(todayStr());
+    };
+
+    async function loadHeatmap() {
+      if (!state.selectedId) return;
+      const days = document.getElementById('heatmapRange').value;
+      const res = await Api.get(`/api/kpi/heatmap/${state.selectedId}?days=${days}`);
+      if (!res.success) return;
+      CalendarHeatmap.render(document.getElementById('heatmapContainer'), res.days, {
+        valueKey: 'online_seconds',
+        onClickDay: (date) => { document.getElementById('detailDateInput').value = date; loadHarian(date); },
+      });
+    }
+    document.getElementById('heatmapRange').onchange = loadHeatmap;
+    document.getElementById('detailDateInput').onchange = (e) => loadHarian(e.target.value);
+
+    async function loadHarian(date) {
+      if (!state.selectedId) return;
+      const res = await Api.get(`/api/kpi/harian/${state.selectedId}?date=${date}`);
+      if (!res.success) return;
+      document.getElementById('detailDateLabel').textContent = `Detail Harian — ${new Date(date + 'T00:00:00').toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}`;
+      document.getElementById('statOnline').textContent = fmtHours(res.online_seconds);
+      document.getElementById('statInArea').textContent = fmtHours(res.in_area_seconds);
+      document.getElementById('statOutArea').textContent = fmtHours(res.out_area_seconds);
+
+      renderSessions('onlineList', res.online_sessions, 'session-online', 'Karyawan ini gak online sama sekali hari ini');
+      renderSessions('inAreaList', res.in_area_sessions, 'session-in', 'Gak ada waktu di dalam area hari ini');
+      renderSessions('outAreaList', res.out_area_sessions, 'session-out', 'Tidak keluar area sepanjang hari ini 🎉');
+    }
+
+    function renderSessions(elementId, sessions, cls, emptyMsg) {
+      document.getElementById(elementId).innerHTML = (sessions || []).map(s => `
+        <div class="session-row ${cls}">
+          <span>${s.start.slice(11, 16)} – ${s.end.slice(11, 16)}</span>
+          <span class="dur">${fmtHours(s.duration_seconds)}</span>
+        </div>`).join('') || `<div class="empty-state">${emptyMsg}</div>`;
+    }
+
+    // Kalau dibuka dari popup peta dashboard (?teknisiId=), langsung pilih karyawan itu
+    const preselect = new URLSearchParams(window.location.search).get('teknisiId');
+
+    loadList().then(() => {
+      if (preselect) {
+        Api.get(`/api/teknisi/${preselect}`).then(res => {
+          if (res.success) selectTeknisi(Number(preselect), res.teknisi.nama, res.teknisi.jabatan);
+        });
+      }
+    });
+  </script>
+</body>
+</html>

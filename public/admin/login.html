@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<script src="/js/theme.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login Admin — PT Gokak Indonesia</title>
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <button class="theme-toggle-btn theme-toggle-fixed" title="Ganti tema"><span class="theme-toggle-icon">🌙</span></button>
+  <div class="auth-page">
+    <div class="auth-card card">
+      <h1>🏭 Login Admin</h1>
+      <p class="sub">Dashboard monitoring &amp; tiket — PT Gokak Indonesia</p>
+      <form id="loginForm">
+        <label for="username">Username</label>
+        <input id="username" name="username" autocomplete="username" required>
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" autocomplete="current-password" required>
+        <button type="submit" style="width:100%;margin-top:18px">Masuk</button>
+        <div class="auth-error" id="errMsg"></div>
+      </form>
+      <div class="auth-switch">Bukan admin? <a href="/teknisi/login">Login sebagai teknisi</a></div>
+    </div>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script>
+    Api.init('admin');
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const errMsg = document.getElementById('errMsg');
+      errMsg.textContent = '';
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value;
+      const res = await Api.post('/api/auth/admin/login', { username, password });
+      if (!res.success) {
+        errMsg.textContent = res.message || 'Login gagal';
+        return;
+      }
+      Api.setSession(res.token, { id: res.adminId, nama: res.nama, username: res.username, role: res.role });
+      window.location.href = '/admin/dashboard';
+    });
+  </script>
+</body>
+</html>

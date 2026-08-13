@@ -1,0 +1,22 @@
+# Dependencies
+node_modules/
+
+# File upload (foto bukti pengerjaan tiket) - jangan di-commit, cuma data runtime
+uploads/bukti/*
+!uploads/bukti/.gitkeep
+
+# Environment variables (jangan pernah ke-push, isinya credential DB)
+.env
+.env.local
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/

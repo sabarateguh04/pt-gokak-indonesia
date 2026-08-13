@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<script src="/js/theme.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Detail Tugas — PT Gokak Indonesia</title>
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="teknisi-shell">
+    <div class="teknisi-topbar">
+      <a href="/teknisi/home" style="color:var(--text-dim)">← Kembali</a>
+      <div style="display:flex;align-items:center;gap:10px">
+        <button class="theme-toggle-btn" title="Ganti tema"><span class="theme-toggle-icon">🌙</span></button>
+        <span class="logout" id="btnLogout" style="color:var(--danger);font-size:13px">Logout</span>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div>
+          <div style="font-weight:700;font-size:16px" id="judul"></div>
+          <div style="color:var(--text-dim);font-size:13px" id="tiketNo"></div>
+        </div>
+        <span class="badge" id="statusBadge"></span>
+      </div>
+      <p id="deskripsi" style="color:var(--text-dim);font-size:14px"></p>
+    </div>
+
+    <div class="card" style="margin-bottom:14px" id="scheduleCard">
+      <h3 style="margin-top:0">Jadwal &amp; Lokasi</h3>
+      <p style="color:var(--text-dim);font-size:12px;margin-top:-6px" id="scheduleHint">Bisa diedit sampai tugas ditandai selesai.</p>
+      <form id="scheduleForm">
+        <label>Area / Lokasi Kerja</label>
+        <select id="f_area_id"><option value="">-- Pilih area --</option></select>
+        <div style="display:flex;gap:10px">
+          <div style="flex:1"><label>Tanggal Mulai</label><input id="f_tanggal_mulai" type="date"></div>
+          <div style="flex:1"><label>Tanggal Selesai</label><input id="f_tanggal_selesai" type="date"></div>
+        </div>
+        <button type="submit" class="secondary" style="width:100%;margin-top:14px" id="btnSaveSchedule">Simpan Perubahan</button>
+        <div class="auth-error" id="scheduleErr"></div>
+      </form>
+    </div>
+
+    <div class="card" style="margin-bottom:14px" id="actionCard">
+      <h3 style="margin-top:0">Update Progres</h3>
+      <div style="display:flex;gap:8px">
+        <button id="btnMulai" style="flex:1">Mulai Kerjakan</button>
+        <button id="btnSelesai" class="secondary" style="flex:1">Tandai Selesai</button>
+      </div>
+      <div style="margin-top:14px">
+        <label>Upload Foto Bukti</label>
+        <input type="file" id="fileInput" multiple accept="image/*">
+        <button id="btnUpload" class="secondary" style="width:100%;margin-top:8px">Upload</button>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:14px">
+      <h3 style="margin-top:0">Foto Bukti</h3>
+      <div id="filesList"></div>
+    </div>
+
+    <div class="card">
+      <h3 style="margin-top:0">Riwayat</h3>
+      <div id="timelineList"></div>
+    </div>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script>
+    Api.init('teknisi');
+    const me = Api.getUser();
+    document.getElementById('btnLogout').onclick = () => Api.logout();
+
+    const tiketId = new URLSearchParams(window.location.search).get('id');
+    function statusBadge(v) { return `<span class="badge badge-${v}">${v}</span>`; }
+
+    async function loadAreaOptions(selectedId) {
+      const res = await Api.get(`/api/teknisi/${me.id}`);
+      const select = document.getElementById('f_area_id');
+      if (!res.success || !res.area.length) {
+        select.innerHTML = '<option value="">Belum ada area di-set admin</option>';
+        return;
+      }
+      select.innerHTML = '<option value="">-- Pilih area --</option>' +
+        res.area.map(a => `<option value="${a.id}">${a.nama}${a.is_primary ? '' : ' (referensi)'}</option>`).join('');
+      if (selectedId) select.value = selectedId;
+    }
+
+    async function loadDetail() {
+      const res = await Api.get(`/api/tiket/${tiketId}`);
+      if (!res.success) { alert(res.message); window.location.href = '/teknisi/home'; return; }
+      const t = res.tiket;
+      document.getElementById('judul').textContent = t.judul;
+      document.getElementById('tiketNo').textContent = t.tiket_no;
+      document.getElementById('deskripsi').textContent = t.deskripsi || 'Tidak ada deskripsi tambahan';
+      const badge = document.getElementById('statusBadge');
+      badge.className = `badge badge-${t.status}`;
+      badge.textContent = t.status;
+
+      const locked = ['DONE', 'CANCELLED'].includes(t.status);
+      document.getElementById('actionCard').style.display = locked ? 'none' : 'block';
+      document.getElementById('btnMulai').disabled = t.status !== 'ASSIGNED';
+      document.getElementById('btnSelesai').disabled = t.status !== 'IN_PROGRESS';
+
+      await loadAreaOptions(t.area_id);
+      document.getElementById('f_tanggal_mulai').value = t.tanggal_mulai || '';
+      document.getElementById('f_tanggal_selesai').value = t.tanggal_selesai || '';
+      document.getElementById('f_area_id').disabled = locked;
+      document.getElementById('f_tanggal_mulai').disabled = locked;
+      document.getElementById('f_tanggal_selesai').disabled = locked;
+      document.getElementById('btnSaveSchedule').classList.toggle('hidden', locked);
+      document.getElementById('scheduleHint').textContent = locked
+        ? 'Tugas sudah selesai/dibatalkan -- gak bisa diedit lagi.'
+        : 'Bisa diedit sampai tugas ditandai selesai.';
+
+      document.getElementById('filesList').innerHTML = t.files.map(f => `
+        <a href="${f.file_url}" target="_blank" style="display:block;font-size:13px;margin:4px 0">📎 ${f.judul || f.file_url.split('/').pop()}</a>
+      `).join('') || '<div class="empty-state">Belum ada foto bukti</div>';
+
+      document.getElementById('timelineList').innerHTML = t.timeline.map(item => `
+        <div class="timeline-item">
+          <div>${item.note || item.event_type}</div>
+          <div class="ts">${new Date(item.created_at).toLocaleString('id-ID')}</div>
+        </div>`).join('') || '<div class="empty-state">Belum ada aktivitas</div>';
+    }
+
+    document.getElementById('scheduleForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      // Judul/deskripsi/kategori/priority dikirim ulang persis (PUT butuh
+      // semua field) -- ambil dari state terkini di server dulu.
+      const cur = await Api.get(`/api/tiket/${tiketId}`);
+      if (!cur.success) return;
+      const body = {
+        judul: cur.tiket.judul,
+        deskripsi: cur.tiket.deskripsi,
+        kategori: cur.tiket.kategori,
+        priority: cur.tiket.priority,
+        area_id: document.getElementById('f_area_id').value || null,
+        tanggal_mulai: document.getElementById('f_tanggal_mulai').value || null,
+        tanggal_selesai: document.getElementById('f_tanggal_selesai').value || null,
+      };
+      const res = await Api.put(`/api/tiket/${tiketId}`, body);
+      const errBox = document.getElementById('scheduleErr');
+      if (!res.success) { errBox.textContent = res.message || 'Gagal menyimpan'; return; }
+      errBox.textContent = '';
+      loadDetail();
+    });
+
+    document.getElementById('btnMulai').onclick = async () => {
+      const res = await Api.post(`/api/tiket/${tiketId}/status`, { status: 'IN_PROGRESS' });
+      if (!res.success) return alert(res.message);
+      loadDetail();
+    };
+    document.getElementById('btnSelesai').onclick = async () => {
+      if (!confirm('Tandai tugas ini selesai?')) return;
+      const res = await Api.post(`/api/tiket/${tiketId}/status`, { status: 'DONE' });
+      if (!res.success) return alert(res.message);
+      loadDetail();
+    };
+    document.getElementById('btnUpload').onclick = async () => {
+      const input = document.getElementById('fileInput');
+      if (!input.files.length) return;
+      const fd = new FormData();
+      [...input.files].forEach(f => fd.append('files', f));
+      const res = await Api.upload(`/api/tiket/${tiketId}/files`, fd);
+      if (res.success) { input.value = ''; loadDetail(); }
+    };
+
+    loadDetail();
+  </script>
+</body>
+</html>

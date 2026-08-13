@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<script src="/js/theme.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Area Pabrik — PT Gokak Indonesia</title>
+<link rel="stylesheet" href="/css/style.css">
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">🏭 PT Gokak Indonesia<small>Portal Admin</small></div>
+      <a href="/admin/dashboard">📍 Dashboard</a>
+      <a href="/admin/teknisi">🧑‍🔧 Teknisi</a>
+      <a href="/admin/tiket">🎫 Tiket</a>
+      <a href="/admin/kehadiran">📆 Kehadiran</a>
+      <a href="/admin/area" class="active">🗺️ Area Pabrik</a>
+      <div class="logout" id="btnLogout">↩ Logout</div>
+    </aside>
+
+    <main class="main">
+      <div class="main-header">
+        <h1>Kelola Area Pabrik (3D)</h1>
+        <div style="display:flex;align-items:center;gap:10px">
+          <button class="theme-toggle-btn" title="Ganti tema"><span class="theme-toggle-icon">🌙</span></button>
+          <div class="user-badge" id="userBadge"></div>
+        </div>
+      </div>
+      <p style="color:var(--text-dim);font-size:13px;margin-top:-8px;margin-bottom:16px">
+        Area <b>primary</b> dihitung sebagai "dalam area pabrik" buat KPI kehadiran karyawan. Area non-primary cuma referensi visual (misal area parkir).
+      </p>
+
+      <div class="grid grid-2col">
+        <div class="card map-wrap" style="height:640px">
+          <div id="map" style="height:100%"></div>
+          <div class="map-legend" id="drawHint">
+            <span class="item">🖱️ Klik peta buat nambah titik poligon</span>
+          </div>
+        </div>
+
+        <div class="card" style="max-height:640px;overflow:auto;display:flex;flex-direction:column;gap:14px">
+          <div>
+            <button id="btnStartDraw" style="width:100%">+ Gambar Area Baru</button>
+          </div>
+
+          <div id="drawToolbar" class="hidden" style="display:flex;gap:6px">
+            <button class="secondary" id="btnUndo" style="flex:1">↩ Undo Titik</button>
+            <button class="secondary" id="btnClear" style="flex:1">✕ Bersihkan</button>
+          </div>
+          <div id="pointCounter" class="hidden empty-state" style="padding:8px"></div>
+          <button id="btnFinish" class="hidden" style="width:100%">Selesai Gambar →</button>
+
+          <form id="areaForm" class="hidden">
+            <input type="hidden" id="f_id">
+            <label>Nama Area</label>
+            <input id="f_nama" required placeholder="cth. Gedung Produksi">
+            <label>Deskripsi (opsional)</label>
+            <input id="f_deskripsi">
+            <div style="display:flex;gap:10px">
+              <div style="flex:1"><label>Tinggi 3D (meter)</label><input id="f_height" type="number" value="10" min="1"></div>
+              <div style="flex:1"><label>Warna</label><input id="f_color" type="color" value="#f59e0b" style="padding:4px;height:42px"></div>
+            </div>
+            <label style="display:flex;align-items:center;gap:8px;margin-top:14px">
+              <input type="checkbox" id="f_is_primary" style="width:auto" checked>
+              <span style="font-size:13px;color:var(--text)">Area primary (dihitung ke KPI kehadiran)</span>
+            </label>
+            <div style="display:flex;gap:8px;margin-top:16px">
+              <button type="submit" style="flex:1">Simpan Area</button>
+              <button type="button" class="secondary" id="btnCancelForm" style="flex:1">Batal</button>
+            </div>
+            <div class="auth-error" id="formErr"></div>
+          </form>
+
+          <hr style="border-color:var(--border);width:100%">
+
+          <div>
+            <h3 style="margin-top:0">Area Tersimpan</h3>
+            <div id="areaList"></div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+  <script src="/js/area-map.js"></script>
+  <script>
+    Api.init('admin');
+    const me = Api.getUser();
+    document.getElementById('userBadge').textContent = me ? `${me.nama} (${me.role})` : '';
+    document.getElementById('btnLogout').onclick = () => Api.logout();
+
+    let allAreas = [];
+
+    function setDrawUiVisible(visible) {
+      document.getElementById('drawToolbar').classList.toggle('hidden', !visible);
+      document.getElementById('pointCounter').classList.toggle('hidden', !visible);
+      document.getElementById('btnFinish').classList.toggle('hidden', !visible);
+      document.getElementById('btnStartDraw').classList.toggle('hidden', visible);
+    }
+
+    function resetForm() {
+      document.getElementById('areaForm').reset();
+      document.getElementById('areaForm').classList.add('hidden');
+      document.getElementById('f_id').value = '';
+      document.getElementById('formErr').textContent = '';
+    }
+
+    let pendingPolygon = null; // titik hasil "Selesai Gambar", nunggu di-submit form
+
+    document.getElementById('btnStartDraw').onclick = () => {
+      resetForm();
+      pendingPolygon = null;
+      AreaMap.startDraw();
+      setDrawUiVisible(true);
+    };
+    document.getElementById('btnUndo').onclick = () => AreaMap.undoPoint();
+    document.getElementById('btnClear').onclick = () => AreaMap.clearDraw();
+    document.getElementById('btnCancelForm').onclick = () => {
+      AreaMap.stopDraw();
+      AreaMap.clearDraw();
+      pendingPolygon = null;
+      setDrawUiVisible(false);
+      resetForm();
+    };
+
+    document.getElementById('btnFinish').onclick = () => {
+      const pts = AreaMap.finishDraw();
+      if (!pts) { alert('Gambar minimal 3 titik dulu ya'); AreaMap.startDraw(); return; }
+      pendingPolygon = pts;
+      setDrawUiVisible(false);
+      document.getElementById('areaForm').classList.remove('hidden');
+      document.getElementById('f_nama').focus();
+    };
+
+    document.getElementById('areaForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!pendingPolygon || pendingPolygon.length < 3) {
+        document.getElementById('formErr').textContent = 'Poligon gak valid, gambar ulang dulu.';
+        return;
+      }
+      const id = document.getElementById('f_id').value;
+      const payload = {
+        nama: document.getElementById('f_nama').value.trim(),
+        deskripsi: document.getElementById('f_deskripsi').value.trim(),
+        height: Number(document.getElementById('f_height').value) || 10,
+        color: document.getElementById('f_color').value,
+        is_primary: document.getElementById('f_is_primary').checked,
+        // tutup ring (titik pertama = terakhir) sebelum dikirim ke server
+        polygon: [...pendingPolygon, pendingPolygon[0]],
+      };
+
+      const res = id ? await Api.put(`/api/area/${id}`, payload) : await Api.post('/api/area', payload);
+      if (!res.success) { document.getElementById('formErr').textContent = res.message; return; }
+
+      pendingPolygon = null;
+      resetForm();
+      AreaMap.clearDraw();
+      await refreshAll();
+    });
+
+    function badgeFor(area) {
+      return area.is_primary
+        ? `<span class="badge badge-PRIMARY">PRIMARY</span>`
+        : `<span class="badge badge-REFERENSI">REFERENSI</span>`;
+    }
+
+    function renderAreaList() {
+      document.getElementById('areaList').innerHTML = allAreas.map(a => `
+        <div class="tiket-item">
+          <div class="judul">
+            <span style="width:12px;height:12px;border-radius:3px;background:${a.color};display:inline-block"></span>
+            ${a.nama} ${badgeFor(a)}
+          </div>
+          <div class="meta">${a.deskripsi || 'Tanpa deskripsi'} · tinggi ${a.height}m</div>
+          <div style="display:flex;gap:6px;margin-top:8px">
+            <button class="secondary" style="padding:5px 10px;font-size:12px" onclick='flyTo(${a.id})'>📍 Lihat</button>
+            <button class="secondary" style="padding:5px 10px;font-size:12px" onclick='editArea(${a.id})'>✏️ Edit</button>
+            <button class="danger" style="padding:5px 10px;font-size:12px" onclick='deleteArea(${a.id})'>🗑️ Hapus</button>
+          </div>
+        </div>`).join('') || '<div class="empty-state">Belum ada area digambar</div>';
+    }
+
+    window.flyTo = (id) => {
+      const a = allAreas.find(x => x.id === id);
+      if (a) AreaMap.flyToPolygon(a.polygon);
+    };
+
+    // Edit = muat ulang poligon lama ke mode gambar (bisa di-Undo/Clear/
+    // gambar ulang kalau mau), metadata di-prefill tapi form baru muncul
+    // lagi setelah klik "Selesai Gambar" -- alur SAMA kayak bikin baru,
+    // jadi gak ada state ganjil (misal masih bisa nge-klik nambah titik
+    // padahal toolbar-nya udah disembunyiin).
+    window.editArea = (id) => {
+      const a = allAreas.find(x => x.id === id);
+      if (!a) return;
+      resetForm();
+      document.getElementById('f_id').value = a.id;
+      document.getElementById('f_nama').value = a.nama;
+      document.getElementById('f_deskripsi').value = a.deskripsi || '';
+      document.getElementById('f_height').value = a.height;
+      document.getElementById('f_color').value = a.color;
+      document.getElementById('f_is_primary').checked = !!a.is_primary;
+      pendingPolygon = null;
+      AreaMap.loadPolygonForEdit(a.polygon);
+      setDrawUiVisible(true);
+    };
+
+    window.deleteArea = async (id) => {
+      if (!confirm('Hapus area ini? Histori kehadiran yang udah tercatat gak akan hilang.')) return;
+      const res = await Api.del(`/api/area/${id}`);
+      if (res.success) refreshAll();
+    };
+
+    async function refreshAll() {
+      allAreas = await AreaMap.loadAreas();
+      renderAreaList();
+    }
+
+    (async () => {
+      await AreaMap.init('map', {
+        onPointsChange: (count) => {
+          document.getElementById('pointCounter').textContent = `${count} titik${count >= 3 ? ' — siap disimpan' : ' (minimal 3)'}`;
+          document.getElementById('btnFinish').disabled = count < 3;
+        },
+      });
+      await refreshAll();
+    })();
+  </script>
+</body>
+</html>
