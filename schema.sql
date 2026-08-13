@@ -2,10 +2,10 @@
 -- PT GOKAK INDONESIA — EMPLOYEE TRACKING & TICKET SYSTEM
 -- Schema database, prefix tabel: pt_kapuk_
 --
--- Turunan dari be-oki-app, dipangkas jadi cuma 9 tabel (dari 15) --
--- gak ada lagi customer, site, perangkat, BA checklist, kebutuhan,
--- biaya, approval berjenjang. Liat README.md bagian 1 & 3 buat alasan
--- lengkapnya.
+-- Sengaja cuma 9 tabel -- gak ada customer, site, perangkat, BA
+-- checklist, kebutuhan, biaya, atau approval berjenjang, karena ini
+-- sistem internal pabrik sendiri. Liat README.md bagian 1 & 3 buat
+-- alasan lengkapnya.
 --
 -- ⚠️  RESET TOTAL — DROP semua tabel pt_kapuk_* lalu bikin ulang dari
 --     nol. SEMUA DATA HILANG. Backup dulu kalau perlu:
@@ -219,8 +219,8 @@ CREATE TABLE pt_kapuk_tiket_timeline (
 
 -- ───────────────────────────────────────────────────────────
 -- 9. FILE / FOTO BUKTI — lampiran bebas per tiket (mis. foto sebelum/
---    sesudah dikerjakan). Sengaja generik, gak dipisah kategori kayak
---    be-oki-app karena gak ada lagi BA checklist/biaya yang butuh itu.
+--    sesudah dikerjakan). Sengaja generik, gak dipisah-pisah kategori,
+--    karena gak ada BA checklist/rincian biaya yang butuh itu di sini.
 -- ───────────────────────────────────────────────────────────
 CREATE TABLE pt_kapuk_tiket_files (
   id                      INT AUTO_INCREMENT PRIMARY KEY,

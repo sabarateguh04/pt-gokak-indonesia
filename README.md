@@ -1,36 +1,26 @@
 # PT Gokak Indonesia — Employee Tracking & Ticket System
 
-Aplikasi internal untuk **monitoring lokasi karyawan/teknisi di area pabrik** lewat peta 3D real-time, **assign tugas (tiket)** langsung dari dashboard admin, dan **KPI kehadiran** (berapa lama online, di dalam vs di luar area pabrik). Turunan dari `be-oki-app` (sistem order maintenance customer B2B), dipangkas total supaya cuma fokus ke: **Dashboard (peta monitoring)**, **Teknisi (karyawan)**, **Tiket (dulu "Order")**, **Kehadiran (KPI)**, dan **Area Pabrik (poligon 3D)**.
+Aplikasi internal untuk **monitoring lokasi karyawan/teknisi di area pabrik** lewat peta 3D real-time, **assign tugas (tiket)** langsung dari dashboard admin, dan **KPI kehadiran** (berapa lama online, di dalam vs di luar area pabrik). Fokusnya cuma 5 hal: **Dashboard (peta monitoring)**, **Teknisi (karyawan)**, **Tiket**, **Kehadiran (KPI)**, dan **Area Pabrik (poligon 3D)** — sengaja gak ada modul customer, finance, atau approval berjenjang, karena ini sistem internal pabrik sendiri.
 
 > ⚠️ **Lokasi development SAAT INI dialihkan ke kantor** (Ruko Pesona View, Blok C7, `-6.380064, 106.8408239`) — BUKAN lokasi pabrik asli PT Gokak Indonesia. Ini diset lewat `FACTORY_LAT`/`FACTORY_LNG` di `.env` (cuma nentuin arah kamera default) + 1 area seed di `schema.sql` (geofence beneran). Ganti kapan pun development pindah ke lokasi pabrik — tinggal edit `.env` buat kameranya, dan gambar ulang area yang presisi lewat halaman **Area Pabrik** (lihat bagian 6).
 
 ---
 
-## 1. Kenapa dipangkas dari be-oki-app
+## 1. Fokus & prinsip desain
 
-`be-oki-app` dibangun buat bisnis jasa maintenance ke banyak **customer eksternal** (approval atasan, finance/pembayaran, BA/checklist serah-terima, inventaris perangkat per site). Kebutuhan sekarang beda total: **internal pabrik sendiri**, gak ada customer, gak ada uang jalan/approval berjenjang — cuma admin yang mantau & nugasin karyawan.
+Sistem ini murni buat **internal pabrik sendiri** — gak ada konsep customer eksternal, gak ada uang jalan/approval berjenjang. Prinsip yang dipegang:
 
-**Dibuang total** (beserta tabel & route-nya):
-| Dibuang | Alasan |
-|---|---|
-| `oki_customers`, `oki_customer_sites` | Gak ada customer eksternal — lokasi tugas cukup "area di pabrik" |
-| `oki_perangkat` (inventaris) | Gak relevan buat tracking karyawan |
-| `oki_site_ba`, `oki_site_ba_template`, `oki_order_ba_checklist` | Checklist serah-terima ke customer — gak dipakai lagi ("tanpa perlu BA-BA an") |
-| `oki_order_kebutuhan`, `oki_order_biaya` | Approval pembelian & pembayaran finance — di luar scope |
-| Role `ATASAN`, `FINANCE`, `DISPATCHER` | Approval berjenjang dihapus — admin bisa create & assign tiket langsung |
-| Firebase push notification (`push.js`, FCM) | Realtime cukup lewat Socket.IO yang udah ada; FCM bisa ditambah lagi kapan-kapan kalau perlu notif ke HP saat app di background |
-
-**Dipertahankan & disederhanakan:**
-- Login JWT terpisah staff vs lapangan (`middleware/auth.js`) → jadi **Admin vs Teknisi**, dengan portal frontend yang benar-benar kepisah folder (`/admin/*` vs `/teknisi/*`).
-- GPS ping teknisi tiap ~2 detik + riwayat lokasi (`pt_kapuk_teknisi_lokasi`) → sekarang JUGA jadi dasar hitungan **KPI kehadiran** (bagian 5), bukan cuma buat titik di peta.
-- Socket.IO realtime buat live map & notifikasi assign.
+- **Gak ada approval berjenjang.** Cuma ada role `ADMIN` (dan `SUPERVISOR` yang disiapkan, belum dipakai) — admin bisa create & assign tiket langsung, teknisi juga bisa bikin tiket sendiri (bagian 10), gak perlu nunggu siapa-siapa nyetujuin.
+- **Login JWT terpisah** staff vs lapangan (`middleware/auth.js`) → **Admin vs Teknisi**, dengan portal frontend yang benar-benar kepisah folder (`/admin/*` vs `/teknisi/*`).
+- **GPS ping teknisi tiap ~2 detik** + riwayat lokasi (`pt_kapuk_teknisi_lokasi`) jadi dasar dua hal: titik di peta live DAN hitungan **KPI kehadiran** (bagian 5).
+- **Socket.IO realtime** buat live map & notifikasi assign — gak ada push notification ke HP (FCM) dulu, cukup realtime selama tab/app-nya terbuka.
 
 ---
 
 ## 2. Penamaan
 
-- **Order → Tiket** (di semua tempat: tabel, route, endpoint, UI, variabel).
-- **Prefix tabel:** `oki_` → **`pt_kapuk_`**.
+- Tugas disebut **"Tiket"** di semua tempat: tabel, route, endpoint, UI, variabel.
+- Semua tabel pakai prefix **`pt_kapuk_`**.
 - **Technician → Teknisi** tetap istilah utama di kode/UI (bukan "karyawan").
 
 ---

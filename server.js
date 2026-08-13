@@ -47,7 +47,7 @@ app.get('/health', (req, res) => res.json({ status: 'ok', time: new Date().toISO
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 /* ═══════════════════════════════════════════════════
-   CLEAN URL — sembunyiin ekstensi .html, sama kayak pola be-oki-app.
+   CLEAN URL — sembunyiin ekstensi .html.
    1) /sesuatu.html -> redirect permanen ke /sesuatu
    2) /sesuatu (tanpa ekstensi) di-serve dari public/sesuatu.html kalau
       ada -- termasuk yang di dalam subfolder /admin dan /teknisi.
