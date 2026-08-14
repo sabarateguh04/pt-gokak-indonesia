@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<script src="/js/theme.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lisensi — PT Gokak Indonesia</title>
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">🏭 PT Gokak Indonesia<small>Portal Admin</small></div>
+      <a href="/admin/dashboard">📍 Dashboard</a>
+      <a href="/admin/teknisi">🧑‍🔧 Teknisi</a>
+      <a href="/admin/tiket">🎫 Tiket</a>
+      <a href="/admin/kehadiran">📆 Kehadiran</a>
+      <a href="/admin/area">🗺️ Area Pabrik</a>
+      <a href="/admin/license" class="active">🔑 Lisensi</a>
+      <div class="logout" id="btnLogout">↩ Logout</div>
+    </aside>
+
+    <main class="main">
+      <div class="main-header">
+        <h1>Lisensi Aplikasi</h1>
+        <div style="display:flex;align-items:center;gap:10px">
+          <button class="theme-toggle-btn" title="Ganti tema"><span class="theme-toggle-icon">🌙</span></button>
+          <div class="user-badge" id="userBadge"></div>
+        </div>
+      </div>
+
+      <div class="grid grid-2col">
+        <div>
+          <div class="card" style="margin-bottom:16px">
+            <h3 style="margin-top:0">Status Saat Ini</h3>
+            <div id="statusBadgeWrap" style="margin-bottom:14px"></div>
+            <div class="stat-mini-grid">
+              <div class="stat-mini"><div class="v" id="sSeats">-</div><div class="l">Seat Terpakai</div></div>
+              <div class="stat-mini"><div class="v" id="sDays">-</div><div class="l">Sisa Hari</div></div>
+              <div class="stat-mini"><div class="v" id="sVersion">-</div><div class="l">Versi Aplikasi</div></div>
+            </div>
+            <table style="margin-top:14px">
+              <tbody>
+                <tr><th style="width:160px">Customer</th><td id="dCustomer">-</td></tr>
+                <tr><th>Berlaku s/d</th><td id="dValidUntil">-</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="card">
+            <h3 style="margin-top:0">Riwayat Pengajuan</h3>
+            <div id="requestHistory"><div class="empty-state">Memuat…</div></div>
+          </div>
+        </div>
+
+        <div>
+          <div class="card" style="margin-bottom:16px">
+            <h3 style="margin-top:0">Pasang Token Lisensi Baru</h3>
+            <p style="color:var(--text-dim);font-size:12.5px;margin-top:-6px">
+              Sudah dapat token baru dari vendor (perpanjangan / tambah seat)? Tempel di sini, langsung aktif tanpa perlu akses server.
+            </p>
+            <form id="activateForm">
+              <label>Token Lisensi</label>
+              <textarea id="a_token" rows="3" placeholder="Tempel license key (token) yang dikirim vendor…" style="font-family:monospace;font-size:11px"></textarea>
+              <button type="submit" style="width:100%;margin-top:10px">🔑 Aktifkan</button>
+              <div class="auth-error" id="activateErr"></div>
+              <div id="activateOk" class="hidden" style="color:var(--success);font-size:13px;margin-top:10px"></div>
+            </form>
+          </div>
+
+          <div class="card">
+            <h3 style="margin-top:0">Ajukan Tambah Seat / Perpanjangan</h3>
+            <p style="color:var(--text-dim);font-size:12.5px;margin-top:-6px">
+              Butuh tambahan user di tengah masa aktif, atau mau perpanjang sebelum habis? Isi form ini, permintaan langsung tercatat & (kalau vendor sudah mengaktifkan notifikasi otomatis) langsung diteruskan.
+            </p>
+            <form id="requestForm">
+              <label>Jenis Pengajuan</label>
+              <select id="f_type">
+                <option value="ADDON">Tambah Seat (Add-on)</option>
+                <option value="RENEWAL">Perpanjangan Masa Aktif</option>
+                <option value="OTHER">Lainnya</option>
+              </select>
+              <label>Jumlah Seat Tambahan (opsional)</label>
+              <input id="f_seats" type="number" min="1" placeholder="cth. 5">
+              <label>Catatan</label>
+              <textarea id="f_note" placeholder="Jelaskan kebutuhannya di sini…"></textarea>
+              <label>Nama Kontak</label>
+              <input id="f_contact_name" placeholder="Nama Anda">
+              <label>Email Kontak</label>
+              <input id="f_contact_email" type="email" placeholder="email@perusahaan.com">
+              <button type="submit" style="width:100%;margin-top:18px">Kirim Pengajuan</button>
+              <div class="auth-error" id="formErr"></div>
+              <div id="formOk" class="hidden" style="color:var(--success);font-size:13px;margin-top:10px"></div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script>
+    Api.init('admin');
+    const me = Api.getUser();
+    document.getElementById('userBadge').textContent = me ? `${me.nama} (${me.role})` : '';
+    document.getElementById('btnLogout').onclick = () => Api.logout();
+
+    async function loadStatus() {
+      const res = await fetch('/api/license/status').then(r => r.json());
+      const badge = res.valid
+        ? `<span class="badge badge-DONE">AKTIF</span>`
+        : `<span class="badge badge-HIGH">${res.reason || 'TIDAK VALID'}</span>`;
+      document.getElementById('statusBadgeWrap').innerHTML = `${badge} ${res.message ? `<span style="color:var(--text-dim);font-size:12.5px;margin-left:8px">${res.message}</span>` : ''}`;
+      document.getElementById('sSeats').textContent = (res.seats_used != null && res.seats_total != null) ? `${res.seats_used} / ${res.seats_total}` : '-';
+      document.getElementById('sDays').textContent = res.days_remaining != null ? res.days_remaining : '-';
+      document.getElementById('sVersion').textContent = res.app_version || '-';
+      document.getElementById('dCustomer').textContent = res.customer || '-';
+      document.getElementById('dValidUntil').textContent = res.valid_until ? new Date(res.valid_until).toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) : '-';
+    }
+
+    async function loadHistory() {
+      const res = await Api.get('/api/license/requests');
+      if (!res.success) {
+        document.getElementById('requestHistory').innerHTML = '<div class="empty-state">Gagal memuat riwayat</div>';
+        return;
+      }
+      document.getElementById('requestHistory').innerHTML = res.requests.map(r => `
+        <div class="timeline-item">
+          <div><b>${r.type}</b>${r.requested_seats ? ` — ${r.requested_seats} seat` : ''} ${r.webhook_sent ? '<span class="badge badge-DONE" style="margin-left:6px">terkirim</span>' : '<span class="badge badge-OFFLINE" style="margin-left:6px">tersimpan lokal</span>'}</div>
+          ${r.note ? `<div style="color:var(--text-dim);font-size:12.5px">${r.note}</div>` : ''}
+          <div class="ts">${new Date(r.created_at).toLocaleString('id-ID')}${r.contact_name ? ` · ${r.contact_name}` : ''}</div>
+        </div>`).join('') || '<div class="empty-state">Belum ada pengajuan</div>';
+    }
+
+    document.getElementById('requestForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const errBox = document.getElementById('formErr');
+      const okBox = document.getElementById('formOk');
+      errBox.textContent = '';
+      okBox.classList.add('hidden');
+
+      const body = {
+        type: document.getElementById('f_type').value,
+        requested_seats: document.getElementById('f_seats').value || null,
+        note: document.getElementById('f_note').value.trim(),
+        contact_name: document.getElementById('f_contact_name').value.trim(),
+        contact_email: document.getElementById('f_contact_email').value.trim(),
+      };
+      const res = await fetch('/api/license/request', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+      }).then(r => r.json());
+
+      if (!res.success) { errBox.textContent = res.message || 'Gagal mengirim pengajuan'; return; }
+      okBox.textContent = res.message + (res.fallbackContactEmail ? ` (Atau kirim email ke ${res.fallbackContactEmail})` : '');
+      okBox.classList.remove('hidden');
+      document.getElementById('requestForm').reset();
+      loadHistory();
+    });
+
+    document.getElementById('activateForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const errBox = document.getElementById('activateErr');
+      const okBox = document.getElementById('activateOk');
+      errBox.textContent = '';
+      okBox.classList.add('hidden');
+
+      const token = document.getElementById('a_token').value.trim();
+      if (!token) { errBox.textContent = 'Token wajib diisi.'; return; }
+
+      const res = await Api.post('/api/license/activate', { token });
+      if (!res.success) { errBox.textContent = res.message || 'Gagal mengaktifkan lisensi'; return; }
+
+      okBox.textContent = res.message;
+      okBox.classList.remove('hidden');
+      document.getElementById('activateForm').reset();
+      loadStatus();
+    });
+
+    loadStatus();
+    loadHistory();
+  </script>
+</body>
+</html>

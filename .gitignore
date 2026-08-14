@@ -18,6 +18,23 @@ uploads/bukti/*
 licensing-tools/keys/
 license.lic
 
+# Registry partner/customer lokal (licensing-tools/register-partner.js)
+# -- isinya nama & catatan customer (data bisnis, bukan source code),
+# SENGAJA cuma ada di laptop vendor yang generate license, gak perlu &
+# gak boleh ke-commit. "Terdaftar" artinya ADA DI FILE INI, di laptop
+# vendor -- bukan di git.
+licensing-tools/partners.json
+
+# Hasil build obfuscated (scripts/build-obfuscate.js) -- artefak build,
+# di-generate ulang tiap kali mau bikin image Docker, gak perlu ikut git.
+dist/
+
+# Data runtime servis internal vendor (vendor-license-service/) -- catatan
+# check-in customer, bukan source code, beda-beda tiap deployment servis
+# itu. Folder ini sendiri idealnya dipindah ke repo terpisah begitu mau
+# beneran dihosting -- lihat notesubscribe.md bagian 10-C.
+vendor-license-service/checkins.json
+
 # Logs
 *.log
 npm-debug.log*

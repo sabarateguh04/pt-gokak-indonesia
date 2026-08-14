@@ -1,0 +1,24 @@
+node_modules
+.git
+.gitignore
+
+# ⚠️ Rahasia -- JANGAN PERNAH masuk ke build context Docker sama
+# sekali, apalagi ke image. Private key gak boleh ke-bundle walau
+# gak sengaja ada di folder ini pas `docker build`.
+licensing-tools/
+license.lic
+.env
+.env.local
+
+dist
+uploads/bukti/*
+!uploads/bukti/.gitkeep
+
+*.log
+npm-debug.log*
+.vscode
+.idea
+
+notesubscribe.md
+README.md
+INSTALL-CUSTOMER.md

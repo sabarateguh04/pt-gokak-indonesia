@@ -10,7 +10,7 @@
 <body>
   <button class="theme-toggle-btn theme-toggle-fixed" title="Ganti tema"><span class="theme-toggle-icon">🌙</span></button>
   <div class="auth-page">
-    <div class="auth-card card" style="max-width:440px;text-align:center">
+    <div class="auth-card card" style="max-width:460px;text-align:center">
       <div style="font-size:40px;margin-bottom:6px">🔒</div>
       <h1 id="title">Lisensi Tidak Aktif</h1>
       <p class="sub" id="message">Memuat status lisensi…</p>
@@ -21,16 +21,78 @@
         <div style="display:flex;justify-content:space-between;padding:4px 0"><span style="color:var(--text-dim)">Seat terpakai</span><span id="dSeats">-</span></div>
       </div>
 
+      <form id="activateForm" class="hidden" style="text-align:left;margin-top:20px">
+        <label>Sudah punya token dari vendor? Tempel di sini</label>
+        <textarea id="a_token" rows="3" placeholder="Tempel license key (token) yang dikirim vendor…" style="font-family:monospace;font-size:11px"></textarea>
+        <button type="submit" style="width:100%;margin-top:10px">🔑 Aktifkan Lisensi</button>
+        <div class="auth-error" id="activateErr"></div>
+        <div id="activateOk" class="hidden" style="color:var(--success);font-size:13px;margin-top:10px"></div>
+      </form>
+
       <div style="display:flex;flex-direction:column;gap:10px;margin-top:20px">
         <button class="secondary" id="btnRetry" style="width:100%">🔄 Cek Ulang</button>
-        <a class="btn secondary" href="/" style="width:100%">← Kembali ke Halaman Awal</a>
+        <button id="btnShowForm" style="width:100%">✉️ Ajukan Perpanjangan ke Vendor</button>
       </div>
-      <p style="color:var(--text-dim);font-size:12px;margin-top:16px">Hubungi vendor aplikasi ini untuk perpanjangan atau penambahan seat.</p>
+
+      <form id="requestForm" class="hidden" style="text-align:left;margin-top:16px">
+        <label>Jenis Pengajuan</label>
+        <select id="f_type">
+          <option value="RENEWAL">Perpanjangan Masa Aktif</option>
+          <option value="ADDON">Tambah Seat (Add-on)</option>
+          <option value="OTHER">Lainnya</option>
+        </select>
+        <label>Catatan</label>
+        <textarea id="f_note" placeholder="Jelaskan kebutuhannya di sini…"></textarea>
+        <label>Nama Kontak</label>
+        <input id="f_contact_name" placeholder="Nama Anda">
+        <label>Email Kontak</label>
+        <input id="f_contact_email" type="email" placeholder="email@perusahaan.com">
+        <button type="submit" style="width:100%;margin-top:14px">Kirim Pengajuan</button>
+        <div class="auth-error" id="formErr"></div>
+        <div id="formOk" class="hidden" style="color:var(--success);font-size:13px;margin-top:10px"></div>
+      </form>
     </div>
   </div>
 
-  <script src="/js/api.js"></script>
   <script>
+    // Kalau ada token admin di localStorage, berarti admin BERHASIL
+    // login (login sekarang SENGAJA tetap kebuka walau lisensi lagi
+    // invalid, lihat server.js) -- tampilin form "tempel token baru"
+    // langsung di sini, biar admin gak perlu akses SSH/file server
+    // buat masang lisensi baru, cukup dari dashboard yang dia lagi buka.
+    const adminToken = localStorage.getItem('pt_gokak_admin_token');
+    if (adminToken) {
+      document.getElementById('activateForm').classList.remove('hidden');
+    }
+
+    document.getElementById('activateForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const errBox = document.getElementById('activateErr');
+      const okBox = document.getElementById('activateOk');
+      errBox.textContent = '';
+      okBox.classList.add('hidden');
+
+      const token = document.getElementById('a_token').value.trim();
+      if (!token) { errBox.textContent = 'Token wajib diisi.'; return; }
+
+      const res = await fetch('/api/license/activate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminToken}` },
+        body: JSON.stringify({ token }),
+      }).then(r => r.json());
+
+      if (!res.success) { errBox.textContent = res.message || 'Gagal mengaktifkan lisensi'; return; }
+      if (res.valid) {
+        okBox.textContent = res.message + ' Mengalihkan ke dashboard…';
+        okBox.classList.remove('hidden');
+        setTimeout(() => { window.location.href = '/admin/dashboard'; }, 1200);
+      } else {
+        okBox.textContent = res.message;
+        okBox.classList.remove('hidden');
+        loadStatus();
+      }
+    });
+
     async function loadStatus() {
       document.getElementById('message').textContent = 'Memuat status lisensi…';
       try {
@@ -52,6 +114,37 @@
       }
     }
     document.getElementById('btnRetry').onclick = loadStatus;
+    document.getElementById('btnShowForm').onclick = () => {
+      document.getElementById('requestForm').classList.toggle('hidden');
+    };
+
+    // SENGAJA pakai fetch() polos (bukan Api.post dari api.js) -- di
+    // halaman ini biasanya BELUM ADA token login sama sekali (justru
+    // itu skenario utamanya, admin kelock gak bisa login), jadi gak
+    // perlu Authorization header. Endpoint-nya emang publik.
+    document.getElementById('requestForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const errBox = document.getElementById('formErr');
+      const okBox = document.getElementById('formOk');
+      errBox.textContent = '';
+      okBox.classList.add('hidden');
+
+      const body = {
+        type: document.getElementById('f_type').value,
+        note: document.getElementById('f_note').value.trim(),
+        contact_name: document.getElementById('f_contact_name').value.trim(),
+        contact_email: document.getElementById('f_contact_email').value.trim(),
+      };
+      const res = await fetch('/api/license/request', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+      }).then(r => r.json());
+
+      if (!res.success) { errBox.textContent = res.message || 'Gagal mengirim pengajuan'; return; }
+      okBox.textContent = res.message + (res.fallbackContactEmail ? ` (Atau kirim email ke ${res.fallbackContactEmail})` : '');
+      okBox.classList.remove('hidden');
+      document.getElementById('requestForm').reset();
+    });
+
     loadStatus();
   </script>
 </body>

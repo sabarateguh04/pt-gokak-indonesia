@@ -45,17 +45,25 @@ app.get('/api/config', (req, res) => {
 
 app.use('/api/license', licenseRoute);
 
-// Gerbang lisensi -- SEMUA route /api/* di bawah ini (termasuk login)
-// ditolak kalau lisensi gak valid/udah expired. Di-scope ke prefix
-// '/api' doang (BUKAN app.use(requireValidLicense) tanpa prefix) --
-// kalau gak di-scope, halaman statis (clean-URL handler & static file
+// Login SENGAJA didaftarin SEBELUM gerbang lisensi -- admin HARUS
+// tetap bisa login walaupun lisensinya lagi invalid/expired, soalnya
+// justru itu jalan satu-satunya buat dia masuk dashboard & TEMPEL
+// TOKEN LISENSI BARU lewat menu Lisensi / halaman lock (lihat
+// POST /api/license/activate di routes/license.route.js). Kalau login
+// ikut keblokir, admin gak akan pernah bisa masukin lisensi baru sama
+// sekali tanpa akses SSH/file server -- itu bukan yang diminta.
+app.use('/api/auth', authRoute);
+
+// Gerbang lisensi -- SEMUA route /api/* LAINNYA di bawah ini ditolak
+// kalau lisensi gak valid/udah expired. Di-scope ke prefix '/api'
+// doang (BUKAN app.use(requireValidLicense) tanpa prefix) -- kalau
+// gak di-scope, halaman statis (clean-URL handler & static file
 // serving yang didaftarin belakangan di file ini) ikut keblokir juga,
 // padahal justru itu yang perlu tetap kebuka biar halaman
 // /license-locked & /admin/login bisa NUNJUKIN pesannya ke user, bukan
 // ikut dapet 403 mentah. Lihat notesubscribe.md buat alur lengkapnya.
 app.use('/api', requireValidLicense);
 
-app.use('/api/auth', authRoute);
 app.use('/api/teknisi', teknisiRoute);
 app.use('/api/tiket', tiketRoute);
 app.use('/api/dashboard', dashboardRoute);
@@ -128,4 +136,6 @@ httpServer.listen(PORT, () => {
   console.log(`   GET    /api/license/status               (publik -- status lisensi)`);
   console.log(`🔌 Socket.IO aktif (register-dashboard / register-teknisi)`);
   console.log(`   GET    /health`);
+
+  require('./helpers/phone-home').start();
 });

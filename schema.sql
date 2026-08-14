@@ -2,7 +2,7 @@
 -- PT GOKAK INDONESIA — EMPLOYEE TRACKING & TICKET SYSTEM
 -- Schema database, prefix tabel: pt_kapuk_
 --
--- Sengaja cuma 9 tabel -- gak ada customer, site, perangkat, BA
+-- Sengaja cuma 11 tabel -- gak ada customer, site, perangkat, BA
 -- checklist, kebutuhan, biaya, atau approval berjenjang, karena ini
 -- sistem internal pabrik sendiri. Liat README.md bagian 1 & 3 buat
 -- alasan lengkapnya.
@@ -32,7 +32,9 @@ DROP TABLE IF EXISTS
   pt_kapuk_teknisi_lokasi,
   pt_kapuk_teknisi,
   pt_kapuk_area,
-  pt_kapuk_admins;
+  pt_kapuk_admins,
+  pt_kapuk_license_state,
+  pt_kapuk_license_requests;
 
 -- ───────────────────────────────────────────────────────────
 -- 1. ADMINS — akun yang login ke dashboard admin.
@@ -233,6 +235,47 @@ CREATE TABLE pt_kapuk_tiket_files (
   FOREIGN KEY (tiket_id)               REFERENCES pt_kapuk_tiket(id) ON DELETE CASCADE,
   FOREIGN KEY (uploaded_by_admin_id)   REFERENCES pt_kapuk_admins(id),
   FOREIGN KEY (uploaded_by_teknisi_id) REFERENCES pt_kapuk_teknisi(id)
+) ENGINE=InnoDB;
+
+-- ───────────────────────────────────────────────────────────
+-- 10. LICENSE STATE — 1 baris doang (id selalu 1), nyimpen
+--     `last_verified_ms` = waktu PALING BESAR yang PERNAH keliatan sama
+--     app ini (Unix timestamp milidetik -- SENGAJA angka mentah, BUKAN
+--     DATETIME, biar gak ada ambiguitas timezone sama sekali pas
+--     dibandingin sama Date.now() di kode). Dipakai buat DETEKSI JAM
+--     SISTEM DIMUNDURIN: kalau waktu sekarang ternyata LEBIH KECIL
+--     dari baris ini, itu artinya jam servernya baru aja dimundurin --
+--     lisensi otomatis dianggap gak valid apapun kata token JWT-nya
+--     (JWT-nya sendiri bisa "ketipu" jam mundur, tabel ini jangkarnya,
+--     nilainya monoton naik terus, gak pernah di-set mundur oleh app).
+--     Disimpan di DATABASE (bukan file lokal di container) SENGAJA --
+--     biar gak ke-reset kalau container di-restart/recreate, beda sama
+--     database yang persisten independen dari lifecycle container.
+--     Lihat helpers/license.js fungsi checkClockIntegrity().
+-- ───────────────────────────────────────────────────────────
+CREATE TABLE pt_kapuk_license_state (
+  id                INT PRIMARY KEY,
+  last_verified_ms  BIGINT NOT NULL,
+  updated_at        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+-- ───────────────────────────────────────────────────────────
+-- 11. LICENSE REQUESTS — riwayat pengajuan tambah seat/perpanjangan
+--     yang dikirim dari dalam aplikasi (halaman admin "Lisensi" ATAU
+--     dari halaman /license-locked kalau lagi kekunci). Disimpan lokal
+--     di sini SEKALIGUS dicoba dikirim ke vendor lewat webhook (kalau
+--     dikonfigurasi) -- baris di sini jadi bukti/riwayat yang gak
+--     hilang walau webhook gagal/belum di-setup.
+-- ───────────────────────────────────────────────────────────
+CREATE TABLE pt_kapuk_license_requests (
+  id                INT AUTO_INCREMENT PRIMARY KEY,
+  type              ENUM('ADDON','RENEWAL','OTHER') NOT NULL DEFAULT 'ADDON',
+  requested_seats   INT NULL,
+  note              VARCHAR(500) NULL,
+  contact_name      VARCHAR(150) NULL,
+  contact_email     VARCHAR(150) NULL,
+  webhook_sent      TINYINT(1) NOT NULL DEFAULT 0,
+  created_at        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
 -- FK checks dinyalain lagi -- semua tabel udah selesai dibikin.
