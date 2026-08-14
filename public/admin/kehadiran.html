@@ -88,13 +88,13 @@
               </div>
 
               <div class="session-section-title session-online"><span class="dot"></span> Rentang Waktu Online</div>
-              <div id="onlineList"></div>
+              <div id="onlineList" class="session-list"></div>
 
               <div class="session-section-title session-in"><span class="dot"></span> Rentang Waktu di Dalam Area</div>
-              <div id="inAreaList"></div>
+              <div id="inAreaList" class="session-list"></div>
 
               <div class="session-section-title session-out"><span class="dot"></span> Rentang Waktu di Luar Area</div>
-              <div id="outAreaList"></div>
+              <div id="outAreaList" class="session-list"></div>
             </div>
           </div>
         </div>
@@ -208,17 +208,23 @@
       document.getElementById('statInArea').textContent = fmtHours(res.in_area_seconds);
       document.getElementById('statOutArea').textContent = fmtHours(res.out_area_seconds);
 
-      renderSessions('onlineList', res.online_sessions, 'session-online', 'Karyawan ini gak online sama sekali hari ini');
-      renderSessions('inAreaList', res.in_area_sessions, 'session-in', 'Gak ada waktu di dalam area hari ini');
-      renderSessions('outAreaList', res.out_area_sessions, 'session-out', 'Tidak keluar area sepanjang hari ini 🎉');
+      renderSessions('onlineList', res.online_sessions, res.online_sessions_hidden_count, 'session-online', 'Karyawan ini gak online sama sekali hari ini');
+      renderSessions('inAreaList', res.in_area_sessions, res.in_area_sessions_hidden_count, 'session-in', 'Gak ada waktu di dalam area hari ini');
+      renderSessions('outAreaList', res.out_area_sessions, res.out_area_sessions_hidden_count, 'session-out', 'Tidak keluar area sepanjang hari ini 🎉');
     }
 
-    function renderSessions(elementId, sessions, cls, emptyMsg) {
-      document.getElementById(elementId).innerHTML = (sessions || []).map(s => `
+    // Sesi kependekan (< 1 menit, biasanya cuma noise blip GPS/network)
+    // udah disaring server-side biar daftarnya gak kepanjangan -- di
+    // sini tinggal nampilin catatan kecil kalau ada yang disembunyikan.
+    function renderSessions(elementId, sessions, hiddenCount, cls, emptyMsg) {
+      const rows = (sessions || []).map(s => `
         <div class="session-row ${cls}">
           <span>${s.start.slice(11, 16)} – ${s.end.slice(11, 16)}</span>
           <span class="dur">${fmtHours(s.duration_seconds)}</span>
-        </div>`).join('') || `<div class="empty-state">${emptyMsg}</div>`;
+        </div>`).join('');
+      const hint = hiddenCount > 0
+        ? `<div class="session-hint">+${hiddenCount} sesi singkat (&lt; 1 menit) disembunyikan</div>` : '';
+      document.getElementById(elementId).innerHTML = (rows || `<div class="empty-state">${emptyMsg}</div>`) + hint;
     }
 
     // Kalau dibuka dari popup peta dashboard (?teknisiId=), langsung pilih karyawan itu

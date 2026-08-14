@@ -52,7 +52,7 @@
       const hint = status === 'ON_TASK'
         ? 'Anda sedang bertugas — lokasi terus terkirim ke admin.'
         : status === 'ONLINE'
-          ? 'Anda online — lokasi terkirim tiap 2 detik.'
+          ? 'Anda online — lokasi terkirim tiap 30 detik.'
           : 'Anda offline — admin tidak melihat lokasi Anda.';
       document.getElementById('statusHint').textContent = hint;
     }

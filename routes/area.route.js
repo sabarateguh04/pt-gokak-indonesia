@@ -7,9 +7,8 @@ router.use(requireAuth, requireAdmin);
 
 /* Cache in-memory buat area PRIMARY (dipakai tiap ping GPS masuk --
  * lihat teknisi.route.js -- jadi jangan query DB tiap ping kalau lagi
- * ratusan/ribuan karyawan ngirim lokasi tiap 2 detik, itungannya bisa
- * ratusan query/detik ke DB kalau gak di-cache). TTL pendek cukup
- * karena admin gak gambar ulang poligon tiap detik. */
+ * ratusan/ribuan karyawan ngirim lokasi tiap 30 detik). TTL pendek
+ * cukup karena admin gak gambar ulang poligon tiap detik. */
 const CACHE_TTL_MS = 30000;
 let cache = { data: null, ts: 0 };
 

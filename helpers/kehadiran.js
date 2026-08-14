@@ -1,6 +1,6 @@
 /* Perhitungan KPI kehadiran (jam online, di dalam vs di luar area
  * pabrik) dari data mentah `pt_kapuk_teknisi_lokasi` (ping GPS tiap
- * ~2 detik selama status ONLINE/ON_TASK).
+ * ~30 detik selama status ONLINE/ON_TASK).
  *
  * PENDEKATAN: gak ada tabel sesi terpisah -- durasi dihitung dari GAP
  * ANTAR PING. Gap yang wajar (<= MAX_GAP_SECONDS, toleransi ping
@@ -17,12 +17,25 @@
  * hitung SELISIH, bukan buat baca jam UTC asli.
  */
 
-const PING_INTERVAL_SECONDS = 2; // sinkron sama public/js/teknisi-tracker.js
-// Toleransi disconnect SENGAJA gak sekadar "3x interval" lagi -- di
-// interval 2 detik itu cuma 6 detik, ketat banget buat jeda network/GPS
-// yang wajar (masuk lift, sinyal ngedip bentar, dst). Dikasih lantai
-// minimum biar tetep longgar walau interval-nya kecil.
-const MAX_GAP_SECONDS = Math.max(PING_INTERVAL_SECONDS * 5, 30);
+const PING_INTERVAL_SECONDS = 30; // sinkron sama public/js/teknisi-tracker.js -- 30 detik biar hemat baterai HP teknisi
+// Toleransi disconnect -- gap antar ping yang masih dianggap "online
+// nyambung" (jeda network/GPS wajar: masuk lift, sinyal ngedip bentar,
+// dst), dikasih lantai minimum biar tetep longgar walau interval-nya
+// dikecilin lagi suatu saat. Ini JUGA yang paling nentuin panjang-
+// pendeknya daftar "rentang waktu online" (makin ketat, makin gampang
+// kepecah jadi banyak sesi kecil).
+const MAX_GAP_SECONDS = Math.max(PING_INTERVAL_SECONDS * 3, 60);
+
+// Toleransi "flicker" GPS di deket garis batas poligon area -- posisi
+// yang goyang beberapa meter di pinggir area bisa keluar-masuk status
+// in_area tiap ping padahal orangnya diem di tempat. Kalau durasi
+// "keluar"-nya di bawah ini DAN abis itu balik lagi (bukan disconnect),
+// dianggap noise -- sesi di-dalam/luar-area-nya TETEP NYAMBUNG, gak
+// dianggap sesi baru. Ini cuma ngaruh ke daftar rentang yang
+// ditampilin, BUKAN ke total detik (itu tetep presisi dari summarizeByDay).
+// 1.5x interval normal -- cukup buat nutupin 1 ping nyasar doang, gak
+// nutupin excursion beneran (yang biasanya lebih dari 1 ping).
+const AREA_FLICKER_BRIDGE_SECONDS = Math.round(PING_INTERVAL_SECONDS * 1.5);
 
 function parseNaive(str) {
   const [datePart, timePart] = str.split(' ');
@@ -77,11 +90,20 @@ function summarizeByDay(pings) {
  * (start-end). Sesi PUTUS kalau: segmen gak lolos matchFn (mis. keluar
  * area di tengah sesi "di dalam area"), ATAU segmen capped (disconnect
  * -- apapun jenis sesinya, gak nyambung lewat jeda yang gak ada datanya).
+ *
+ * `bridgeSeconds` (opsional): kalau segmen yang GAK lolos matchFn cuma
+ * "keblip" sebentar (total durasi <= bridgeSeconds, gak ada disconnect
+ * di tengahnya, DAN abis itu balik lolos matchFn lagi), dianggap noise
+ * -- sesi yang lagi jalan tetep nyambung ngelewatin blip itu, gak
+ * dianggap sesi baru.
  */
-function mergeSessions(segments, matchFn) {
+function mergeSessions(segments, matchFn, bridgeSeconds = 0) {
   const sessions = [];
   let current = null;
-  for (const seg of segments) {
+  let i = 0;
+  while (i < segments.length) {
+    const seg = segments[i];
+
     if (matchFn(seg)) {
       if (current) {
         current.end = seg.endStr;
@@ -90,10 +112,33 @@ function mergeSessions(segments, matchFn) {
         current = { start: seg.startStr, end: seg.endStr, duration_seconds: seg.duration_seconds };
         sessions.push(current);
       }
-    } else {
-      current = null;
+      if (seg.capped) current = null;
+      i++;
+      continue;
     }
-    if (seg.capped) current = null; // disconnect -> sesi apapun yang jalan ikut putus
+
+    // Segmen ini gagal matchFn -- coba cek apakah ini cuma blip singkat
+    // yang bisa "dijembatani" (sesi yang lagi jalan tetep dianggap nyambung).
+    if (current && bridgeSeconds > 0 && !seg.capped) {
+      let j = i;
+      let offDuration = 0;
+      let hitCapped = false;
+      while (j < segments.length && !matchFn(segments[j])) {
+        if (segments[j].capped) { hitCapped = true; break; }
+        offDuration += segments[j].duration_seconds;
+        j++;
+      }
+      const resumesAfter = !hitCapped && j < segments.length && matchFn(segments[j]);
+      if (resumesAfter && offDuration <= bridgeSeconds) {
+        current.end = segments[j - 1].endStr;
+        current.duration_seconds += offDuration;
+        i = j;
+        continue;
+      }
+    }
+
+    current = null;
+    i++;
   }
   return sessions;
 }
@@ -103,22 +148,34 @@ function buildOnlineSessions(pings) {
   return mergeSessions(buildSegments(pings), () => true);
 }
 
-/** Rentang waktu online DAN posisinya di dalam area pabrik. */
+/** Rentang waktu online DAN posisinya di dalam area pabrik (blip GPS singkat di-bridge). */
 function buildInAreaSessions(pings) {
-  return mergeSessions(buildSegments(pings), (seg) => seg.in_area);
+  return mergeSessions(buildSegments(pings), (seg) => seg.in_area, AREA_FLICKER_BRIDGE_SECONDS);
 }
 
-/** Rentang waktu online tapi posisinya di LUAR area pabrik. */
+/** Rentang waktu online tapi posisinya di LUAR area pabrik (blip GPS singkat di-bridge). */
 function buildOutAreaSessions(pings) {
-  return mergeSessions(buildSegments(pings), (seg) => !seg.in_area);
+  return mergeSessions(buildSegments(pings), (seg) => !seg.in_area, AREA_FLICKER_BRIDGE_SECONDS);
+}
+
+/**
+ * Buang sesi yang durasinya kependekan buat ditampilin satu-satu (biar
+ * daftarnya gak kepanjangan/berantakan) -- TOTAL detik di kartu ringkasan
+ * TETEP presisi (dari summarizeByDay, gak lewat sini), ini cuma nyaring
+ * apa yang muncul di daftar rentang waktunya.
+ */
+function filterSignificantSessions(sessions, minSeconds = 60) {
+  return sessions.filter(s => s.duration_seconds >= minSeconds);
 }
 
 module.exports = {
   PING_INTERVAL_SECONDS,
   MAX_GAP_SECONDS,
+  AREA_FLICKER_BRIDGE_SECONDS,
   buildSegments,
   summarizeByDay,
   buildOnlineSessions,
   buildInAreaSessions,
   buildOutAreaSessions,
+  filterSignificantSessions,
 };

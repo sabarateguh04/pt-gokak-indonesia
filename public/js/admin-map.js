@@ -27,29 +27,100 @@ const FactoryMap = (() => {
     return 'Offline';
   }
 
+  // ── Anti-numpuk buat titik yang lokasinya kebetulan (hampir) sama ──
+  // Clustering (di bawah) udah nanganin "banyak orang tersebar, kelompokin
+  // pas di-zoom out". Tapi kalau beberapa teknisi BENERAN berdiri di titik
+  // yang sama/berdekatan (misal 1 mesin dikerjain rame-rame), zoom in
+  // sejauh apapun titiknya tetep numpuk persis -- makanya dipisah dikit
+  // (beberapa meter) dalam pola lingkaran kecil di sini, SEBELUM masuk ke
+  // clustering, biar tiap orang tetep punya titik sendiri yang bisa diklik.
+  const OVERLAP_THRESHOLD_METERS = 6; // titik dalam radius ini dianggap "numpuk"
+  const SPREAD_RADIUS_METERS = 4;     // jarak sebar tiap titik dari pusat kelompoknya
+
+  function haversineMeters(lat1, lng1, lat2, lng2) {
+    const R = 6371000;
+    const toRad = (d) => (d * Math.PI) / 180;
+    const dLat = toRad(lat2 - lat1);
+    const dLng = toRad(lng2 - lng1);
+    const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
+    return 2 * R * Math.asin(Math.sqrt(a));
+  }
+
+  function metersToLatLngDelta(lat, meters) {
+    return {
+      dLat: meters / 111320,
+      dLng: meters / (111320 * Math.cos((lat * Math.PI) / 180)),
+    };
+  }
+
+  /** list teknisi (udah ada latitude/longitude) -> list yang sama tapi
+   *  ditambah _displayLat/_displayLng (posisi buat DIGAMBAR di peta) dan
+   *  _overlapCount (berapa orang nempel di titik yang sama). Diurutin
+   *  by id dulu sebelum dikasih sudut, biar posisi sebarnya STABIL antar
+   *  refresh (gak lompat-lompat tiap live-update padahal orangnya diem). */
+  function dodgeOverlappingPoints(list) {
+    const withCoords = (list || []).filter(t => t.latitude != null && t.longitude != null);
+    const used = new Array(withCoords.length).fill(false);
+    const result = [];
+
+    for (let i = 0; i < withCoords.length; i++) {
+      if (used[i]) continue;
+      const group = [withCoords[i]];
+      used[i] = true;
+      for (let j = i + 1; j < withCoords.length; j++) {
+        if (used[j]) continue;
+        if (haversineMeters(withCoords[i].latitude, withCoords[i].longitude, withCoords[j].latitude, withCoords[j].longitude) <= OVERLAP_THRESHOLD_METERS) {
+          group.push(withCoords[j]);
+          used[j] = true;
+        }
+      }
+
+      if (group.length === 1) {
+        result.push({ ...group[0], _displayLat: group[0].latitude, _displayLng: group[0].longitude, _overlapCount: 1 });
+        continue;
+      }
+
+      group.sort((a, b) => a.id - b.id); // urutan stabil antar refresh
+      const centerLat = group.reduce((s, g) => s + g.latitude, 0) / group.length;
+      const centerLng = group.reduce((s, g) => s + g.longitude, 0) / group.length;
+      const { dLat, dLng } = metersToLatLngDelta(centerLat, SPREAD_RADIUS_METERS);
+      group.forEach((t, idx) => {
+        const angle = (2 * Math.PI * idx) / group.length;
+        result.push({
+          ...t,
+          _displayLat: centerLat + Math.sin(angle) * dLat,
+          _displayLng: centerLng + Math.cos(angle) * dLng,
+          _overlapCount: group.length,
+        });
+      });
+    }
+    return result;
+  }
+
   function toGeoJson(list) {
     return {
       type: 'FeatureCollection',
-      features: (list || [])
-        .filter(t => t.latitude != null && t.longitude != null)
-        .map(t => ({
-          type: 'Feature',
-          properties: {
-            id: t.id,
-            nama: t.nama,
-            jabatan: t.jabatan || '',
-            status: t.status,
-            tugas_sekarang: t.tugas_sekarang || '',
-            last_location_at: t.last_location_at || '',
-          },
-          geometry: { type: 'Point', coordinates: [t.longitude, t.latitude] },
-        })),
+      features: dodgeOverlappingPoints(list).map(t => ({
+        type: 'Feature',
+        properties: {
+          id: t.id,
+          nama: t.nama,
+          jabatan: t.jabatan || '',
+          status: t.status,
+          tugas_sekarang: t.tugas_sekarang || '',
+          last_location_at: t.last_location_at || '',
+          overlap_count: t._overlapCount,
+        },
+        geometry: { type: 'Point', coordinates: [t._displayLng, t._displayLat] },
+      })),
     };
   }
 
   function popupHtml(p) {
     const tugas = p.tugas_sekarang ? `<div>Tugas: <b>${p.tugas_sekarang}</b></div>` : '<div>Tidak ada tugas aktif</div>';
     const lastSeen = p.last_location_at ? new Date(p.last_location_at).toLocaleString('id-ID') : '-';
+    const overlapNote = p.overlap_count > 1
+      ? `<div class="map-popup-ts">📍 ${p.overlap_count} orang di titik yang sama -- posisi digeser dikit biar gak numpuk</div>` : '';
     return `
       <div class="map-popup">
         <div class="map-popup-title">${p.nama}</div>
@@ -57,6 +128,7 @@ const FactoryMap = (() => {
         <div>Status: <b>${statusLabel(p.status)}</b></div>
         ${tugas}
         <div class="map-popup-ts">Update terakhir: ${lastSeen}</div>
+        ${overlapNote}
         <a href="/admin/tiket?teknisiId=${p.id}">Lihat tiket teknisi ini →</a>
         <a href="/admin/kehadiran?teknisiId=${p.id}">Lihat kehadiran teknisi ini →</a>
       </div>`;
@@ -143,17 +215,9 @@ const FactoryMap = (() => {
       paint: { 'text-color': '#ffffff', 'text-halo-color': 'rgba(15,23,42,.85)', 'text-halo-width': 1.4 },
     });
 
-    map.on('click', 'factory-areas-3d', (e) => {
-      const p = e.features[0].properties;
-      new maplibregl.Popup({ offset: 10 })
-        .setLngLat(e.lngLat)
-        .setHTML(`<div class="map-popup"><div class="map-popup-title">${p.nama}</div><div class="map-popup-sub">${p.is_primary ? 'Area primary (dihitung KPI)' : 'Area referensi'}</div></div>`)
-        .addTo(map);
-    });
-    ['factory-areas-3d', 'factory-area-labels'].forEach((layer) => {
-      map.on('mouseenter', layer, () => map.getCanvas().style.cursor = 'pointer');
-      map.on('mouseleave', layer, () => map.getCanvas().style.cursor = '');
-    });
+    // Sengaja GAK ada popup buat area/gedung -- nama area-nya udah
+    // keliatan langsung dari pin label di atas, gak perlu diklik lagi.
+    // Klik yang beneran nampilin data cuma di titik teknisi (di bawah).
   }
 
   function addTeknisiLayers() {

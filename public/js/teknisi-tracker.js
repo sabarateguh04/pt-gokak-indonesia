@@ -3,7 +3,11 @@
  * Dipakai di teknisi/home.html.
  */
 const TeknisiTracker = (() => {
-  const PING_INTERVAL_MS = 2000; // 2 detik -- sinkron sama helpers/kehadiran.js (PING_INTERVAL_SECONDS)
+  // 30 detik -- sinkron sama helpers/kehadiran.js (PING_INTERVAL_SECONDS).
+  // SENGAJA gak dibikin lebih cepat (sempet dicoba 2 detik) -- GPS+network
+  // ping sesering itu boros baterai HP teknisi buat manfaat yang gak
+  // sebanding, 30 detik udah cukup buat kebutuhan tracking & KPI kehadiran.
+  const PING_INTERVAL_MS = 30000;
   let watchId = null;
   let intervalId = null;
   let lastPosition = null;
@@ -19,7 +23,7 @@ const TeknisiTracker = (() => {
         if (onUpdate) onUpdate(pos.coords);
       },
       (err) => console.error('[GEO]', err.message),
-      { enableHighAccuracy: true, maximumAge: 2000, timeout: 20000 },
+      { enableHighAccuracy: true, maximumAge: 10000, timeout: 20000 },
     );
 
     intervalId = setInterval(() => {

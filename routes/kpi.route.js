@@ -1,7 +1,12 @@
 const express = require('express');
 const pool = require('../db');
 const { requireAuth, requireAdmin } = require('../middleware/auth');
-const { PING_INTERVAL_SECONDS, summarizeByDay, buildOnlineSessions, buildInAreaSessions, buildOutAreaSessions } = require('../helpers/kehadiran');
+const {
+  PING_INTERVAL_SECONDS, summarizeByDay,
+  buildOnlineSessions, buildInAreaSessions, buildOutAreaSessions, filterSignificantSessions,
+} = require('../helpers/kehadiran');
+
+const MIN_SESSION_SECONDS_TO_SHOW = 60; // sesi < 1 menit disembunyikan dari daftar (noise GPS/network)
 
 const router = express.Router();
 router.use(requireAuth, requireAdmin);
@@ -18,13 +23,10 @@ router.use(requireAuth, requireAdmin);
    dihitung), cuma gak sepresisi yang per-detik. Buat detail akurat 1
    karyawan, pakai /harian.
 
-   ⚠️ Interval ping SEKARANG 2 detik (dari sebelumnya 30 detik) --
-   volume baris di pt_kapuk_teknisi_lokasi jadi ~15x lebih banyak per
-   karyawan online. Query COUNT(*) di endpoint ini masih query mentah
-   tiap request (belum ada rollup harian, lihat README bagian 15) --
-   di skala 500-1000 karyawan yang online serempak lama-lama, pantau
-   performanya; kalau mulai berat, itu titik yang paling nunjuk buat
-   dikasih tabel rollup harian duluan.
+   Query COUNT(*) di endpoint ini masih query mentah tiap request (gak
+   ada rollup harian, lihat README bagian 15) -- di skala 500-1000
+   karyawan yang online bareng, pantau performanya; kalau mulai berat,
+   itu titik yang paling nunjuk buat dikasih tabel rollup harian duluan.
 ═══════════════════════════════════════════════════ */
 router.get('/ringkasan', async (req, res) => {
   const page = Math.max(Number(req.query.page) || 1, 1);
@@ -109,6 +111,13 @@ router.get('/heatmap/:teknisiId', async (req, res) => {
    halaman Kehadiran): kapan online (apapun posisinya), kapan online
    DAN di dalam area, kapan online tapi di LUAR area (buat investigasi
    admin).
+
+   Sesi yang durasinya < MIN_SESSION_SECONDS_TO_SHOW (noise blip GPS/
+   network, bukan kejadian beneran) DIBUANG dari daftar yang dibalikin
+   biar gak kepanjangan/berantakan -- tapi jumlahnya tetep dilaporin
+   lewat *_hidden_count biar admin tau ada yang disembunyikan. Total
+   detik di atas (online_seconds dkk) TETEP presisi, gak kepengaruh
+   penyaringan ini (dihitung terpisah lewat summarizeByDay).
 ═══════════════════════════════════════════════════ */
 router.get('/harian/:teknisiId', async (req, res) => {
   const date = req.query.date || new Date().toISOString().slice(0, 10);
@@ -126,15 +135,25 @@ router.get('/harian/:teknisiId', async (req, res) => {
     const byDay = summarizeByDay(pings);
     const totals = byDay.get(date) || { online_seconds: 0, in_area_seconds: 0, out_area_seconds: 0 };
 
+    const allOnline = buildOnlineSessions(pings);
+    const allInArea = buildInAreaSessions(pings);
+    const allOutArea = buildOutAreaSessions(pings);
+    const onlineSessions = filterSignificantSessions(allOnline, MIN_SESSION_SECONDS_TO_SHOW);
+    const inAreaSessions = filterSignificantSessions(allInArea, MIN_SESSION_SECONDS_TO_SHOW);
+    const outAreaSessions = filterSignificantSessions(allOutArea, MIN_SESSION_SECONDS_TO_SHOW);
+
     return res.json({
       success: true,
       teknisi,
       date,
       ping_count: pings.length,
       ...totals,
-      online_sessions: buildOnlineSessions(pings),
-      in_area_sessions: buildInAreaSessions(pings),
-      out_area_sessions: buildOutAreaSessions(pings),
+      online_sessions: onlineSessions,
+      online_sessions_hidden_count: allOnline.length - onlineSessions.length,
+      in_area_sessions: inAreaSessions,
+      in_area_sessions_hidden_count: allInArea.length - inAreaSessions.length,
+      out_area_sessions: outAreaSessions,
+      out_area_sessions_hidden_count: allOutArea.length - outAreaSessions.length,
     });
   } catch (e) {
     console.error('[KPI harian]', e.message);
