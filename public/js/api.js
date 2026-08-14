@@ -61,7 +61,14 @@ const Api = (() => {
       logout();
       return { success: false, message: 'Sesi habis' };
     }
-    return res.json();
+    const data = await res.json();
+    // Lisensi invalid/expired -- lempar ke halaman penjelasan full-screen,
+    // KECUALI lagi di halaman login sendiri (biar pesannya tampil inline
+    // di form, gak usah pindah halaman -- lihat admin/login.html).
+    if (res.status === 403 && data.licenseError && !window.location.pathname.endsWith('/login')) {
+      window.location.href = '/license-locked';
+    }
+    return data;
   }
 
   return {

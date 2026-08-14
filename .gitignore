@@ -9,6 +9,15 @@ uploads/bukti/*
 .env
 .env.local
 
+# ⚠️ LICENSING -- private key JANGAN PERNAH ke-push kemanapun (termasuk
+# private repo sekalipun) -- itu satu-satunya yang bisa nandatangan
+# license baru. license.lic juga di-ignore karena isinya token khusus
+# PER CUSTOMER (bukan source code, beda-beda tiap instalasi) -- lihat
+# notesubscribe.md. config/license-public.pem SENGAJA GAK di-ignore,
+# itu aman buat di-ship (cuma bisa verifikasi, bukan bikin token baru).
+licensing-tools/keys/
+license.lic
+
 # Logs
 *.log
 npm-debug.log*

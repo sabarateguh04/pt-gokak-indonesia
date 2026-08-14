@@ -434,4 +434,13 @@ button:disabled { opacity: .45; cursor: not-allowed; transform: none; box-shadow
 .session-section-title.session-in .dot { background: var(--success); }
 .session-section-title.session-out .dot { background: var(--danger); }
 
+/* ── Banner peringatan lisensi (public/js/license-banner.js) ────── */
+.license-warn-bar {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+  background: linear-gradient(135deg, var(--warning), #d97706); color: #1a1206;
+  font-size: 13px; font-weight: 600; text-align: center; padding: 9px 40px;
+  box-shadow: var(--shadow-sm);
+}
+.license-warn-close { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); cursor: pointer; font-weight: 800; }
+
 .hidden { display: none !important; }

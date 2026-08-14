@@ -6,6 +6,7 @@ const http = require('http');
 require('dotenv').config();
 
 const { initSocket } = require('./socket');
+const { requireValidLicense } = require('./middleware/license');
 
 const authRoute      = require('./routes/auth.route');
 const teknisiRoute   = require('./routes/teknisi.route');
@@ -13,6 +14,7 @@ const tiketRoute     = require('./routes/tiket.route');
 const dashboardRoute = require('./routes/dashboard.route');
 const areaRoute      = require('./routes/area.route');
 const kpiRoute       = require('./routes/kpi.route');
+const licenseRoute   = require('./routes/license.route');
 
 const app = express();
 const PORT = process.env.PORT || 3010;
@@ -20,12 +22,12 @@ const PORT = process.env.PORT || 3010;
 app.use(cors());
 app.use(express.json());
 
-app.use('/api/auth', authRoute);
-app.use('/api/teknisi', teknisiRoute);
-app.use('/api/tiket', tiketRoute);
-app.use('/api/dashboard', dashboardRoute);
-app.use('/api/area', areaRoute);
-app.use('/api/kpi', kpiRoute);
+// Endpoint yang HARUS tetap kejawab APAPUN status lisensinya -- health
+// check buat infra monitoring, config publik buat halaman peta, dan
+// status lisensi itu sendiri (biar admin tau KENAPA dia kelock, bukan
+// cuma dapet error kosong). Makanya ketiganya didaftarin SEBELUM
+// gerbang lisensi di bawah.
+app.get('/health', (req, res) => res.json({ status: 'ok', time: new Date().toISOString() }));
 
 // Koordinat pabrik dipakai frontend buat auto-center KAMERA peta --
 // bukan sumber geofence (itu dari poligon pt_kapuk_area). Taruh di
@@ -41,7 +43,24 @@ app.get('/api/config', (req, res) => {
   });
 });
 
-app.get('/health', (req, res) => res.json({ status: 'ok', time: new Date().toISOString() }));
+app.use('/api/license', licenseRoute);
+
+// Gerbang lisensi -- SEMUA route /api/* di bawah ini (termasuk login)
+// ditolak kalau lisensi gak valid/udah expired. Di-scope ke prefix
+// '/api' doang (BUKAN app.use(requireValidLicense) tanpa prefix) --
+// kalau gak di-scope, halaman statis (clean-URL handler & static file
+// serving yang didaftarin belakangan di file ini) ikut keblokir juga,
+// padahal justru itu yang perlu tetap kebuka biar halaman
+// /license-locked & /admin/login bisa NUNJUKIN pesannya ke user, bukan
+// ikut dapet 403 mentah. Lihat notesubscribe.md buat alur lengkapnya.
+app.use('/api', requireValidLicense);
+
+app.use('/api/auth', authRoute);
+app.use('/api/teknisi', teknisiRoute);
+app.use('/api/tiket', tiketRoute);
+app.use('/api/dashboard', dashboardRoute);
+app.use('/api/area', areaRoute);
+app.use('/api/kpi', kpiRoute);
 
 // Foto bukti pengerjaan tiket yang diupload admin/teknisi
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
@@ -75,6 +94,13 @@ const httpServer = http.createServer(app);
 initSocket(httpServer);
 
 httpServer.listen(PORT, () => {
+  const { verifyLicense } = require('./helpers/license');
+  const license = verifyLicense({ forceRefresh: true });
+  if (license.valid) {
+    console.log(`🔑 Lisensi aktif -- customer: ${license.payload.customer}, seat: ${license.payload.base_seats + license.payload.addon_seats}, berlaku s/d ${new Date(license.payload.exp * 1000).toLocaleDateString('id-ID')}`);
+  } else {
+    console.log(`🔒 LISENSI TIDAK VALID (${license.reason}) -- semua endpoint /api/* selain /api/license & /health bakal ditolak. Lihat notesubscribe.md.`);
+  }
   console.log(`🚀 PT Gokak Indonesia — Tracking & Tiket System jalan di http://localhost:${PORT}`);
   console.log(`   🖥️  Portal Admin   : http://localhost:${PORT}/admin/login`);
   console.log(`   🧑‍🔧 Portal Teknisi : http://localhost:${PORT}/teknisi/login`);
@@ -99,6 +125,7 @@ httpServer.listen(PORT, () => {
   console.log(`   GET    /api/kpi/ringkasan               (tabel kehadiran semua karyawan)`);
   console.log(`   GET    /api/kpi/heatmap/:teknisiId       (kalender ala GitHub)`);
   console.log(`   GET    /api/kpi/harian/:teknisiId        (detail 1 hari + sesi keluar-area)`);
+  console.log(`   GET    /api/license/status               (publik -- status lisensi)`);
   console.log(`🔌 Socket.IO aktif (register-dashboard / register-teknisi)`);
   console.log(`   GET    /health`);
 });

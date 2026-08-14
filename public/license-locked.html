@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<script src="/js/theme.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lisensi Tidak Aktif — PT Gokak Indonesia</title>
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <button class="theme-toggle-btn theme-toggle-fixed" title="Ganti tema"><span class="theme-toggle-icon">🌙</span></button>
+  <div class="auth-page">
+    <div class="auth-card card" style="max-width:440px;text-align:center">
+      <div style="font-size:40px;margin-bottom:6px">🔒</div>
+      <h1 id="title">Lisensi Tidak Aktif</h1>
+      <p class="sub" id="message">Memuat status lisensi…</p>
+
+      <div id="detailBox" class="hidden" style="text-align:left;background:var(--panel-2);border-radius:var(--radius-sm);padding:14px;margin-top:6px;font-size:13px">
+        <div style="display:flex;justify-content:space-between;padding:4px 0"><span style="color:var(--text-dim)">Customer</span><span id="dCustomer">-</span></div>
+        <div style="display:flex;justify-content:space-between;padding:4px 0"><span style="color:var(--text-dim)">Berlaku s/d</span><span id="dValidUntil">-</span></div>
+        <div style="display:flex;justify-content:space-between;padding:4px 0"><span style="color:var(--text-dim)">Seat terpakai</span><span id="dSeats">-</span></div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:10px;margin-top:20px">
+        <button class="secondary" id="btnRetry" style="width:100%">🔄 Cek Ulang</button>
+        <a class="btn secondary" href="/" style="width:100%">← Kembali ke Halaman Awal</a>
+      </div>
+      <p style="color:var(--text-dim);font-size:12px;margin-top:16px">Hubungi vendor aplikasi ini untuk perpanjangan atau penambahan seat.</p>
+    </div>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script>
+    async function loadStatus() {
+      document.getElementById('message').textContent = 'Memuat status lisensi…';
+      try {
+        const res = await fetch('/api/license/status').then(r => r.json());
+        if (res.valid) {
+          // Lisensi ternyata udah valid lagi (baru dipasang) -- balik ke landing.
+          window.location.href = '/';
+          return;
+        }
+        document.getElementById('message').textContent = res.message || 'Lisensi tidak valid.';
+        if (res.customer || res.valid_until) {
+          document.getElementById('detailBox').classList.remove('hidden');
+          document.getElementById('dCustomer').textContent = res.customer || '-';
+          document.getElementById('dValidUntil').textContent = res.valid_until ? new Date(res.valid_until).toLocaleDateString('id-ID') : '-';
+          document.getElementById('dSeats').textContent = (res.seats_used != null && res.seats_total != null) ? `${res.seats_used} / ${res.seats_total}` : '-';
+        }
+      } catch (e) {
+        document.getElementById('message').textContent = 'Gagal menghubungi server. Coba lagi.';
+      }
+    }
+    document.getElementById('btnRetry').onclick = loadStatus;
+    loadStatus();
+  </script>
+</body>
+</html>

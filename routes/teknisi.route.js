@@ -5,6 +5,7 @@ const { emitToDashboard } = require('../socket');
 const { requireAuth, requireAdmin, requireTeknisi } = require('../middleware/auth');
 const { getPrimaryAreasCached } = require('./area.route');
 const { classifyPoint } = require('../helpers/geo');
+const { verifyLicense, countUsedSeats, totalSeats } = require('../helpers/license');
 
 const router = express.Router();
 
@@ -72,13 +73,28 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-/* POST /api/teknisi — hanya admin yang boleh tambah akun teknisi baru */
+/* POST /api/teknisi — hanya admin yang boleh tambah akun teknisi baru.
+   Dibatasi jumlah seat dari lisensi (base_seats + addon_seats) --
+   akun teknisi AKTIF yang udah ada gak boleh ngelebihin itu. Lihat
+   notesubscribe.md buat skema lisensi lengkapnya. */
 router.post('/', requireAdmin, async (req, res) => {
   const { username, password, ...profile } = req.body;
   if (!username || !password || !profile.nama) {
     return res.status(400).json({ success: false, message: 'username, password, nama wajib diisi' });
   }
   try {
+    const license = verifyLicense();
+    if (license.valid) {
+      const used = await countUsedSeats(pool);
+      const max = totalSeats(license.payload);
+      if (used >= max) {
+        return res.status(403).json({
+          success: false,
+          message: `Kuota lisensi sudah penuh (${used}/${max} seat terpakai). Nonaktifkan akun lain atau hubungi vendor untuk nambah add-on seat.`,
+        });
+      }
+    }
+
     const [existing] = await pool.query(`SELECT id FROM pt_kapuk_teknisi WHERE username = ?`, [username]);
     if (existing.length > 0) {
       return res.status(409).json({ success: false, message: 'Username sudah dipakai' });
@@ -105,6 +121,27 @@ router.post('/', requireAdmin, async (req, res) => {
 router.put('/:id', requireAdmin, async (req, res) => {
   const b = req.body;
   try {
+    // Nyalain lagi akun yang tadinya nonaktif = makan 1 seat lisensi
+    // juga -- dicek SEBELUM update, cuma kalau statusnya beneran
+    // berubah dari nonaktif ke aktif (edit biasa ke teknisi yang udah
+    // aktif gak perlu dicek ulang, dia emang udah kehitung).
+    if (b.is_active !== undefined && Number(b.is_active) === 1) {
+      const [[current]] = await pool.query(`SELECT is_active FROM pt_kapuk_teknisi WHERE id = ?`, [req.params.id]);
+      if (current && !current.is_active) {
+        const license = verifyLicense();
+        if (license.valid) {
+          const used = await countUsedSeats(pool);
+          const max = totalSeats(license.payload);
+          if (used >= max) {
+            return res.status(403).json({
+              success: false,
+              message: `Kuota lisensi sudah penuh (${used}/${max} seat terpakai). Nonaktifkan akun lain atau hubungi vendor untuk nambah add-on seat.`,
+            });
+          }
+        }
+      }
+    }
+
     const values = PROFILE_FIELDS.map(f => {
       if (f === 'is_active') return b.is_active === undefined ? 1 : b.is_active;
       return b[f] === undefined || b[f] === '' ? null : b[f];
