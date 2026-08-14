@@ -30,6 +30,7 @@
             <div class="map-topbar-sub" id="liveSummary">Memuat data…</div>
           </div>
           <div class="map-topbar-actions">
+            <span id="licenseChip"></span>
             <button class="secondary map-topbar-btn" id="btnResetView" title="Reset tampilan peta">⟳ <span class="hide-narrow">Reset</span></button>
             <button class="secondary map-topbar-btn" id="btnTogglePanel" title="Tampil/sembunyikan panel">☰ <span class="hide-narrow">Panel</span></button>
             <button class="theme-toggle-btn" title="Ganti tema"><span class="theme-toggle-icon">🌙</span></button>
@@ -72,7 +73,6 @@
   </div>
 
   <script src="/js/api.js"></script>
-  <script src="/js/license-banner.js"></script>
   <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
   <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
   <script src="/js/admin-map.js"></script>
@@ -164,10 +164,24 @@
 
     document.getElementById('btnResetView').onclick = () => FactoryMap.resetView();
 
+    // Peringatan H-30 lisensi -- taruh sebagai chip kecil DI DALAM kartu
+    // topbar yang udah ada (bukan bar lebar terpisah kayak halaman admin
+    // lain), soalnya di dashboard ini banyak elemen ngambang di atas peta
+    // yang posisinya udah pas -- nambah bar lebar bakal nabrak itu semua.
+    async function loadLicenseChip() {
+      try {
+        const res = await Api.get('/api/license/status');
+        if (!res.success || !res.valid || res.days_remaining == null || res.days_remaining > 30) return;
+        document.getElementById('licenseChip').innerHTML =
+          `<span class="license-warn-chip" title="Berakhir ${new Date(res.valid_until).toLocaleDateString('id-ID')}">⚠️ Lisensi H-${res.days_remaining}</span>`;
+      } catch (e) { /* non-critical */ }
+    }
+
     (async () => {
       await FactoryMap.init('map');
       await loadKpi();
       await loadMonitoring();
+      loadLicenseChip();
 
       // Realtime: posisi & status teknisi + perubahan tiket
       const socket = io();

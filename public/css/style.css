@@ -436,11 +436,25 @@ button:disabled { opacity: .45; cursor: not-allowed; transform: none; box-shadow
 
 /* ── Banner peringatan lisensi (public/js/license-banner.js) ────── */
 .license-warn-bar {
-  position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+  /* position:relative (BUKAN fixed) -- ikut normal flow di dalam
+     <main>, jadi otomatis kebatasin di area konten (gak pernah nimpa
+     sidebar) dan ndorong konten di bawahnya turun. z-index dikasih
+     tetep biar menang stacking di halaman dashboard yang punya peta
+     3D full-screen (map-nya position:absolute). */
+  position: relative; z-index: 200; margin-bottom: 14px; border-radius: var(--radius-sm);
   background: linear-gradient(135deg, var(--warning), #d97706); color: #1a1206;
-  font-size: 13px; font-weight: 600; text-align: center; padding: 9px 40px;
+  font-size: 13px; font-weight: 600; text-align: center; padding: 10px 40px;
   box-shadow: var(--shadow-sm);
 }
 .license-warn-close { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); cursor: pointer; font-weight: 800; }
+
+/* Varian kecil buat dashboard -- nempel di dalam kartu topbar yang
+   udah ada (bukan bar lebar terpisah), biar gak nabrak elemen overlay
+   peta yang lain (map-overlay-top, reset/panel button, dst). */
+.license-warn-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(245,158,11,.16); color: #fbbf24; border: 1px solid rgba(245,158,11,.35);
+  font-size: 11.5px; font-weight: 700; padding: 5px 10px; border-radius: 999px;
+}
 
 .hidden { display: none !important; }
