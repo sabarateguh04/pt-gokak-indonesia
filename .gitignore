@@ -25,6 +25,14 @@ license.lic
 # vendor -- bukan di git.
 licensing-tools/partners.json
 
+# Paket Docker PER MITRA (dibuat otomatis lewat menu "Kelola Mitra" /
+# licensing-tools/lib/issue-license.js) -- isinya RAHASIA PER CUSTOMER
+# (JWT_SECRET unik, token lisensi) di dalam docker/<id_mitra>/*, jangan
+# pernah ke-commit. Folder docker/ sendiri (kosong) TETAP di-track lewat
+# .gitkeep biar strukturnya kebawa di clone baru.
+docker/*
+!docker/.gitkeep
+
 # Hasil build obfuscated (scripts/build-obfuscate.js) -- artefak build,
 # di-generate ulang tiap kali mau bikin image Docker, gak perlu ikut git.
 dist/

@@ -9,6 +9,7 @@ licensing-tools/
 license.lic
 .env
 .env.local
+docker/
 
 dist
 uploads/bukti/*
@@ -22,3 +23,4 @@ npm-debug.log*
 notesubscribe.md
 README.md
 INSTALL-CUSTOMER.md
+Caddyfile.example

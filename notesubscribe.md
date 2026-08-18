@@ -573,6 +573,209 @@ selesai dikerjain sekarang.
       alasan desain, ini dokumen LANGKAH PRAKTIS) — dikecualikan dari
       `.dockerignore` juga (dokumentasi, bukan runtime).
 
+#### G. Menu "Kelola Mitra" (Fase 3, bukan lagi Fase 2 — instruksi baru, dicatat verbatim di bagian 12) — SELESAI, sudah dites
+- [x] **Instalasi ini (port 3010, dijalanin `npm run dev`/`npm start`
+      langsung dari source) sekarang berperan sebagai "MASTER vendor"**
+      — diaktifkan lewat `VENDOR_MASTER_MODE=true` di `.env` (SUDAH
+      di-set di `.env` lokal ini). Env ini SATU-SATUNYA saklar fitur
+      "Kelola Mitra" — kalau `false`/gak diisi (default di semua
+      instalasi lain termasuk customer), fitur ini nonaktif total.
+- [x] `licensing-tools/lib/issue-license.js` (baru) — lib bersama yang
+      ngerangkum SEMUA logic "nerbitin lisensi buat 1 mitra": registry
+      (`loadRegistry`/`saveRegistry`/`registerOrUpdatePartner`/
+      `revokePartner`), generate token (`generateLicenseToken`), DAN
+      scaffold paket Docker (`scaffoldDockerPackage`). **Dipakai
+      BARENGAN** oleh CLI (`register-partner.js`, `generate-license.js`
+      — sekarang jadi wrapper tipis, gak ada logic dobel lagi) DAN web
+      (`routes/mitra.route.js`) — inilah bagian "rapihin struktur" yang
+      diminta: sebelumnya 2 CLI script masing-masing punya salinan
+      logic sendiri, sekarang 1 sumber kebenaran.
+- [x] `routes/mitra.route.js` (baru, **VENDOR-ONLY**) — `GET /api/mitra`
+      (daftar), `POST /api/mitra` (bikin mitra baru: registrasi + token
+      + scaffold folder sekali jalan), `POST /api/mitra/:id/reissue`
+      (renewal/nambah seat, `JWT_SECRET` instalasi LAMA di folder itu
+      DIPERTAHANKAN — **bug ketemu & diperbaiki saat testing**: awalnya
+      `scaffoldDockerPackage` SELALU generate `JWT_SECRET` acak baru
+      tiap dipanggil, termasuk pas reissue, padahal pesannya udah
+      ngeklaim "dipertahankan" — fixed dengan `readExistingJwtSecret()`
+      yang baca `.env` lama di folder itu dulu sebelum generate yang
+      baru), `POST /api/mitra/:id/revoke`. Didaftarkan di `server.js`
+      HANYA kalau `VENDOR_MASTER_MODE=true`, dibungkus try/catch supaya
+      kalau file ini gak ada (situasi NORMAL di image customer) app
+      TETAP jalan, cuma nge-log peringatan.
+- [x] `public/admin/mitra.html` (baru, **VENDOR-ONLY**) — form "Tambah
+      Mitra Baru" (nama, id opsional, base/addon seat, tahun, catatan),
+      tabel mitra terdaftar + tombol Reissue/Revoke, hasil (token +
+      path folder + tombol salin) langsung tampil setelah submit.
+- [x] Link sidebar "🤝 Kelola Mitra" **SENGAJA GAK di-hardcode** di HTML
+      halaman admin manapun — disuntik dinamis lewat `public/js/api.js`
+      (`injectMitraLinkIfMaster()`), CUMA muncul kalau `GET /api/config`
+      balikin `vendorMasterMode:true`. Instalasi customer gak akan
+      pernah lihat link ke halaman yang emang gak ada di paket mereka.
+- [x] **2 lapis proteksi biar fitur ini TIDAK PERNAH ke-ship ke
+      customer** (independen satu sama lain, kalau salah satu kelupaan
+      yang lain tetap nutup):
+      1. Runtime: `VENDOR_MASTER_MODE` cuma boleh `true` di `.env`
+         vendor sendiri.
+      2. **Build-time** (`scripts/build-obfuscate.js`, `EXCLUDE_PATHS`)
+         — `routes/mitra.route.js` & `public/admin/mitra.html` DIHAPUS
+         TOTAL dari proses build, apapun env-nya. **Dites**: build
+         customer (`npm run build`) dicek `dist/routes/` &
+         `dist/public/admin/` TIDAK PERNAH punya file mitra sama
+         sekali; jalanin `dist/server.js` dengan
+         `VENDOR_MASTER_MODE=true` SENGAJA (simulasi salah konfigurasi)
+         → log peringatan `[MITRA] ... gak ketemu (normal kalau ini
+         instalasi CUSTOMER)`, app TETAP jalan normal, gak crash, gak
+         ada endpoint mitra yang kebuka.
+- [x] Folder `docker/` (baru, root project) — tempat SEMUA paket
+      per-mitra ke-generate (`docker/<id_mitra>/`), di-gitignore total
+      (isinya `JWT_SECRET` & token per-customer, rahasia) KECUALI
+      `.gitkeep` biar strukturnya kebawa di clone baru.
+- [x] `Caddyfile.example` (baru) — reverse proxy siap pakai buat HTTPS
+      otomatis (Let's Encrypt via Caddy, gak perlu setup manual
+      certbot/openssl), ikut di-copy ke tiap paket mitra yang
+      di-scaffold. Menjawab concern "URL harus terenkripsi" — HTTPS
+      itu urusan REVERSE PROXY di depan app, bukan sesuatu yang app
+      Node.js sendiri yang atur.
+- [x] **Dites end-to-end** (lihat log testing): create mitra → folder +
+      `.env` + token + `docker-compose.yml` (tag image ikut versi
+      `VERSION` file) semua benar; reissue → `JWT_SECRET` KONSISTEN
+      sebelum/sesudah (setelah fix bug di atas); reissue ke id yang
+      udah di-revoke → ditolak dengan pesan jelas; create dengan id
+      yang udah dipakai → 409 ditolak; revoke lalu list → status
+      NONAKTIF kebaca benar di tabel.
+
+#### H. Hardening tambahan ("aman dari hacker2") — SELESAI, sudah dites
+- **Kerangka berpikir yang dipegang** (biar gak oversell): ancaman
+  paling realistis di sini BUKAN nation-state attacker, tapi (a) bot
+  brute-force login umum, (b) orang iseng buka DevTools & baca kode
+  polos, (c) situs lain nyoba fetch API ini pakai token yang somehow
+  ke-leak. Semua item di bawah ngincer 3 ancaman KONKRET itu — bukan
+  klaim "gak bisa diretas", yang mana gak ada software yang bisa
+  klaim itu jujur (lihat bagian 9).
+- [x] **Obfuscation client-side** (`scripts/build-obfuscate.js` ditulis
+      ulang) — SEBELUMNYA cuma server-side (`routes/helpers/middleware`)
+      yang diobfuscate, `public/` disalin POLOS (alasan lama: "browser
+      toh selalu bisa view-source"). Itu tetap benar, TAPI beda antara
+      "bisa dibaca kalau niat" vs "kebaca sekali klik Inspect Element"
+      — sekarang `public/js/*.js` DIOBFUSCATE (preset lebih ringan,
+      tanpa controlFlowFlattening/selfDefending yang berat buat kode
+      yang di-load ulang tiap halaman) DAN semua inline `<script>` di
+      tiap halaman HTML admin JUGA diobfuscate di tempat (regex extract
+      → obfuscate → reinsert, `<script src=...>` gak disentuh, cuma
+      isinya file eksternal yang dirujuk yang diobfuscate terpisah).
+      **Dites**: build customer, semua file JS hasil obfuscate lolos
+      `node --check`, semua inline script di 9 halaman HTML lolos
+      parse ulang (`vm.Script`), server jalan normal dari hasil build
+      itu, halaman ke-serve 200, `grep` string asli kayak `"Api.init"`
+      di HTML hasil build gak ketemu lagi (buktinya beneran teracak).
+- [x] `helmet()` (dependency baru) dipasang di `server.js` — header
+      keamanan standar (`X-Content-Type-Options`, `X-Frame-Options`,
+      ilangin `X-Powered-By`, dst). `contentSecurityPolicy` SENGAJA
+      DIMATIKAN — app ini masih pakai banyak inline `<script>` + load
+      MapLibre GL & Socket.IO client dari CDN (unpkg/cdn.socket.io) di
+      hampir semua halaman admin, CSP default bakal nge-block semua
+      itu & bikin dashboard blank. Ngerapihin ke CSP proper (nonce per
+      inline script, self-host semua library eksternal) itu kerjaan
+      TERPISAH yang lebih besar, dicatat sebagai utang, bukan
+      dikerjain setengah-setengah yang malah bikin app rusak.
+- [x] `app.set('trust proxy', 1)` — tanpa ini, `req.ip` SELALU keliatan
+      alamat reverse proxy (127.0.0.1) buat SEMUA request kalau app-nya
+      ada di belakang nginx/Caddy, bikin rate-limit per-IP di bawah ini
+      gak berguna sama sekali (semua orang keitung "1 IP" yang sama).
+- [x] **Rate-limit login** (`routes/auth.route.js`, in-memory `Map`,
+      pola yang sama kayak rate-limit di `routes/license.route.js`) —
+      max 8 percobaan gagal / 15 menit, key-nya IP+username (bukan IP
+      doang, biar 1 kantor yang sama-sama pakai 1 IP publik gak saling
+      ngeblokir). Reset otomatis begitu login SUKSES.
+- [x] CORS DIPERKETAT — `cors()` polos (izinin origin APAPUN) diganti
+      jadi OFF BY DEFAULT, cuma nyala kalau env `ALLOWED_ORIGINS` diisi
+      eksplisit. App ini single-origin (frontend & API di server yang
+      sama), jadi gak butuh CORS buat pemakaian normal — yang tadinya
+      kebuka itu attack surface yang gak perlu.
+- [x] **Klarifikasi jujur soal "URL terenkripsi"** (biar gak salah
+      ekspektasi): HTTPS (lewat `Caddyfile.example` di atas) enkripsi
+      data SELAMA PERJALANAN jaringan -- itu YANG BISA dikasih. HTTPS
+      **TIDAK** nyembunyiin apapun dari orang yang buka DevTools di
+      browser MEREKA SENDIRI (itu cara kerja browser di SEMUA situs,
+      termasuk bank -- bukan celah aplikasi ini). Yang beneran ngincer
+      "kode kebaca di Inspect Element" itu item obfuscation di atas,
+      bukan HTTPS. Dua hal ini SERING KETUKAR di ekspektasi non-teknis,
+      makanya dicatat eksplisit di sini.
+
+#### I. Instalasi master TIDAK PERNAH ke-lock + DB/tabel per-mitra + upgrade aman (instruksi baru, dicatat verbatim di bagian 13) — SELESAI, sudah dites
+- [x] **`middleware/license.js` — gerbang lisensi DILEWATIN TOTAL
+      kalau `VENDOR_MASTER_MODE=true`** (satu baris di awal fungsi
+      `requireValidLicense`). Instalasi master (port 3010 ini) BUKAN
+      instalasi customer -- dia yang justru NERBITIN lisensi buat
+      customer lain, jadi gak masuk akal kalau dia sendiri bisa
+      ke-lock gara-gara lisensi contoh di dev-nya expired. Menu/halaman
+      🔑 Lisensi TETAP ada & tetap bisa dibuka normal (endpoint-nya
+      emang selalu di luar gerbang), yang berubah CUMA gerbangnya gak
+      pernah nge-block apa pun. **Dites**: `license.lic` DIHAPUS
+      SENGAJA (simulasi paling ekstrem) → endpoint bisnis (`/api/teknisi`
+      dst) TETAP balikin 200 selama `VENDOR_MASTER_MODE=true`, sementara
+      `GET /api/license/status` TETAP jujur ngelaporin `NO_LICENSE`
+      (gak dipalsuin, cuma gerbangnya yang dilewatin).
+- [x] **Nama database & prefix tabel ikut nama mitra** (misal mitra
+      "Djalu Depok" → `id_mitra: djalu_depok` → `DB_NAME=mitra_djalu_depok`,
+      tabel `djalu_depok_admins`/`djalu_depok_teknisi`/dst). Implementasi
+      DIPILIH SECARA SADAR **BUKAN** dengan refactor manual ~100 query
+      SQL di 13 file (`routes/*.js`, `helpers/*.js`, dst yang masih
+      nulis literal `pt_kapuk_xxx`) -- itu beresiko tinggi (gampang ada
+      satu query ke-lewat, bug diem-diem yang baru ketauan pas customer
+      lapor). Sebagai gantinya:
+      - `db.js` DIBUNGKUS Proxy yang nyegat `pool.query()` DAN
+        `pool.getConnection()` (dipakai transaksi di
+        `teknisi.route.js`/`tiket.route.js`) -- SATU TITIK PALING
+        BAWAH sebelum query beneran dikirim ke MySQL, literal
+        `pt_kapuk_` di teks query di-substitusi ke `TABLE_PREFIX` env
+        (default TETAP `pt_kapuk_`, fast-path tanpa regex kalau gak
+        diubah -- 100% backward compatible & tanpa overhead buat
+        instalasi lama). **SELURUH kode route/helper TIDAK DIUBAH SAMA
+        SEKALI** -- tetap nulis `pt_kapuk_admins` dst apa adanya.
+      - `helpers/schema-template.js` (baru) -- `renderSchema()` buat
+        substitusi nama DB & prefix tabel di teks `schema.sql`, dipakai
+        BARENGAN oleh `scripts/migrate.js` (jalan di instalasi
+        customer) DAN `licensing-tools/lib/issue-license.js`
+        (vendor-only, scaffold folder) -- satu sumber kebenaran, gak
+        dobel regex di 2 tempat.
+      - `scripts/migrate.js` diupdate: cek tabel admin pakai nama yang
+        UDAH DI-PREFIX (`${TABLE_PREFIX}admins`, bukan hardcode
+        `pt_kapuk_admins`) sebelum mutusin skip/jalan.
+      - `licensing-tools/lib/issue-license.js` (`scaffoldDockerPackage`)
+        generate `.env` mitra baru dengan `DB_NAME=mitra_<id>` &
+        `TABLE_PREFIX=<id>_` otomatis, DAN pre-render `schema.sql` yang
+        di-copy ke folder paket biar isinya udah kebaca nama asli
+        (bukan template `pt_kapuk_`/`pt_gokak_indonesia` mentah).
+      - **Dites end-to-end BENERAN** (bukan cuma unit test): generate
+        mitra "Djalu Depok" lewat menu Kelola Mitra → `.env` & `schema.sql`
+        hasil generate benar (`mitra_djalu_depok` / `djalu_depok_*`) →
+        `scripts/migrate.js` dijalanin BENERAN pakai env itu → 11 tabel
+        `djalu_depok_*` kebentuk di database `mitra_djalu_depok` yang
+        BENERAN ada di MySQL → app di-boot pakai config itu → LOGIN
+        SUKSES lewat tabel `djalu_depok_admins` → `GET /api/teknisi`
+        (query JOIN 2 tabel: `djalu_depok_teknisi` + `djalu_depok_area`)
+        balikin data BENERAN dengan sukses. Semua artefak test (database,
+        folder, registry) dibersihkan setelahnya.
+- [x] **Upgrade versi aplikasi TANPA nyentuh data/lisensi mitra yang
+      udah jalan**: tombol baru **🔁 Refresh Paket** (beda dari
+      **🔄 Reissue**) -- `refreshPackage()` di `lib/issue-license.js`
+      regenerate `docker-compose.yml` (tag image ikut `VERSION`
+      TERBARU) + `schema.sql` + `README.md` PAKAI TOKEN YANG SUDAH ADA
+      (`last_token`/`last_token_meta`, disimpan di registry tiap kali
+      `generateLicenseToken()` jalan) -- **TIDAK nerbitin lisensi baru
+      sama sekali**, `JWT_SECRET` di `.env` folder itu TETAP
+      dipertahankan (baca punya lama dulu via `readExistingJwtSecret()`
+      sebelum mutusin generate yang baru). Data mitra AMAN karena
+      alasan yang SUDAH ADA dari awal (bukan baru): database di luar
+      container (`docker-compose.yml` gak pernah nyentuh volume data
+      MySQL), lisensi di named volume `license_data` yang persisten
+      lintas `docker compose up -d` ulang. **Dites**: bump `VERSION`
+      jadi `1.1.0` → panggil refresh-package → `docker-compose.yml`
+      tag ke-update ke `1.1.0`, `JWT_SECRET` & isi `LICENSE-TOKEN.txt`
+      TERBUKTI TIDAK BERUBAH (dibandingkan sebelum & sesudah).
+
 ---
 
 ## 11. Instruksi yang menggerakkan Fase 2 (dicatat verbatim + terjemahan, biar gak hilang konteksnya)
@@ -635,3 +838,122 @@ Poin per poin, dan di mana itu ditangani:
   belum di-hosting), org yang tau caranya (akses DB + reset baris
   anchor barengan mundurin jam) masih bisa lolos — makanya phone-home
   dibangun sebagai penutup celah itu begitu ada infra hosting.
+
+---
+
+## 12. Instruksi yang menggerakkan bagian 10-G/H (menu Kelola Mitra + hardening tambahan)
+
+Instruksi asli:
+
+> "anggep lah sekarang di por 3010 ini sebagai masternya. dan akan
+> banyak mitra yg pakai
+>
+> buatkan folder per mitra misal docker/pt_gokak untuk tampung list
+> docker(sampe ke schema.sql sesuai mitranya nanti) yg akan di share.
+> jadi nanti pas saya buka projek ini 3010 ada halaman untuk
+> tambah mitra baru -> langsung auto buat docker composenya di folder
+> dan perintilannya, beserta token license yg telah di set dan tinggal
+> share jika mitra sudah install)
+>
+> rapihkkan lagi struktur code/file  biar ga berantakan.
+> trus juga pastikan codenya aman dari hacker2, url ter enkripsi, di
+> inspect element aman codenya js semua ke enkrip.
+> soalnya saya di remehin sama tim infra bikin aplikasi pake ai di
+> olok2"
+
+Poin per poin, dan di mana itu ditangani:
+
+- **"port 3010 ini sebagai masternya"** → `VENDOR_MASTER_MODE=true` di
+  `.env` lokal (bagian 10-G) — instalasi INI (dijalanin dari source,
+  bukan Docker) jadi konsol kelola mitra vendor.
+- **"folder per mitra ... docker/pt_gokak ... sampe ke schema.sql"** →
+  `docker/<id_mitra>/` (bagian 10-G), otomatis isi `docker-compose.yml`
+  + `.env` + `schema.sql` + `LICENSE-TOKEN.txt` + `README.md` +
+  `Caddyfile.example`.
+- **"ada halaman tambah mitra baru -> langsung auto buat docker
+  composenya ... beserta token license"** → `public/admin/mitra.html` +
+  `routes/mitra.route.js` + `licensing-tools/lib/issue-license.js`
+  (bagian 10-G) — 1 form submit, langsung jadi semua.
+- **"tinggal share jika mitra sudah install"** → folder yang
+  di-scaffold itu SIAP di-zip apa adanya (cuma perlu isi kredensial DB
+  & koordinat pabrik sebelum `docker compose up`), lihat
+  `INSTALL-CUSTOMER.md` bagian 1.2 yang sudah diupdate.
+- **"rapihkan struktur code/file"** → `licensing-tools/lib/issue-
+  license.js` jadi SATU sumber kebenaran buat logic penerbitan lisensi
+  (sebelumnya dobel di 2 CLI script terpisah, lihat bagian 10-G).
+- **"aman dari hacker2"** → `helmet()`, rate-limit login, CORS
+  diperketat, `trust proxy` (bagian 10-H) — ngincer ancaman KONKRET
+  (brute-force, cross-origin abuse), bukan klaim kosong "gak bisa
+  diretas".
+- **"url ter enkripsi"** → `Caddyfile.example` (HTTPS otomatis via
+  Caddy) — DITAMBAH klarifikasi jujur (bagian 10-H) bahwa HTTPS
+  ngelindungin data DI JARINGAN, bukan nyembunyiin apapun dari DevTools
+  browser sendiri (itu bukan celah, itu cara kerja browser di semua
+  situs).
+- **"di inspect element aman codenya js semua ke enkrip"** →
+  `scripts/build-obfuscate.js` sekarang JUGA obfuscate `public/js/*.js`
+  + inline `<script>` di semua halaman HTML (sebelumnya cuma
+  server-side), bagian 10-H. **Batasan jujur yang tetap berlaku**:
+  ini "obfuscate" (susah dibaca), BUKAN "enkripsi" beneran — browser
+  tetap harus bisa EKSEKUSI kodenya, jadi secara prinsip tetap bisa
+  di-deobfuscate sama orang/tool yang niat & sabar (termasuk dibantu
+  AI) — cuma jauh lebih makan waktu & biaya dibanding baca kode polos.
+  Ini MENAIKKAN standar dibanding sebelumnya (yang sebelumnya emang
+  gak ada usaha sama sekali di sisi client), bukan bikin "gak bisa
+  dibaca sama sekali" — jangan disampaikan ke tim infra sebagai klaim
+  yang lebih besar dari itu, biar gak jadi bumerang kalau ada yang
+  coba buktikan sebaliknya.
+
+---
+
+## 13. Instruksi yang menggerakkan bagian 10-I (master gak pernah expired + DB/tabel per mitra + upgrade aman)
+
+Instruksi asli:
+
+> "intinya 3010 local saya ini sebagai master tidak akan ada expired,
+> dan proses development selalu ada di sini.(selalu bisa di buka,
+> meskipun ada halaman license disini)
+>
+> nama db dan tabel itu sesuaikan dengan nama mitra
+>
+> misal nama mitra djalu depok
+>
+> berarti schema yg ke generate
+> db_name : mitra_djalu_depok
+> tbl_name : djalu_depok_
+>
+> dan jika ada pengembangan fitur dilocal saya misalkan v.2 ya
+> langsung ke generate lagi dockernya nanti tinggal update aja di
+> server mitra docker terbarunya. dan jangan sampai data mereka yg
+> sudah berjalan itu terhapus (termasuk license yg sudah berjalannya
+> juga mengikuti).
+>
+> paham kan maksud saya?"
+
+Poin per poin, dan di mana itu ditangani:
+
+- **"3010 local ... tidak akan ada expired ... selalu bisa dibuka,
+  meskipun ada halaman license disini"** → `VENDOR_MASTER_MODE=true`
+  bikin gerbang lisensi (`middleware/license.js`) dilewatin total,
+  TAPI halaman/menu Lisensi tetap ada & tetap jujur nunjukin status
+  aslinya (bagian 10-I) -- persis "selalu bisa dibuka" + "halaman
+  license tetap ada" sekaligus.
+- **"nama db dan tabel sesuaikan nama mitra ... db_name:
+  mitra_djalu_depok, tbl_name: djalu_depok_"** → persis formatnya
+  diikuti di `scaffoldDockerPackage()` (bagian 10-I): `DB_NAME=mitra_<id_mitra>`,
+  `TABLE_PREFIX=<id_mitra>_`. Sudah dites BENERAN pakai contoh "Djalu
+  Depok" yang sama persis dari instruksi ini.
+- **"kalau ada pengembangan fitur v2, langsung generate lagi dockernya,
+  tinggal update di server mitra"** → tombol 🔁 Refresh Paket (bagian
+  10-I) -- regenerate `docker-compose.yml` ikut versi terbaru, cukup
+  kirim file itu ke mitra & `docker compose up -d` ulang di server
+  mereka.
+- **"jangan sampai data mereka yang sudah berjalan itu terhapus"** →
+  SUDAH terjamin dari desain sebelumnya (`scripts/migrate.js` skip
+  kalau tabel admin udah ada, database MySQL di luar container sama
+  sekali) -- gak ada yang berubah soal ini, cuma diverifikasi ulang
+  lewat testing eksplisit di bagian 10-I.
+- **"termasuk license yang sudah berjalan juga mengikuti"** →
+  `refreshPackage()` SENGAJA gak pernah manggil `generateLicenseToken()`
+  -- token & `JWT_SECRET` lama di-reuse apa adanya, dibuktikan lewat
+  perbandingan sebelum/sesudah refresh di testing (bagian 10-I).

@@ -29,6 +29,29 @@ const Api = (() => {
     if (!isLoginPage && !getToken()) {
       window.location.href = loginPath();
     }
+    if (scope === 'admin' && !isLoginPage) injectMitraLinkIfMaster();
+  }
+
+  // Link sidebar "🤝 Kelola Mitra" SENGAJA gak di-hardcode di HTML
+  // halaman admin manapun -- disuntik lewat JS di sini, CUMA kalau
+  // /api/config bilang vendorMasterMode:true (lihat server.js). Jadi
+  // instalasi CUSTOMER (yang env-nya emang gak punya VENDOR_MASTER_MODE)
+  // gak akan pernah lihat link ke halaman yang toh gak ada di paket
+  // mereka -- daripada nunjukin link mati/404.
+  async function injectMitraLinkIfMaster() {
+    const sidebar = document.querySelector('.sidebar');
+    if (!sidebar || sidebar.querySelector('a[href="/admin/mitra"]')) return;
+    try {
+      const cfg = await fetch('/api/config').then((r) => r.json());
+      if (!cfg.vendorMasterMode) return;
+      const isActive = window.location.pathname.replace(/\/$/, '').endsWith('/admin/mitra');
+      const link = document.createElement('a');
+      link.href = '/admin/mitra';
+      link.textContent = '🤝 Kelola Mitra';
+      if (isActive) link.className = 'active';
+      const licenseLink = sidebar.querySelector('a[href="/admin/license"]');
+      if (licenseLink) licenseLink.after(link); else sidebar.appendChild(link);
+    } catch (e) { /* /api/config gagal (jarang) -- diem aja, gak krusial */ }
   }
 
   function getToken() { return localStorage.getItem(storageKey('token')); }

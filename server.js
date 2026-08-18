@@ -1,4 +1,5 @@
 const express = require('express');
+const helmet = require('helmet');
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
@@ -19,7 +20,48 @@ const licenseRoute   = require('./routes/license.route');
 const app = express();
 const PORT = process.env.PORT || 3010;
 
-app.use(cors());
+// Mode "MASTER VENDOR" -- SATU-SATUNYA cara fitur kelola mitra
+// (routes/mitra.route.js + public/admin/mitra.html) bisa aktif. Cuma
+// boleh true di instalasi VENDOR SENDIRI (biasanya jalan lewat
+// `npm run dev`/`npm start` langsung, BUKAN dari Docker image yang
+// dikirim ke customer) -- lihat komentar lengkap di routes/mitra.route.js
+// & scripts/build-obfuscate.js soal kenapa fitur ini gak boleh
+// pernah ke-bundle ke image customer sama sekali.
+const VENDOR_MASTER_MODE = process.env.VENDOR_MASTER_MODE === 'true';
+
+// Percaya header X-Forwarded-For dari reverse proxy (nginx/Caddy) di
+// depan app -- TANPA ini, req.ip SELALU keliatan alamat proxy-nya
+// sendiri (misal 127.0.0.1) buat SEMUA request, bikin rate-limit
+// per-IP di bawah (login, /api/license/request) gak berguna sama
+// sekali (semua orang keitung "1 IP" yang sama). Aman diaktifin
+// default -- kalau app-nya DIAKSES LANGSUNG tanpa reverse proxy pun
+// gak ada downside nyata di setup ini.
+app.set('trust proxy', 1);
+
+// Header keamanan standar (X-Content-Type-Options, X-Frame-Options,
+// hilangin X-Powered-By, dst). contentSecurityPolicy DIMATIKAN SENGAJA
+// -- app ini masih pakai banyak inline <script> + load MapLibre GL &
+// Socket.IO client dari CDN (unpkg/cdn.socket.io) di tiap halaman
+// admin, CSP default helmet bakal nge-block SEMUA itu & bikin
+// dashboard putih blank. Ngerapihin ke CSP proper (nonce per inline
+// script, self-host semua library) itu kerjaan terpisah, bukan quick
+// win -- lebih baik jujur DIMATIKAN daripada nyalain versi yang bikin
+// aplikasinya rusak.
+app.use(helmet({ contentSecurityPolicy: false }));
+
+// CORS SENGAJA gak dibuka lebar (`cors()` polos = izinin origin APAPUN)
+// -- app ini single-origin (frontend & API sama-sama diserve dari
+// server yang sama, gak ada frontend terpisah yang butuh cross-origin
+// fetch beneran). Kosongin ALLOWED_ORIGINS di .env (default) = CORS
+// gak diaktifkan sama sekali (browser tetap bisa akses normal karena
+// same-origin, cuma situs LAIN gak bisa fetch API ini pakai token yang
+// mungkin ke-leak). Isi ALLOWED_ORIGINS kalau suatu saat beneran butuh
+// frontend terpisah (misal subdomain beda).
+const allowedOrigins = (process.env.ALLOWED_ORIGINS || '').split(',').map((s) => s.trim()).filter(Boolean);
+if (allowedOrigins.length > 0) {
+  app.use(cors({ origin: allowedOrigins }));
+}
+
 app.use(express.json());
 
 // Endpoint yang HARUS tetap kejawab APAPUN status lisensinya -- health
@@ -40,10 +82,33 @@ app.get('/api/config', (req, res) => {
       lat: Number(process.env.FACTORY_LAT) || -6.380064,
       lng: Number(process.env.FACTORY_LNG) || 106.8408239,
     },
+    // Dipakai public/js/api.js buat nampilin/nyembunyiin link menu
+    // "Kelola Mitra" di sidebar SECARA DINAMIS -- HTML admin yang
+    // di-ship ke customer TETAP gak akan pernah punya halamannya sama
+    // sekali (dikecualikan dari build, lihat scripts/build-obfuscate.js),
+    // flag ini cuma nyegah link-nya nongol nyasar kalau ada yang salah
+    // konfigurasi VENDOR_MASTER_MODE di instalasi customer.
+    vendorMasterMode: VENDOR_MASTER_MODE,
   });
 });
 
 app.use('/api/license', licenseRoute);
+
+// Kelola mitra/partner (registrasi, generate token, scaffold paket
+// Docker) -- VENDOR-ONLY, lihat VENDOR_MASTER_MODE di atas. Dibungkus
+// try/catch: kalau file routes/mitra.route.js gak ada (situasi NORMAL
+// di image customer, lihat scripts/build-obfuscate.js), app TETAP
+// jalan normal, cuma nge-log peringatan -- gak boleh ikut crash.
+if (VENDOR_MASTER_MODE) {
+  try {
+    const mitraRoute = require('./routes/mitra.route');
+    const { requireAuth, requireAdmin } = require('./middleware/auth');
+    app.use('/api/mitra', requireAuth, requireAdmin, mitraRoute);
+    console.log('🛠️  VENDOR_MASTER_MODE aktif -- /api/mitra/* & menu Kelola Mitra kebuka.');
+  } catch (e) {
+    console.error('[MITRA] VENDOR_MASTER_MODE=true tapi routes/mitra.route.js gak ketemu (normal kalau ini instalasi CUSTOMER, bukan master vendor):', e.message);
+  }
+}
 
 // Login SENGAJA didaftarin SEBELUM gerbang lisensi -- admin HARUS
 // tetap bisa login walaupun lisensinya lagi invalid/expired, soalnya
@@ -109,7 +174,7 @@ httpServer.listen(PORT, () => {
   } else {
     console.log(`🔒 LISENSI TIDAK VALID (${license.reason}) -- semua endpoint /api/* selain /api/license & /health bakal ditolak. Lihat notesubscribe.md.`);
   }
-  console.log(`🚀 PT Gokak Indonesia — Tracking & Tiket System jalan di http://localhost:${PORT}`);
+  console.log(`🚀 Monitoring App — Tracking & Tiket System jalan di http://localhost:${PORT}`);
   console.log(`   🖥️  Portal Admin   : http://localhost:${PORT}/admin/login`);
   console.log(`   🧑‍🔧 Portal Teknisi : http://localhost:${PORT}/teknisi/login`);
   console.log(``);

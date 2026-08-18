@@ -17,55 +17,49 @@ Kenapa & apa konsekuensinya, lihat `notesubscribe.md` bagian 9.
 ### 1.1 Sekali saja (infrastruktur vendor, bukan per-customer)
 - [ ] RSA keypair sudah ada (`licensing-tools/keys/`) — kalau belum:
       `node licensing-tools/generate-keypair.js`
-- [ ] Build & publish image Docker (lihat bagian 1.4).
+- [ ] Instalasi vendor sendiri jalan dengan `VENDOR_MASTER_MODE=true`
+      di `.env` (lihat `.env.example`) — ini yang buka menu **🤝 Kelola
+      Mitra** di dashboard, JANGAN PERNAH diisi `true` di paket manapun
+      yang dikirim ke customer (lihat `notesubscribe.md` bagian 10-G).
+- [ ] Build & publish image Docker (lihat bagian 1.3).
 
-### 1.2 Daftarkan customer sebagai "mitra" (SEKALI per customer, bukan per-renewal)
-Ini yang bikin token lisensi customer ini gak bisa asal ditempel ke
-instalasi customer LAIN (lihat "id_mitra" di `notesubscribe.md`).
+### 1.2 Daftarkan mitra baru + generate paket lengkap (per-customer)
+**Cara termudah — lewat dashboard**: login ke instalasi master (yang
+`VENDOR_MASTER_MODE=true`), buka menu **🤝 Kelola Mitra**, isi form
+"Tambah Mitra Baru" (nama, base seat, add-on, masa aktif tahun). Sekali
+submit, otomatis:
+1. Terdaftar di registry lokal (`licensing-tools/partners.json`,
+   gitignored) — ini yang bikin token gak bisa asal digenerate ulang
+   buat id yang sama tanpa sepengetahuan vendor.
+2. Token lisensi (JWT RS256) langsung jadi.
+3. Folder **`docker/<id_mitra>/`** langsung ke-generate isinya
+   `docker-compose.yml`, `.env` (JWT_SECRET random unik, `ID_MITRA` &
+   `TABLE_PREFIX` udah keisi otomatis, `DB_NAME=mitra_<id_mitra>`),
+   `schema.sql` (SUDAH direndernya pakai nama DB & prefix tabel mitra
+   itu — misal mitra "Djalu Depok" → `id_mitra: djalu_depok` →
+   `DB_NAME=mitra_djalu_depok`, tabel `djalu_depok_admins`,
+   `djalu_depok_teknisi`, dst), `LICENSE-TOKEN.txt`, `README.md`,
+   `Caddyfile.example` — **SIAP DI-ZIP & DIKIRIM APA ADANYA**, gak perlu
+   ngedit manual apapun kecuali kredensial DB customer (`DB_HOST`/
+   `DB_USER`/`DB_PASSWORD`) & koordinat pabrik (`FACTORY_LAT`/`LNG`).
 
+Butuh perpanjang / nambah seat mitra yang SUDAH ada? Tombol **🔄
+Reissue** di tabel daftar mitra — generate token baru, `JWT_SECRET`
+instalasi LAMA tetap dipertahankan (sesi login customer gak ke-reset).
+Mitra yang kontraknya berakhir tinggal klik **🚫 Revoke** (token lama
+yang udah kepasang customer tetap jalan sampai `exp`, cuma nyegah
+token BARU digenerate buat id itu).
+
+**Alternatif lewat CLI** (kalau lebih suka scripting/otomatisasi,
+manggil lib yang sama):
 ```bash
-node licensing-tools/register-partner.js --id PT-GOKAK --name "PT Gokak Indonesia" --note "Kontrak awal 50 seat/tahun, mulai 2026-08"
+node licensing-tools/register-partner.js --id pt_gokak --name "PT Gokak Indonesia" --note "Kontrak awal 50 seat/tahun"
+node licensing-tools/generate-license.js --id pt_gokak --customer "PT Gokak Indonesia" --base 50 --addon 0 --years 1
 ```
+CLI ini CUMA generate token-nya (gak sekalian scaffold folder
+`docker/`) — kalau butuh paket lengkap juga, tetap pakai dashboard.
 
-`--id` itu KODE PENDEK bebas kamu tentukan (huruf/angka/strip, gak ada
-spasi) — ini yang nanti WAJIB sama persis dengan `ID_MITRA` di `.env`
-customer itu. Cek semua yang udah terdaftar kapan aja:
-```bash
-node licensing-tools/register-partner.js --list
-```
-
-### 1.3 Siapkan paket buat customer INI (per-customer, beda tiap instalasi)
-Folder yang dikirim/dibawa ke lokasi instalasi isinya:
-
-```
-paket-instalasi-pt-gokak/
-├── docker-compose.yml      (salin apa adanya dari repo)
-└── .env                    (BUKAN .env.example — isi manual per poin di bawah)
-```
-
-Isi `.env` (salin dari `.env.example`, lalu isi/ubah baris-baris ini):
-```
-PORT=3010
-DB_HOST=host.docker.internal      # atau IP/host MySQL customer
-DB_USER=...                        # kredensial DB customer
-DB_PASSWORD=...
-DB_NAME=pt_gokak_indonesia
-DB_PORT=3306
-JWT_SECRET=<generate random panjang, JANGAN dipakai ulang antar customer>
-FACTORY_LAT=...                    # koordinat pabrik customer
-FACTORY_LNG=...
-ID_MITRA=PT-GOKAK                  # HARUS SAMA PERSIS dengan --id di langkah 1.2
-VENDOR_SUPPORT_EMAIL=support@kita.co.id
-```
-`JWT_SECRET` generate gampang: `node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"`
-
-**Lisensi (`license.lic`) TIDAK ikut di paket ini** — itu ditempel
-BELAKANGAN lewat dashboard (lihat bagian 2, langkah 5). Kalau kontrak
-sudah pasti dari awal, boleh langsung generate tokennya sekarang juga
-(bagian 1.5) supaya siap ditempel begitu dashboard-nya kebuka pertama
-kali — tapi gak wajib disiapkan duluan.
-
-### 1.4 Build image Docker (butuh Docker terpasang di mesin yang build)
+### 1.3 Build image Docker (butuh Docker terpasang di mesin yang build)
 ```bash
 docker build -t ptgokak/tracking-app:1.0.0 .
 ```
@@ -79,14 +73,6 @@ docker load -i ptgokak-tracking-app-1.0.0.tar
 Atau, kalau punya akun Docker Hub/registry privat, `docker push` lalu
 `docker pull` di mesin tujuan — lebih rapi buat update rutin ke depannya.
 
-### 1.5 Generate token lisensi pertama
-```bash
-node licensing-tools/generate-license.js --id PT-GOKAK --customer "PT Gokak Indonesia" --base 50 --addon 0 --years 1
-```
-Simpan token yang keluar (baris panjang setelah "License key berhasil
-dibuat") — itu yang ditempel admin customer di dashboard (bagian 2,
-langkah 5). **Private key TIDAK IKUT ke mana-mana, tetap di laptop kita.**
-
 ---
 
 ## 🖥️ BAGIAN 2 — Instalasi di server/PC tujuan
@@ -99,8 +85,10 @@ docker compose version
 ```
 
 ### Langkah 1 — Siapkan folder & file
-Taruh `docker-compose.yml` + `.env` (dari vendor, bagian 1.3) dalam satu
-folder, misal `C:\pt-gokak-app\` atau `/opt/pt-gokak-app/`.
+Ekstrak folder `docker/<id_mitra>/` yang dikirim vendor (bagian 1.2) ke
+lokasi tujuan, misal `C:\pt-gokak-app\` atau `/opt/pt-gokak-app/` —
+sudah isi `docker-compose.yml`, `.env`, `schema.sql`,
+`LICENSE-TOKEN.txt`, `README.md`.
 
 Kalau image dikirim sebagai file `.tar` (bukan dari registry):
 ```bash
@@ -145,9 +133,9 @@ dibiarkan.
 Login BERHASIL walaupun lisensi belum dipasang (memang didesain begitu
 — lihat `notesubscribe.md` bagian 10-E), tapi menu selain 🔑 Lisensi
 belum bisa diakses sampai lisensi valid. Buka menu **🔑 Lisensi**,
-tempel token dari vendor (bagian 1.5) di kotak "Pasang Token Lisensi
-Baru", klik **Aktifkan**. Semua fitur langsung terbuka, TANPA restart
-container.
+tempel isi `LICENSE-TOKEN.txt` (dari paket vendor) di kotak "Pasang
+Token Lisensi Baru", klik **Aktifkan**. Semua fitur langsung terbuka,
+TANPA restart container.
 
 ### Langkah 6 — Selesai, verifikasi
 - Cek `http://localhost:3010/health` → harus `{"status":"ok"}`.
@@ -155,17 +143,31 @@ container.
   kontrak.
 - Coba buka menu lain (Teknisi, Tiket, dst) → harus bisa diakses normal.
 
+### Langkah 7 — (Direkomendasikan) Aktifkan HTTPS
+Akses langsung `http://ip-server:3010` itu TIDAK terenkripsi — siapapun
+yang bisa menyadap jaringan di antara browser & server ini bisa baca
+isi trafiknya. Kalau server ini punya domain sendiri, pakai
+`Caddyfile.example` yang ikut di paket (edit domainnya, jalankan Caddy)
+— otomatis dapat sertifikat HTTPS gratis, gak perlu setup manual. Lihat
+komentar di file itu buat detail & batasannya.
+
 ---
 
 ## Update aplikasi ke versi baru (bugfix/fitur, bukan install pertama)
 
-1. Vendor kirim image baru (tag versi baru, misal `1.1.0`) — lewat
-   `docker load` file `.tar` baru, atau `docker pull` kalau pakai
-   registry.
-2. Update `image:` di `docker-compose.yml` ke tag barunya.
-3. `docker compose up -d` lagi — container lama diganti yang baru,
-   **data database & lisensi TIDAK HILANG** (database di luar container,
-   lisensi di named volume `license_data` yang persisten).
+1. Vendor bump `VERSION`, build image baru (tag ikut versi itu), lalu
+   di menu **🤝 Kelola Mitra** klik **🔁 Refresh Paket** di baris mitra
+   yang mau diupdate — ini regenerate `docker-compose.yml` (tag image
+   ke versi terbaru) TANPA nyentuh lisensi/token/`JWT_SECRET` sama
+   sekali (beda sama tombol Reissue, yang nerbitin lisensi BARU).
+2. Kirim `docker-compose.yml` yang baru ke customer (atau file `.tar`
+   image-nya kalau distribusinya lewat `docker load`, bukan registry).
+3. Customer/installer: `docker load` (kalau perlu) → timpa
+   `docker-compose.yml` lama dengan yang baru → `docker compose up -d`
+   lagi — container lama diganti yang baru, **data database & lisensi
+   TIDAK HILANG** (database di luar container sepenuhnya; lisensi di
+   named volume `license_data`; `JWT_SECRET` yang sama di `.env` lama
+   TETAP dipakai, sesi login yang aktif gak ikut ke-invalidate).
 
 ## Troubleshooting cepat
 

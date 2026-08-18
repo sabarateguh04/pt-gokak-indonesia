@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<script src="/js/theme.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kelola Mitra — Monitoring App (Vendor Master)</title>
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">🏭 Monitoring App<small>Vendor Master</small></div>
+      <a href="/admin/dashboard">📍 Dashboard</a>
+      <a href="/admin/teknisi">🧑‍🔧 Teknisi</a>
+      <a href="/admin/tiket">🎫 Tiket</a>
+      <a href="/admin/kehadiran">📆 Kehadiran</a>
+      <a href="/admin/area">🗺️ Area Pabrik</a>
+      <a href="/admin/license">🔑 Lisensi</a>
+      <a href="/admin/mitra" class="active">🤝 Kelola Mitra</a>
+      <div class="logout" id="btnLogout">↩ Logout</div>
+    </aside>
+
+    <main class="main">
+      <div class="main-header">
+        <h1>Kelola Mitra</h1>
+        <div style="display:flex;align-items:center;gap:10px">
+          <button class="theme-toggle-btn" title="Ganti tema"><span class="theme-toggle-icon">🌙</span></button>
+          <div class="user-badge" id="userBadge"></div>
+        </div>
+      </div>
+
+      <p style="color:var(--text-dim);font-size:12.5px;margin-top:-8px">
+        ⚠️ Halaman VENDOR-ONLY -- gak pernah ikut ke-ship ke instalasi customer manapun (lihat <code>scripts/build-obfuscate.js</code>). Tiap mitra baru otomatis dapet folder <code>docker/&lt;id_mitra&gt;/</code> berisi paket lengkap (docker-compose.yml, .env, schema.sql, token lisensi) siap di-zip & dikirim.
+      </p>
+
+      <div class="grid grid-2col">
+        <div class="card">
+          <h3 style="margin-top:0">Tambah Mitra Baru</h3>
+          <form id="createForm">
+            <label>Nama Mitra/Customer</label>
+            <input id="c_nama" placeholder="cth. PT Contoh Jaya" required>
+            <label>ID Mitra (opsional -- kosongkan buat auto dari nama)</label>
+            <input id="c_id" placeholder="cth. pt_contoh_jaya" style="font-family:monospace">
+            <label>Base Seat</label>
+            <input id="c_base" type="number" min="1" value="50" required>
+            <label>Add-on Seat (opsional)</label>
+            <input id="c_addon" type="number" min="0" value="0">
+            <label>Masa Aktif (tahun)</label>
+            <input id="c_years" type="number" min="1" step="0.5" value="1" required>
+            <label>Catatan (opsional)</label>
+            <textarea id="c_note" placeholder="cth. kontrak awal, PIC, dst"></textarea>
+            <button type="submit" style="width:100%;margin-top:14px">➕ Buat Mitra & Generate Paket</button>
+            <div class="auth-error" id="createErr"></div>
+          </form>
+        </div>
+
+        <div class="card" id="resultCard" style="display:none">
+          <h3 style="margin-top:0">✅ Paket Siap Dikirim</h3>
+          <table style="margin-bottom:12px">
+            <tbody>
+              <tr><th style="width:140px">ID Mitra</th><td id="r_id">-</td></tr>
+              <tr><th>Folder</th><td id="r_folder" style="font-family:monospace;font-size:12px">-</td></tr>
+              <tr><th>Total Seat</th><td id="r_seats">-</td></tr>
+              <tr><th>Berlaku s/d</th><td id="r_valid">-</td></tr>
+            </tbody>
+          </table>
+          <label style="font-size:12.5px;color:var(--text-dim)">Token (juga tersimpan di LICENSE-TOKEN.txt dalam folder)</label>
+          <textarea id="r_token" rows="4" readonly style="font-family:monospace;font-size:11px"></textarea>
+          <button type="button" id="btnCopyToken" style="width:100%;margin-top:8px">📋 Salin Token</button>
+          <p style="color:var(--text-dim);font-size:12px;margin-top:10px">
+            Zip folder di atas & kirim ke mitra. Langkah instalasi lengkap ada di <code>README.md</code> dalam folder itu (dikutip dari <code>INSTALL-CUSTOMER.md</code>).
+          </p>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:16px">
+        <h3 style="margin-top:0">Daftar Mitra Terdaftar</h3>
+        <div id="mitraList"><div class="empty-state">Memuat…</div></div>
+      </div>
+    </main>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script>
+    Api.init('admin');
+    const me = Api.getUser();
+    document.getElementById('userBadge').textContent = me ? `${me.nama} (${me.role})` : '';
+    document.getElementById('btnLogout').onclick = () => Api.logout();
+
+    async function loadMitra() {
+      const res = await Api.get('/api/mitra');
+      const box = document.getElementById('mitraList');
+      if (!res.success) { box.innerHTML = '<div class="empty-state">Gagal memuat (pastikan VENDOR_MASTER_MODE=true)</div>'; return; }
+      if (res.mitra.length === 0) { box.innerHTML = '<div class="empty-state">Belum ada mitra terdaftar</div>'; return; }
+
+      box.innerHTML = `<table>
+        <thead><tr><th>ID Mitra</th><th>Nama</th><th>Status</th><th>Catatan</th><th>Terdaftar</th><th>Aksi</th></tr></thead>
+        <tbody>${res.mitra.map((m) => `
+          <tr>
+            <td style="font-family:monospace">${m.id}</td>
+            <td>${m.name}</td>
+            <td>${m.active === false ? '<span class="badge badge-HIGH">NONAKTIF</span>' : '<span class="badge badge-DONE">AKTIF</span>'}</td>
+            <td style="color:var(--text-dim);font-size:12.5px">${m.note || '-'}</td>
+            <td style="font-size:12px">${new Date(m.registered_at).toLocaleDateString('id-ID')}</td>
+            <td style="white-space:nowrap">
+              <button type="button" class="secondary btnRefresh" data-id="${m.id}" style="padding:4px 10px;font-size:12px" title="Update docker-compose.yml ke versi aplikasi terbaru, TANPA ganti lisensi">🔁 Refresh Paket</button>
+              <button type="button" class="secondary btnReissue" data-id="${m.id}" data-nama="${m.name}" style="padding:4px 10px;font-size:12px;margin-left:6px" title="Generate lisensi BARU (renewal/tambah seat)">🔄 Reissue</button>
+              ${m.active === false ? '' : `<button type="button" class="btnRevoke" data-id="${m.id}" style="padding:4px 10px;font-size:12px;margin-left:6px;background:var(--danger,#c0392b)">🚫 Revoke</button>`}
+            </td>
+          </tr>`).join('')}</tbody>
+      </table>`;
+
+      box.querySelectorAll('.btnRevoke').forEach((btn) => {
+        btn.onclick = async () => {
+          if (!confirm(`Revoke id_mitra '${btn.dataset.id}'? Token baru gak akan bisa digenerate lagi buat id ini.`)) return;
+          const res = await Api.post(`/api/mitra/${btn.dataset.id}/revoke`);
+          if (!res.success) { alert(res.message); return; }
+          loadMitra();
+        };
+      });
+
+      box.querySelectorAll('.btnRefresh').forEach((btn) => {
+        btn.onclick = async () => {
+          const res = await Api.post(`/api/mitra/${btn.dataset.id}/refresh-package`);
+          if (!res.success) { alert(res.message); return; }
+          alert(res.message);
+        };
+      });
+
+      box.querySelectorAll('.btnReissue').forEach((btn) => {
+        btn.onclick = async () => {
+          const base = prompt(`Base seat baru buat '${btn.dataset.nama}':`, '50');
+          if (!base) return;
+          const addon = prompt('Add-on seat (opsional):', '0') || 0;
+          const years = prompt('Masa aktif (tahun):', '1');
+          if (!years) return;
+          const res = await Api.post(`/api/mitra/${btn.dataset.id}/reissue`, { base_seats: Number(base), addon_seats: Number(addon), years: Number(years) });
+          if (!res.success) { alert(res.message); return; }
+          showResult(res);
+          loadMitra();
+        };
+      });
+    }
+
+    function showResult(res) {
+      document.getElementById('resultCard').style.display = '';
+      document.getElementById('r_id').textContent = res.id;
+      document.getElementById('r_folder').textContent = res.folder;
+      document.getElementById('r_seats').textContent = res.total_seats;
+      document.getElementById('r_valid').textContent = new Date(res.valid_until).toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+      document.getElementById('r_token').value = res.token;
+      document.getElementById('resultCard').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    document.getElementById('btnCopyToken').onclick = () => {
+      document.getElementById('r_token').select();
+      navigator.clipboard.writeText(document.getElementById('r_token').value);
+    };
+
+    document.getElementById('createForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const errBox = document.getElementById('createErr');
+      errBox.textContent = '';
+
+      const body = {
+        nama: document.getElementById('c_nama').value.trim(),
+        id: document.getElementById('c_id').value.trim(),
+        base_seats: Number(document.getElementById('c_base').value),
+        addon_seats: Number(document.getElementById('c_addon').value || 0),
+        years: Number(document.getElementById('c_years').value),
+        note: document.getElementById('c_note').value.trim(),
+      };
+      const res = await Api.post('/api/mitra', body);
+      if (!res.success) { errBox.textContent = res.message || 'Gagal membuat mitra'; return; }
+
+      showResult(res);
+      document.getElementById('createForm').reset();
+      document.getElementById('c_base').value = 50;
+      document.getElementById('c_addon').value = 0;
+      document.getElementById('c_years').value = 1;
+      loadMitra();
+    });
+
+    loadMitra();
+  </script>
+</body>
+</html>
