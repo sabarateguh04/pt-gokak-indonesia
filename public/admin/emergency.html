@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <title>Work Order Emergency — PT Gokak Indonesia</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimal-ui">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <link rel="icon" href="/libraries/assets/images/favicon.ico" type="image/x-icon">
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans:400,600" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="/libraries/bower_components/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="/libraries/assets/icon/themify-icons/themify-icons.css">
+    <link rel="stylesheet" type="text/css" href="/libraries/assets/icon/icofont/css/icofont.css">
+    <link rel="stylesheet" type="text/css" href="/libraries/assets/icon/feather/css/feather.css">
+    <link rel="stylesheet" type="text/css" href="/libraries/assets/css/style.css">
+    <link rel="stylesheet" type="text/css" href="/libraries/assets/css/jquery.mCustomScrollbar.css">
+</head>
+<body>
+<div class="theme-loader">
+    <div class="ball-scale"><div class='contain'>
+        <div class="ring"><div class="frame"></div></div>
+        <div class="ring"><div class="frame"></div></div>
+        <div class="ring"><div class="frame"></div></div>
+        <div class="ring"><div class="frame"></div></div>
+        <div class="ring"><div class="frame"></div></div>
+        <div class="ring"><div class="frame"></div></div>
+        <div class="ring"><div class="frame"></div></div>
+        <div class="ring"><div class="frame"></div></div>
+        <div class="ring"><div class="frame"></div></div>
+        <div class="ring"><div class="frame"></div></div>
+    </div></div>
+</div>
+<div id="pcoded" class="pcoded">
+    <div class="pcoded-overlay-box"></div>
+    <div class="pcoded-container navbar-wrapper">
+        <nav class="navbar header-navbar pcoded-header">
+            <div class="navbar-wrapper">
+                <div class="navbar-logo">
+                    <a class="mobile-menu" id="mobile-collapse" href="#!"><i class="feather icon-menu"></i></a>
+                    <a href="/admin/dashboard"><img class="img-fluid" src="/libraries/assets/images/logo.png" alt="Logo"></a>
+                    <a class="mobile-options"><i class="feather icon-more-horizontal"></i></a>
+                </div>
+                <div class="navbar-container container-fluid">
+                    <ul class="nav-left">
+                        <li><a href="#!" onclick="javascript:toggleFullScreen()"><i class="feather icon-maximize full-screen"></i></a></li>
+                    </ul>
+                    <ul class="nav-right">
+                        <li class="user-profile header-notification">
+                            <div class="dropdown-primary dropdown">
+                                <div class="dropdown-toggle" data-toggle="dropdown">
+                                    <img src="/libraries/assets/images/avatar-4.jpg" class="img-radius" alt="User">
+                                    <span id="navUserName">Admin</span>
+                                    <i class="feather icon-chevron-down"></i>
+                                </div>
+                                <ul class="show-notification profile-notification dropdown-menu" data-dropdown-in="fadeIn" data-dropdown-out="fadeOut">
+                                    <li><a href="/admin/settings"><i class="feather icon-settings"></i> Settings</a></li>
+                                    <li><a href="#" id="btnLogoutNav"><i class="feather icon-log-out"></i> Logout</a></li>
+                                </ul>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+        <div class="pcoded-main-container"><div class="pcoded-wrapper">
+            <nav class="pcoded-navbar">
+                <div class="pcoded-inner-navbar main-menu">
+                    <div class="pcoded-navigatio-lavel">DASHBOARDS</div>
+                    <ul class="pcoded-item pcoded-left-item">
+                        <li class=""><a href="/admin/dashboard"><span class="pcoded-micon"><i class="feather icon-home"></i></span><span class="pcoded-mtext">Dashboard</span></a></li>
+                        <li class=""><a href="/admin/layout-plant"><span class="pcoded-micon"><i class="feather icon-map"></i></span><span class="pcoded-mtext">Layout Plant</span></a></li>
+                    </ul>
+                    <div class="pcoded-navigatio-lavel">WORK ORDER</div>
+                    <ul class="pcoded-item pcoded-left-item">
+                        <li class=""><a href="/admin/tasks"><span class="pcoded-micon"><i class="feather icon-file-text"></i></span><span class="pcoded-mtext">Work Order</span></a></li>
+                        <li class="active"><a href="/admin/emergency"><span class="pcoded-micon"><i class="feather icon-alert-triangle"></i></span><span class="pcoded-mtext">Emergency</span></a></li>
+                        <li class=""><a href="/admin/lapor-kendala"><span class="pcoded-micon"><i class="feather icon-message-square"></i></span><span class="pcoded-mtext">Lapor Kendala</span></a></li>
+                    </ul>
+                    <div class="pcoded-navigatio-lavel">MANAJEMEN MEKANIK</div>
+                    <ul class="pcoded-item pcoded-left-item">
+                        <li class=""><a href="/admin/users"><span class="pcoded-micon"><i class="feather icon-users"></i></span><span class="pcoded-mtext">Data Mekanik</span></a></li>
+                        <li class=""><a href="/admin/kehadiran"><span class="pcoded-micon"><i class="feather icon-check-square"></i></span><span class="pcoded-mtext">Absensi Shift</span></a></li>
+                        <li class=""><a href="/admin/hak-akses"><span class="pcoded-micon"><i class="feather icon-lock"></i></span><span class="pcoded-mtext">Hak Akses</span></a></li>
+                    </ul>
+                    <div class="pcoded-navigatio-lavel">ACCOUNT</div>
+                    <ul class="pcoded-item pcoded-left-item">
+                        <li class=""><a href="/admin/settings"><span class="pcoded-micon"><i class="feather icon-settings"></i></span><span class="pcoded-mtext">Settings</span></a></li>
+                    </ul>
+                    <div class="pcoded-navigatio-lavel">AUTHENTICATIONS</div>
+                    <ul class="pcoded-item pcoded-left-item">
+                        <li class=""><a href="/admin/login"><span class="pcoded-micon"><i class="feather icon-log-in"></i></span><span class="pcoded-mtext">Login</span></a></li>
+                        <li class=""><a href="/admin/register"><span class="pcoded-micon"><i class="feather icon-user-plus"></i></span><span class="pcoded-mtext">Register</span></a></li>
+                    </ul>
+                    <ul class="pcoded-item pcoded-left-item">
+                        <li><a href="#" id="btnLogout"><span class="pcoded-micon"><i class="feather icon-log-out"></i></span><span class="pcoded-mtext">Logout</span></a></li>
+                    </ul>
+                </div>
+            </nav>
+            <div class="pcoded-content"><div class="pcoded-inner-content">
+                <div class="main-body"><div class="page-wrapper">
+                    <div class="page-header">
+                        <div class="row align-items-end">
+                            <div class="col-lg-8">
+                                <div class="page-header-title"><div class="d-inline">
+                                    <h4>Work Order Emergency</h4>
+                                    <span>Tangani gangguan kritis mesin secara cepat</span>
+                                </div></div>
+                            </div>
+                            <div class="col-lg-4">
+                                <div class="page-header-breadcrumb">
+                                    <ul class="breadcrumb-title">
+                                        <li class="breadcrumb-item"><a href="/admin/dashboard"><i class="feather icon-home"></i></a></li>
+                                        <li class="breadcrumb-item"><a href="#!">Emergency</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="page-body">
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header" style="background: linear-gradient(135deg, #e74c3c, #c0392b); color: #fff;">
+                <h5 style="color:#fff; margin: 0;"><i class="feather icon-alert-triangle"></i> &nbsp;Work Order Emergency</h5>
+            </div>
+            <div class="card-block">
+                <div class="row m-b-20">
+                    <div class="col-lg-4 col-md-6">
+                        <button class="btn btn-danger btn-block" id="btnBuatEmergency" style="height: 60px; font-size: 16px; font-weight: 600;">
+                            <i class="feather icon-alert-octagon"></i> &nbsp;Buat WO Emergency
+                        </button>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-striped table-bordered">
+                        <thead style="background: #fdf2f2;">
+                            <tr>
+                                <th>No WO</th>
+                                <th>Judul</th>
+                                <th>Mesin / Area</th>
+                                <th>Mekanik</th>
+                                <th>Waktu Lapor</th>
+                                <th>Status</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbodyEmergency">
+                            <tr><td colspan="7" class="text-center text-muted" style="padding: 30px;">Memuat data...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Buat Emergency WO -->
+<div class="modal fade" id="modalEmergency" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="background: #e74c3c; color: #fff;">
+                <h5 class="modal-title"><i class="feather icon-alert-triangle"></i> Buat Work Order Emergency</h5>
+                <button type="button" class="close" data-dismiss="modal" style="color:#fff;opacity:1;">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Judul / Deskripsi Masalah <span class="text-danger">*</span></label>
+                    <input type="text" id="emJudul" class="form-control" placeholder="Contoh: Motor pompa mati mendadak">
+                </div>
+                <div class="form-group">
+                    <label>Mesin / Area Terdampak <span class="text-danger">*</span></label>
+                    <input type="text" id="emMesin" class="form-control" placeholder="Contoh: Pompa Air Line 2">
+                </div>
+                <div class="form-group">
+                    <label>Assign Mekanik</label>
+                    <select id="emMekanik" class="form-control">
+                        <option value="">-- Pilih Mekanik --</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Keterangan Tambahan</label>
+                    <textarea id="emKeterangan" class="form-control" rows="3" placeholder="Detail situasi, risiko, atau tindakan sementara..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" id="btnSimpanEmergency"><i class="feather icon-alert-triangle"></i> Kirim Emergency</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
+            </div>
+        </div>
+    </div>
+</div>
+                    </div><!-- /page-body -->
+                </div></div><!-- /page-wrapper /main-body -->
+                <div id="styleSelector"></div>
+            </div></div><!-- /pcoded-inner-content /pcoded-content -->
+        </div></div><!-- /pcoded-wrapper /pcoded-main-container -->
+    </div></div><!-- /pcoded-container /pcoded -->
+<script type="text/javascript" src="/libraries/bower_components/jquery/js/jquery.min.js"></script>
+<script type="text/javascript" src="/libraries/bower_components/jquery-ui/js/jquery-ui.min.js"></script>
+<script type="text/javascript" src="/libraries/bower_components/popper.js/js/popper.min.js"></script>
+<script type="text/javascript" src="/libraries/bower_components/bootstrap/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="/libraries/bower_components/jquery-slimscroll/js/jquery.slimscroll.js"></script>
+<script type="text/javascript" src="/libraries/bower_components/modernizr/js/modernizr.js"></script>
+<script type="text/javascript" src="/libraries/bower_components/modernizr/js/css-scrollbars.js"></script>
+<script type="text/javascript" src="/libraries/bower_components/i18next/js/i18next.min.js"></script>
+<script type="text/javascript" src="/libraries/bower_components/i18next-xhr-backend/js/i18nextXHRBackend.min.js"></script>
+<script type="text/javascript" src="/libraries/bower_components/i18next-browser-languagedetector/js/i18nextBrowserLanguageDetector.min.js"></script>
+<script type="text/javascript" src="/libraries/bower_components/jquery-i18next/js/jquery-i18next.min.js"></script>
+<script src="/libraries/assets/js/pcoded.min.js"></script>
+<script src="/libraries/assets/js/vartical-layout.min.js"></script>
+<script src="/libraries/assets/js/jquery.mCustomScrollbar.concat.min.js"></script>
+<script type="text/javascript" src="/libraries/assets/js/script.js"></script>
+<script src="/js/api.js"></script>
+<script src="/js/license-banner.js"></script>
+<script>
+    async function loadEmergency() {
+        const res = await Api.get('/api/tasks?priority=HIGH&kategori=emergency');
+        const tbody = document.getElementById('tbodyEmergency');
+        if (!res.success || !res.data || !res.data.length) {
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted" style="padding:30px;">Tidak ada WO Emergency aktif</td></tr>';
+            return;
+        }
+        tbody.innerHTML = res.data.map(t => `
+            <tr>
+                <td><span class="badge badge-danger">${t.task_no || t.tiket_no || '-'}</span></td>
+                <td><strong>${t.judul}</strong></td>
+                <td>${t.mesin_nama || t.line_nama || '-'}</td>
+                <td>${t.teknisi_nama || '<em>Belum assign</em>'}</td>
+                <td>${new Date(t.created_at).toLocaleString('id-ID')}</td>
+                <td><span class="badge badge-${t.status}">${t.status}</span></td>
+                <td><a href="/admin/task-detail?id=${t.id}" class="btn btn-xs btn-info"><i class="feather icon-eye"></i></a></td>
+            </tr>`).join('');
+    }
+
+    async function loadMekanikOptions() {
+        const res = await Api.get('/api/users?role=mekanik');
+        if (!res.success) return;
+        const sel = document.getElementById('emMekanik');
+        (res.data || []).forEach(m => {
+            const opt = document.createElement('option');
+            opt.value = m.id;
+            opt.textContent = m.nama;
+            sel.appendChild(opt);
+        });
+    }
+
+    document.getElementById('btnBuatEmergency').onclick = () => $('#modalEmergency').modal('show');
+
+    document.getElementById('btnSimpanEmergency').onclick = async () => {
+        const judul = document.getElementById('emJudul').value.trim();
+        const mesin = document.getElementById('emMesin').value.trim();
+        if (!judul || !mesin) { alert('Judul dan mesin wajib diisi!'); return; }
+        const payload = {
+            judul,
+            keterangan: `[EMERGENCY] Mesin/Area: ${mesin}. ${document.getElementById('emKeterangan').value}`,
+            priority: 'HIGH',
+            teknisi_id: document.getElementById('emMekanik').value || null,
+        };
+        const res = await Api.post('/api/tasks', payload);
+        if (res.success) {
+            $('#modalEmergency').modal('hide');
+            loadEmergency();
+            alert('Work Order Emergency berhasil dibuat!');
+        } else {
+            alert('Gagal: ' + (res.message || 'Error tidak diketahui'));
+        }
+    };
+
+    loadEmergency();
+    loadMekanikOptions();
+</script>
+<script>
+    Api.init('auth');
+    const me = Api.getUser();
+    if (me && document.getElementById('navUserName')) document.getElementById('navUserName').textContent = me.nama;
+    const logoutFn = () => Api.logout();
+    if (document.getElementById('btnLogout')) document.getElementById('btnLogout').onclick = logoutFn;
+    if (document.getElementById('btnLogoutNav')) document.getElementById('btnLogoutNav').onclick = logoutFn;
+</script>
+</body>
+</html>

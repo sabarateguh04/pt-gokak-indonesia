@@ -1,273 +1,204 @@
 -- ═══════════════════════════════════════════════════════════════════
--- PT GOKAK INDONESIA — EMPLOYEE TRACKING & TICKET SYSTEM
--- Schema database, prefix tabel: pt_kapuk_
+-- PT GOKAK INDONESIA — CMMS & EMPLOYEE TRACKING SYSTEM
+-- Schema database, prefix tabel: pt_gokak_
 --
--- Sengaja cuma 11 tabel -- gak ada customer, site, perangkat, BA
--- checklist, kebutuhan, biaya, atau approval berjenjang, karena ini
--- sistem internal pabrik sendiri. Liat README.md bagian 1 & 3 buat
--- alasan lengkapnya.
---
--- ⚠️  RESET TOTAL — DROP semua tabel pt_kapuk_* lalu bikin ulang dari
---     nol. SEMUA DATA HILANG. Backup dulu kalau perlu:
---       mysqldump -u root -p pt_gokak_indonesia > backup.sql
---
--- CARA JALANIN (sekali jalan utuh, jangan baris per baris manual):
---   mysql -u root -p < schema.sql
+-- ⚠️  RESET TOTAL — DROP semua tabel pt_gokak_* / pt_kapuk_*
 -- ═══════════════════════════════════════════════════════════════════
 
 CREATE DATABASE IF NOT EXISTS pt_gokak_indonesia
   CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE pt_gokak_indonesia;
 
--- FK checks dimatikan dari sini sampai akhir file -- biar drop/create
--- gak perlu mikirin urutan manual.
 SET FOREIGN_KEY_CHECKS = 0;
 
+-- Drop old tables if they exist
 DROP TABLE IF EXISTS
-  pt_kapuk_tiket_files,
-  pt_kapuk_tiket_timeline,
-  pt_kapuk_tiket_teknisi,
-  pt_kapuk_tiket,
-  pt_kapuk_teknisi_area,
-  pt_kapuk_teknisi_lokasi,
-  pt_kapuk_teknisi,
-  pt_kapuk_area,
-  pt_kapuk_admins,
-  pt_kapuk_license_state,
-  pt_kapuk_license_requests;
+  pt_kapuk_tiket_files, pt_kapuk_tiket_timeline, pt_kapuk_tiket_teknisi,
+  pt_kapuk_tiket, pt_kapuk_teknisi_area, pt_kapuk_teknisi_lokasi,
+  pt_kapuk_teknisi, pt_kapuk_area, pt_kapuk_admins,
+  pt_kapuk_license_state, pt_kapuk_license_requests;
+
+-- Drop new tables if they exist
+DROP TABLE IF EXISTS
+  pt_gokak_task_files, pt_gokak_task_timeline, pt_gokak_tasks,
+  pt_gokak_pm_parameters, pt_gokak_machines, pt_gokak_task_categories,
+  pt_gokak_user_locations, pt_gokak_users, pt_gokak_lines, pt_gokak_shifts,
+  pt_gokak_license_state, pt_gokak_license_requests;
 
 -- ───────────────────────────────────────────────────────────
--- 1. ADMINS — akun yang login ke dashboard admin.
---    role disiapkan buat pembagian akses lebih halus nanti (misal
---    SUPERVISOR read-only) -- di versi ini semua ADMIN akses penuh.
+-- MASTER DATA
 -- ───────────────────────────────────────────────────────────
-CREATE TABLE pt_kapuk_admins (
+
+-- 1. SHIFTS
+CREATE TABLE pt_gokak_shifts (
   id          INT AUTO_INCREMENT PRIMARY KEY,
-  username    VARCHAR(100) NOT NULL UNIQUE,
-  password    VARCHAR(255) NOT NULL,
-  nama        VARCHAR(150) NOT NULL,
-  role        ENUM('ADMIN','SUPERVISOR') NOT NULL DEFAULT 'ADMIN',
-  is_active   TINYINT(1) NOT NULL DEFAULT 1,
+  nama        VARCHAR(50) NOT NULL,
+  start_time  TIME NOT NULL,
+  end_time    TIME NOT NULL,
   created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
--- ───────────────────────────────────────────────────────────
--- 2. AREA — poligon 3D area pabrik yang digambar admin di halaman
---    Kelola Area. `is_primary` = area ini DIHITUNG sebagai "dalam
---    area pabrik" buat KPI kehadiran (union dari semua area primary);
---    area non-primary cuma buat referensi visual di peta (misal area
---    parkir), gak dihitung ke jam kerja.
---    `polygon` simpan ring GeoJSON: array [[lng,lat], ...] tertutup
---    (titik pertama & terakhir sama).
--- ───────────────────────────────────────────────────────────
-CREATE TABLE pt_kapuk_area (
+-- 2. LINES / AREA PRODUKSI (menggantikan pt_kapuk_area)
+CREATE TABLE pt_gokak_lines (
   id          INT AUTO_INCREMENT PRIMARY KEY,
   nama        VARCHAR(150) NOT NULL,
+  departemen  VARCHAR(150) NULL,
   deskripsi   VARCHAR(255) NULL,
   is_primary  TINYINT(1) NOT NULL DEFAULT 1,
-  height      INT NOT NULL DEFAULT 10,        -- tinggi extrusion 3D (meter)
+  height      INT NOT NULL DEFAULT 10,
   color       VARCHAR(9) NOT NULL DEFAULT '#f59e0b',
   polygon     JSON NOT NULL,
   is_active   TINYINT(1) NOT NULL DEFAULT 1,
-  created_by  INT NOT NULL,
   created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  FOREIGN KEY (created_by) REFERENCES pt_kapuk_admins(id),
-  INDEX idx_area_primary (is_primary, is_active)
+  INDEX idx_line_primary (is_primary, is_active)
 ) ENGINE=InnoDB;
 
--- ───────────────────────────────────────────────────────────
--- 3. TEKNISI — akun & profil karyawan/teknisi pabrik.
---    status + latitude/longitude/last_location_at = sumber data buat
---    marker di peta dashboard admin (update tiap ping GPS).
--- ───────────────────────────────────────────────────────────
-CREATE TABLE pt_kapuk_teknisi (
+-- 3. USERS (menggabungkan admin & teknisi, mendukung role RBAC)
+CREATE TABLE pt_gokak_users (
   id                INT AUTO_INCREMENT PRIMARY KEY,
   username          VARCHAR(100) NOT NULL UNIQUE,
   password          VARCHAR(255) NOT NULL,
   nama              VARCHAR(150) NOT NULL,
   no_hp             VARCHAR(30)  NULL,
   email             VARCHAR(150) NULL,
-  jabatan           VARCHAR(100) NULL,
-  departemen        VARCHAR(100) NULL,
-  foto_url          VARCHAR(500) NULL,
+  role              ENUM('ADMIN','LEADER','MEKANIK','EXECUTIVE') NOT NULL,
+  line_id           INT NULL,            -- Scope untuk Leader & Mekanik
   status            ENUM('OFFLINE','ONLINE','ON_TASK') NOT NULL DEFAULT 'OFFLINE',
   latitude          DECIMAL(10,7) NULL,
   longitude         DECIMAL(10,7) NULL,
   last_location_at  DATETIME NULL,
   is_active         TINYINT(1) NOT NULL DEFAULT 1,
   created_at        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  INDEX idx_teknisi_status (status)
+  FOREIGN KEY (line_id) REFERENCES pt_gokak_lines(id) ON DELETE SET NULL,
+  INDEX idx_user_role (role),
+  INDEX idx_user_status (status)
 ) ENGINE=InnoDB;
 
--- ───────────────────────────────────────────────────────────
--- 4. RIWAYAT GPS TEKNISI — trail pergerakan, disimpan tiap ping
---    (bukan cuma titik terakhir kayak di tabel teknisi).
---    in_area/area_id = hasil cek point-in-polygon TERHADAP AREA
---    PRIMARY yang aktif SAAT ping ini masuk (disnapshot, bukan
---    dihitung ulang belakangan) -- ini yang jadi dasar perhitungan
---    KPI kehadiran "di dalam vs di luar area pabrik".
--- ───────────────────────────────────────────────────────────
-CREATE TABLE pt_kapuk_teknisi_lokasi (
+-- 4. RIWAYAT GPS USERS (untuk Mekanik/Leader yang di lapangan)
+CREATE TABLE pt_gokak_user_locations (
   id            BIGINT AUTO_INCREMENT PRIMARY KEY,
-  teknisi_id    INT NOT NULL,
-  tiket_id      INT NULL,
+  user_id       INT NOT NULL,
+  task_id       INT NULL,
   latitude      DECIMAL(10,7) NOT NULL,
   longitude     DECIMAL(10,7) NOT NULL,
-  in_area       TINYINT(1) NOT NULL DEFAULT 0,
-  area_id       INT NULL,
+  in_line       TINYINT(1) NOT NULL DEFAULT 0,
+  line_id       INT NULL,
   recorded_at   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (teknisi_id) REFERENCES pt_kapuk_teknisi(id) ON DELETE CASCADE,
-  FOREIGN KEY (area_id) REFERENCES pt_kapuk_area(id) ON DELETE SET NULL,
-  INDEX idx_teknisi_time (teknisi_id, recorded_at)
+  FOREIGN KEY (user_id) REFERENCES pt_gokak_users(id) ON DELETE CASCADE,
+  FOREIGN KEY (line_id) REFERENCES pt_gokak_lines(id) ON DELETE SET NULL,
+  INDEX idx_user_time (user_id, recorded_at)
 ) ENGINE=InnoDB;
 
--- ───────────────────────────────────────────────────────────
--- 5. TEKNISI × AREA — area kerja yang di-assign admin ke teknisi dari
---    master area (bagian 2). 1 teknisi boleh terdaftar di beberapa
---    area. SIFATNYA ORGANISASI/INFORMASI ("teknisi ini seharusnya
---    kerja di area mana") -- BUKAN yang nentuin in_area/geofence di
---    pt_kapuk_teknisi_lokasi (itu tetep union semua area is_primary,
---    apapun teknisinya). Kalau nanti mau geofence per-teknisi ngikut
---    assignment ini, gampang -- tinggal filter areanya pas classifyPoint.
--- ───────────────────────────────────────────────────────────
-CREATE TABLE pt_kapuk_teknisi_area (
+-- 5. TASK CATEGORIES (Jenis pekerjaan)
+CREATE TABLE pt_gokak_task_categories (
   id          INT AUTO_INCREMENT PRIMARY KEY,
-  teknisi_id  INT NOT NULL,
-  area_id     INT NOT NULL,
+  nama        VARCHAR(100) NOT NULL,
+  deskripsi   VARCHAR(255) NULL,
+  created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+-- 6. MACHINES / ASET
+CREATE TABLE pt_gokak_machines (
+  id          INT AUTO_INCREMENT PRIMARY KEY,
+  kode        VARCHAR(50) NOT NULL UNIQUE,
+  nama        VARCHAR(150) NOT NULL,
+  tipe        VARCHAR(100) NULL,
+  merk        VARCHAR(100) NULL,
+  line_id     INT NULL,
+  last_pm_at  DATE NULL,
+  is_active   TINYINT(1) NOT NULL DEFAULT 1,
   created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  UNIQUE KEY uniq_teknisi_area (teknisi_id, area_id),
-  FOREIGN KEY (teknisi_id) REFERENCES pt_kapuk_teknisi(id) ON DELETE CASCADE,
-  FOREIGN KEY (area_id)    REFERENCES pt_kapuk_area(id) ON DELETE CASCADE
+  FOREIGN KEY (line_id) REFERENCES pt_gokak_lines(id) ON DELETE SET NULL
+) ENGINE=InnoDB;
+
+-- 7. PM PARAMETERS (Preventive Maintenance)
+CREATE TABLE pt_gokak_pm_parameters (
+  id              INT AUTO_INCREMENT PRIMARY KEY,
+  machine_tipe    VARCHAR(100) NOT NULL,
+  cycle_days      INT NOT NULL,
+  checklist_json  JSON NULL,
+  created_at      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
 -- ───────────────────────────────────────────────────────────
--- 6. TIKET — inti sistem (dulu "order"). Tanpa approval, tanpa
---    BA-checklist -- begitu admin assign, langsung ASSIGNED.
---    Bisa dibuat ADMIN *atau* TEKNISI sendiri (self-service) --
---    makanya created_by dipecah 2 kolom nullable (persis pola
---    uploaded_by_admin_id/uploaded_by_teknisi_id di tiket_files),
---    karena FK gak bisa nunjuk ke 2 tabel beda sekaligus.
---    area_id = lokasi kerja, WAJIB dari master pt_kapuk_area (dropdown,
---    bukan teks bebas lagi) -- tetap bisa diedit (oleh admin ATAU
---    teknisi yang di-assign) sampai tiket-nya DONE/CANCELLED.
---    tanggal_mulai/tanggal_selesai = rencana jadwal kerja (DATE),
---    beda sama selesai_at (DATETIME, waktu ACTUAL pas di-klik selesai).
+-- TRANSAKSI
 -- ───────────────────────────────────────────────────────────
-CREATE TABLE pt_kapuk_tiket (
-  id                    INT AUTO_INCREMENT PRIMARY KEY,
-  tiket_no              VARCHAR(20) NOT NULL UNIQUE,
 
+-- 8. TASKS (Pengganti tiket, mendukung verifikasi Leader)
+CREATE TABLE pt_gokak_tasks (
+  id                    INT AUTO_INCREMENT PRIMARY KEY,
+  task_no               VARCHAR(20) NOT NULL UNIQUE,
   judul                 VARCHAR(200) NOT NULL,
   deskripsi             TEXT NULL,
-  kategori              ENUM('MAINTENANCE','PERBAIKAN','INSPEKSI','LAINNYA') NOT NULL DEFAULT 'PERBAIKAN',
+  category_id           INT NULL,
   priority              ENUM('LOW','MEDIUM','HIGH') NOT NULL DEFAULT 'MEDIUM',
-
-  area_id               INT NULL,            -- lokasi kerja, dari master pt_kapuk_area
+  
+  line_id               INT NULL,            -- Scope lokasi task
+  machine_id            INT NULL,            -- Mesin yang dikerjakan (opsional)
+  
   tanggal_mulai         DATE NULL,
   tanggal_selesai       DATE NULL,
-  latitude              DECIMAL(10,7) NULL,  -- titik pin tugas di peta (opsional, override dari area)
+  latitude              DECIMAL(10,7) NULL,
   longitude             DECIMAL(10,7) NULL,
 
-  status                ENUM('NEW','ASSIGNED','IN_PROGRESS','DONE','CANCELLED') NOT NULL DEFAULT 'NEW',
+  status                ENUM('OPEN','IN_PROGRESS','SELESAI','TERVERIFIKASI','CANCELLED') NOT NULL DEFAULT 'OPEN',
+  pm_checklist_result   JSON NULL,           -- Jawaban checklist jika ini task PM
 
-  created_by_admin_id   INT NULL,
-  created_by_teknisi_id INT NULL,
+  created_by_id         INT NOT NULL,        -- Bisa Leader (Top-down) atau Mekanik (Bottom-up)
+  assigned_to_id        INT NULL,            -- Mekanik yang mengerjakan
+  verified_by_id        INT NULL,            -- Leader yang memverifikasi
+  
   created_at            DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at            DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  selesai_at            DATETIME NULL,
+  selesai_at            DATETIME NULL,       -- Waktu mekanik klik selesai
+  verified_at           DATETIME NULL,       -- Waktu leader klik verifikasi
 
-  FOREIGN KEY (area_id)               REFERENCES pt_kapuk_area(id) ON DELETE SET NULL,
-  FOREIGN KEY (created_by_admin_id)   REFERENCES pt_kapuk_admins(id),
-  FOREIGN KEY (created_by_teknisi_id) REFERENCES pt_kapuk_teknisi(id),
-  INDEX idx_tiket_status (status),
-  INDEX idx_tiket_created (created_at)
+  FOREIGN KEY (category_id)    REFERENCES pt_gokak_task_categories(id) ON DELETE SET NULL,
+  FOREIGN KEY (line_id)        REFERENCES pt_gokak_lines(id) ON DELETE SET NULL,
+  FOREIGN KEY (machine_id)     REFERENCES pt_gokak_machines(id) ON DELETE SET NULL,
+  FOREIGN KEY (created_by_id)  REFERENCES pt_gokak_users(id),
+  FOREIGN KEY (assigned_to_id) REFERENCES pt_gokak_users(id),
+  FOREIGN KEY (verified_by_id) REFERENCES pt_gokak_users(id),
+  INDEX idx_task_status (status),
+  INDEX idx_task_created (created_at)
 ) ENGINE=InnoDB;
 
--- ───────────────────────────────────────────────────────────
--- 7. TEKNISI PER TIKET — assign langsung (tanpa tawar/terima),
---    boleh lebih dari satu teknisi per tiket. assigned_by juga
---    dipecah 2 kolom nullable -- kalau teknisi bikin tiket sendiri,
---    "yang assign" ya dia sendiri, bukan admin.
--- ───────────────────────────────────────────────────────────
-CREATE TABLE pt_kapuk_tiket_teknisi (
-  id                    INT AUTO_INCREMENT PRIMARY KEY,
-  tiket_id              INT NOT NULL,
-  teknisi_id            INT NOT NULL,
-  assigned_by_admin_id   INT NULL,
-  assigned_by_teknisi_id INT NULL,
-  assigned_at           DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  UNIQUE KEY uniq_tiket_teknisi (tiket_id, teknisi_id),
-  FOREIGN KEY (tiket_id)               REFERENCES pt_kapuk_tiket(id) ON DELETE CASCADE,
-  FOREIGN KEY (teknisi_id)             REFERENCES pt_kapuk_teknisi(id),
-  FOREIGN KEY (assigned_by_admin_id)   REFERENCES pt_kapuk_admins(id),
-  FOREIGN KEY (assigned_by_teknisi_id) REFERENCES pt_kapuk_teknisi(id)
-) ENGINE=InnoDB;
-
--- ───────────────────────────────────────────────────────────
--- 8. TIMELINE — log aktivitas per tiket (buat riwayat & notifikasi).
--- ───────────────────────────────────────────────────────────
-CREATE TABLE pt_kapuk_tiket_timeline (
+-- 9. TASK TIMELINE
+CREATE TABLE pt_gokak_task_timeline (
   id          BIGINT AUTO_INCREMENT PRIMARY KEY,
-  tiket_id    INT NOT NULL,
+  task_id     INT NOT NULL,
   event_type  VARCHAR(50) NOT NULL,
   note        VARCHAR(500) NULL,
-  actor_type  ENUM('ADMIN','TEKNISI','SYSTEM') NOT NULL DEFAULT 'SYSTEM',
   actor_id    INT NULL,
   created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (tiket_id) REFERENCES pt_kapuk_tiket(id) ON DELETE CASCADE,
-  INDEX idx_tiket_timeline (tiket_id, created_at)
+  FOREIGN KEY (task_id) REFERENCES pt_gokak_tasks(id) ON DELETE CASCADE,
+  FOREIGN KEY (actor_id) REFERENCES pt_gokak_users(id) ON DELETE SET NULL,
+  INDEX idx_task_timeline (task_id, created_at)
+) ENGINE=InnoDB;
+
+-- 10. TASK FILES
+CREATE TABLE pt_gokak_task_files (
+  id              INT AUTO_INCREMENT PRIMARY KEY,
+  task_id         INT NOT NULL,
+  judul           VARCHAR(200) NULL,
+  file_url        VARCHAR(500) NOT NULL,
+  uploaded_by_id  INT NULL,
+  created_at      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (task_id) REFERENCES pt_gokak_tasks(id) ON DELETE CASCADE,
+  FOREIGN KEY (uploaded_by_id) REFERENCES pt_gokak_users(id)
 ) ENGINE=InnoDB;
 
 -- ───────────────────────────────────────────────────────────
--- 9. FILE / FOTO BUKTI — lampiran bebas per tiket (mis. foto sebelum/
---    sesudah dikerjakan). Sengaja generik, gak dipisah-pisah kategori,
---    karena gak ada BA checklist/rincian biaya yang butuh itu di sini.
+-- LICENSE (Sama seperti sebelumnya)
 -- ───────────────────────────────────────────────────────────
-CREATE TABLE pt_kapuk_tiket_files (
-  id                      INT AUTO_INCREMENT PRIMARY KEY,
-  tiket_id                INT NOT NULL,
-  judul                   VARCHAR(200) NULL,
-  file_url                VARCHAR(500) NOT NULL,
-  uploaded_by_admin_id    INT NULL,
-  uploaded_by_teknisi_id  INT NULL,
-  created_at              DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (tiket_id)               REFERENCES pt_kapuk_tiket(id) ON DELETE CASCADE,
-  FOREIGN KEY (uploaded_by_admin_id)   REFERENCES pt_kapuk_admins(id),
-  FOREIGN KEY (uploaded_by_teknisi_id) REFERENCES pt_kapuk_teknisi(id)
-) ENGINE=InnoDB;
-
--- ───────────────────────────────────────────────────────────
--- 10. LICENSE STATE — 1 baris doang (id selalu 1), nyimpen
---     `last_verified_ms` = waktu PALING BESAR yang PERNAH keliatan sama
---     app ini (Unix timestamp milidetik -- SENGAJA angka mentah, BUKAN
---     DATETIME, biar gak ada ambiguitas timezone sama sekali pas
---     dibandingin sama Date.now() di kode). Dipakai buat DETEKSI JAM
---     SISTEM DIMUNDURIN: kalau waktu sekarang ternyata LEBIH KECIL
---     dari baris ini, itu artinya jam servernya baru aja dimundurin --
---     lisensi otomatis dianggap gak valid apapun kata token JWT-nya
---     (JWT-nya sendiri bisa "ketipu" jam mundur, tabel ini jangkarnya,
---     nilainya monoton naik terus, gak pernah di-set mundur oleh app).
---     Disimpan di DATABASE (bukan file lokal di container) SENGAJA --
---     biar gak ke-reset kalau container di-restart/recreate, beda sama
---     database yang persisten independen dari lifecycle container.
---     Lihat helpers/license.js fungsi checkClockIntegrity().
--- ───────────────────────────────────────────────────────────
-CREATE TABLE pt_kapuk_license_state (
+CREATE TABLE pt_gokak_license_state (
   id                INT PRIMARY KEY,
   last_verified_ms  BIGINT NOT NULL,
   updated_at        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
--- ───────────────────────────────────────────────────────────
--- 11. LICENSE REQUESTS — riwayat pengajuan tambah seat/perpanjangan
---     yang dikirim dari dalam aplikasi (halaman admin "Lisensi" ATAU
---     dari halaman /license-locked kalau lagi kekunci). Disimpan lokal
---     di sini SEKALIGUS dicoba dikirim ke vendor lewat webhook (kalau
---     dikonfigurasi) -- baris di sini jadi bukti/riwayat yang gak
---     hilang walau webhook gagal/belum di-setup.
--- ───────────────────────────────────────────────────────────
-CREATE TABLE pt_kapuk_license_requests (
+CREATE TABLE pt_gokak_license_requests (
   id                INT AUTO_INCREMENT PRIMARY KEY,
   type              ENUM('ADDON','RENEWAL','OTHER') NOT NULL DEFAULT 'ADDON',
   requested_seats   INT NULL,
@@ -278,36 +209,53 @@ CREATE TABLE pt_kapuk_license_requests (
   created_at        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
--- FK checks dinyalain lagi -- semua tabel udah selesai dibikin.
 SET FOREIGN_KEY_CHECKS = 1;
 
 -- ───────────────────────────────────────────────────────────
--- SEED DATA MINIMAL (password semua akun contoh: "password123")
+-- SEED DATA MINIMAL
 -- ───────────────────────────────────────────────────────────
-INSERT INTO pt_kapuk_admins (username, password, nama, role) VALUES
-  ('admin', '$2b$10$.gI0Q57pTsFDt0cbQBpDb.qq2m6KPafkaQOBaQwnpp1uIbUcXnM62', 'Administrator', 'ADMIN');
 
-INSERT INTO pt_kapuk_teknisi (username, password, nama, no_hp, email, jabatan, departemen) VALUES
-  ('teknisi1', '$2b$10$.gI0Q57pTsFDt0cbQBpDb.qq2m6KPafkaQOBaQwnpp1uIbUcXnM62', 'Andi Wijaya', '081212121212', 'andi@ptgokak.co.id', 'Teknisi Mesin', 'Produksi'),
-  ('teknisi2', '$2b$10$.gI0Q57pTsFDt0cbQBpDb.qq2m6KPafkaQOBaQwnpp1uIbUcXnM62', 'Budi Santoso', '081212121213', 'budi@ptgokak.co.id', 'Teknisi Listrik', 'Maintenance');
+-- 1. Shifts
+INSERT INTO pt_gokak_shifts (nama, start_time, end_time) VALUES
+  ('Shift A', '06:00:00', '14:00:00'),
+  ('Shift B', '14:00:00', '22:00:00'),
+  ('Shift C', '22:00:00', '06:00:00');
 
--- Area default buat MASA DEVELOPMENT -- dialihkan ke lokasi kantor
--- (Ruko Pesona View, Blok C7) sesuai arahan, BUKAN lokasi pabrik asli.
--- Bentuknya kotak kasar di sekitar titik ruko -- gambar ulang yang
--- presisi lewat halaman admin "Area Pabrik" begitu develop di lokasi asli.
-INSERT INTO pt_kapuk_area (nama, deskripsi, is_primary, height, color, polygon, created_by) VALUES
-  ('Kantor (dev sementara)', 'Ruko Pesona View Blok C7 -- ganti ke lokasi pabrik asli lewat halaman Area Pabrik', 1, 10, '#f59e0b',
+-- 2. Lines (Area)
+INSERT INTO pt_gokak_lines (nama, departemen, deskripsi, is_primary, height, color, polygon) VALUES
+  ('Line Spinning 1', 'Spinning', 'Area Spinning 1', 1, 10, '#3b82f6',
    JSON_ARRAY(
      JSON_ARRAY(106.840688, -6.379983),
      JSON_ARRAY(106.840960, -6.379983),
      JSON_ARRAY(106.840960, -6.380146),
      JSON_ARRAY(106.840688, -6.380146),
      JSON_ARRAY(106.840688, -6.379983)
-   ), 1);
+   )),
+  ('Line Weaving 1', 'Weaving', 'Area Weaving 1', 1, 10, '#ef4444',
+   JSON_ARRAY(
+     JSON_ARRAY(106.841000, -6.379900),
+     JSON_ARRAY(106.841200, -6.379900),
+     JSON_ARRAY(106.841200, -6.380100),
+     JSON_ARRAY(106.841000, -6.380100),
+     JSON_ARRAY(106.841000, -6.379900)
+   ));
 
--- Contoh assignment teknisi ke area (keduanya ditugaskan ke area default
--- di atas -- kalau nanti ada beberapa area, tinggal INSERT baris lagi,
--- 1 teknisi boleh punya banyak baris/area).
-INSERT INTO pt_kapuk_teknisi_area (teknisi_id, area_id)
-  SELECT t.id, a.id FROM pt_kapuk_teknisi t, pt_kapuk_area a
-  WHERE t.username IN ('teknisi1', 'teknisi2') AND a.nama = 'Kantor (dev sementara)';
+-- 3. Users
+-- password "password123"
+INSERT INTO pt_gokak_users (username, password, nama, role, line_id) VALUES
+  ('admin', '$2b$10$.gI0Q57pTsFDt0cbQBpDb.qq2m6KPafkaQOBaQwnpp1uIbUcXnM62', 'Super Admin', 'ADMIN', NULL),
+  ('exec1', '$2b$10$.gI0Q57pTsFDt0cbQBpDb.qq2m6KPafkaQOBaQwnpp1uIbUcXnM62', 'Bpk Direktur', 'EXECUTIVE', NULL),
+  ('leader_spin1', '$2b$10$.gI0Q57pTsFDt0cbQBpDb.qq2m6KPafkaQOBaQwnpp1uIbUcXnM62', 'Leader Spinning 1', 'LEADER', 1),
+  ('mekanik_spin1', '$2b$10$.gI0Q57pTsFDt0cbQBpDb.qq2m6KPafkaQOBaQwnpp1uIbUcXnM62', 'Mekanik Spinning 1', 'MEKANIK', 1),
+  ('leader_weav1', '$2b$10$.gI0Q57pTsFDt0cbQBpDb.qq2m6KPafkaQOBaQwnpp1uIbUcXnM62', 'Leader Weaving 1', 'LEADER', 2),
+  ('mekanik_weav1', '$2b$10$.gI0Q57pTsFDt0cbQBpDb.qq2m6KPafkaQOBaQwnpp1uIbUcXnM62', 'Mekanik Weaving 1', 'MEKANIK', 2);
+
+-- 4. Task Categories
+INSERT INTO pt_gokak_task_categories (nama) VALUES
+  ('Perbaikan'), ('Preventive Maintenance'), ('Setting Mesin'), ('Cleaning');
+
+-- 5. Machines
+INSERT INTO pt_gokak_machines (kode, nama, tipe, merk, line_id) VALUES
+  ('SPN-01', 'Mesin Ring Spinning 01', 'Ring Frame', 'Toyota', 1),
+  ('SPN-02', 'Mesin Ring Spinning 02', 'Ring Frame', 'Toyota', 1),
+  ('WVN-01', 'Mesin Loom 01', 'Air Jet Loom', 'Tsudakoma', 2);

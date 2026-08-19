@@ -1,244 +1,648 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<script src="/js/theme.js"></script>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Kehadiran — Monitoring App</title>
-<link rel="stylesheet" href="/css/style.css">
+    <title>Absensi Shift — PT Gokak Indonesia</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimal-ui">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <link rel="icon" href="/libraries/assets/images/favicon.ico" type="image/x-icon">
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans:400,600" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="/libraries/bower_components/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="/libraries/assets/icon/themify-icons/themify-icons.css">
+    <link rel="stylesheet" type="text/css" href="/libraries/assets/icon/icofont/css/icofont.css">
+    <link rel="stylesheet" type="text/css" href="/libraries/assets/icon/feather/css/feather.css">
+    <link rel="stylesheet" type="text/css" href="/libraries/assets/css/style.css">
+    <link rel="stylesheet" type="text/css" href="/libraries/assets/css/jquery.mCustomScrollbar.css">
+    <style>
+        /* ── Heatmap ── */
+        .heatmap-wrap { overflow-x: auto; padding-bottom: 8px; }
+        .heatmap-grid { display: flex; gap: 3px; align-items: flex-end; }
+        .heatmap-col  { display: flex; flex-direction: column; gap: 3px; }
+        .heatmap-cell {
+            width: 13px; height: 13px; border-radius: 2px;
+            background: #eee; cursor: pointer; title: '';
+        }
+        .heatmap-cell:hover { outline: 1px solid #888; }
+        .heatmap-cell[data-v="0"] { background: #eee; }
+        .heatmap-cell[data-v="1"] { background: #c6e48b; }
+        .heatmap-cell[data-v="2"] { background: #7bc96f; }
+        .heatmap-cell[data-v="3"] { background: #239a3b; }
+        .heatmap-cell[data-v="4"] { background: #196127; }
+        .heatmap-month-label { font-size: 10px; color: #999; margin-bottom: 4px; text-align: center; }
+
+        /* ── Teknisi list row ── */
+        .teknisi-row { cursor: pointer; }
+        .teknisi-row:hover td { background: #f0f4ff !important; }
+        .teknisi-row.selected td { background: #e8f0fe !important; font-weight: 600; }
+
+        /* ── Period tabs ── */
+        .period-tab-group { display: flex; gap: 6px; flex-wrap: wrap; }
+        .period-tab-group .btn.active { background: #4099ff; color: #fff; border-color: #4099ff; }
+
+        /* ── Session list ── */
+        .session-block { margin-bottom: 12px; }
+        .session-block-title {
+            font-size: 12px; font-weight: 700; text-transform: uppercase;
+            letter-spacing: .5px; padding: 4px 8px; border-radius: 4px;
+            margin-bottom: 6px; display: inline-block;
+        }
+        .session-block-title.online { background: #e3f2fd; color: #1565c0; }
+        .session-block-title.in     { background: #e8f5e9; color: #2e7d32; }
+        .session-block-title.out    { background: #fff3e0; color: #e65100; }
+        .session-row {
+            display: flex; justify-content: space-between;
+            padding: 5px 10px; border-radius: 4px; font-size: 13px;
+            margin-bottom: 3px; background: #f8f9fa;
+        }
+        .session-hint { font-size: 11px; color: #aaa; margin-top: 4px; }
+
+        /* ── Stat grid ── */
+        .stat-mini-row { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+        .stat-mini-card {
+            flex: 1; min-width: 100px;
+            border-radius: 8px; padding: 12px 14px; text-align: center;
+        }
+        .stat-mini-card.bg-online { background: #e3f2fd; }
+        .stat-mini-card.bg-online .val { color: #1565c0; }
+        .stat-mini-card.bg-in { background: #e8f5e9; }
+        .stat-mini-card.bg-in .val { color: #2e7d32; }
+        .stat-mini-card.bg-out { background: #fff3e0; }
+        .stat-mini-card.bg-out .val { color: #e65100; }
+        
+        .stat-mini-card .val { font-size: 22px; font-weight: 700; margin-bottom: 2px; }
+        .stat-mini-card .lbl { font-size: 11px; color: #666; text-transform: uppercase; font-weight: 600; }
+
+        /* ── Empty detail panel ── */
+        .detail-empty {
+            text-align: center; padding: 50px 20px;
+            color: #aaa; font-size: 14px;
+        }
+        .detail-empty i { font-size: 48px; display: block; margin-bottom: 12px; }
+    </style>
 </head>
 <body>
-  <div class="app-shell">
-    <aside class="sidebar">
-      <div class="brand">🏭 Monitoring App<small>Portal Admin</small></div>
-      <a href="/admin/dashboard">📍 Dashboard</a>
-      <a href="/admin/teknisi">🧑‍🔧 Teknisi</a>
-      <a href="/admin/tiket">🎫 Tiket</a>
-      <a href="/admin/kehadiran" class="active">📆 Kehadiran</a>
-      <a href="/admin/area">🗺️ Area Pabrik</a>
-      <a href="/admin/license">🔑 Lisensi</a>
-      <div class="logout" id="btnLogout">↩ Logout</div>
-    </aside>
+<!-- Pre-loader -->
+<div class="theme-loader">
+    <div class="ball-scale"><div class='contain'>
+        <div class="ring"><div class="frame"></div></div>
+        <div class="ring"><div class="frame"></div></div>
+        <div class="ring"><div class="frame"></div></div>
+        <div class="ring"><div class="frame"></div></div>
+        <div class="ring"><div class="frame"></div></div>
+        <div class="ring"><div class="frame"></div></div>
+        <div class="ring"><div class="frame"></div></div>
+        <div class="ring"><div class="frame"></div></div>
+        <div class="ring"><div class="frame"></div></div>
+        <div class="ring"><div class="frame"></div></div>
+    </div></div>
+</div>
 
-    <main class="main">
-      <div class="main-header">
-        <h1>KPI Kehadiran Karyawan</h1>
-        <div style="display:flex;align-items:center;gap:10px">
-          <button class="theme-toggle-btn" title="Ganti tema"><span class="theme-toggle-icon">🌙</span></button>
-          <div class="user-badge" id="userBadge"></div>
-        </div>
-      </div>
+<div id="pcoded" class="pcoded">
+    <div class="pcoded-overlay-box"></div>
+    <div class="pcoded-container navbar-wrapper">
 
-      <div class="split-layout">
-        <div class="split-list">
-          <div class="card">
-            <div class="period-tabs">
-              <button class="secondary active" data-period="today">Hari Ini</button>
-              <button class="secondary" data-period="week">Minggu Ini</button>
-              <button class="secondary" data-period="month">Bulan Ini</button>
-            </div>
-            <input id="searchInput" placeholder="Cari nama karyawan…" style="margin-bottom:10px">
-            <table>
-              <thead><tr><th>Nama</th><th>Online</th><th>Luar Area</th></tr></thead>
-              <tbody id="tbody"></tbody>
-            </table>
-            <div class="pagination">
-              <span id="pageInfo"></span>
-              <div style="display:flex;gap:6px">
-                <button class="secondary" id="btnPrev">← Prev</button>
-                <button class="secondary" id="btnNext">Next →</button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="split-detail">
-          <div id="emptyDetail" class="card">
-            <div class="empty-state">Pilih salah satu karyawan di daftar kiri buat lihat detail kehadirannya</div>
-          </div>
-
-          <div id="detailWrap" class="hidden">
-            <div class="card" style="margin-bottom:16px">
-              <div class="main-header" style="margin-bottom:14px">
-                <div>
-                  <h2 id="detailNama" style="margin:0;font-size:18px"></h2>
-                  <div class="meta" style="color:var(--text-dim);font-size:13px" id="detailJabatan"></div>
+        <!-- NAVBAR -->
+        <nav class="navbar header-navbar pcoded-header">
+            <div class="navbar-wrapper">
+                <div class="navbar-logo">
+                    <a class="mobile-menu" id="mobile-collapse" href="#!"><i class="feather icon-menu"></i></a>
+                    <a href="/admin/dashboard"><img class="img-fluid" src="/libraries/assets/images/logo.png" alt="Logo"></a>
+                    <a class="mobile-options"><i class="feather icon-more-horizontal"></i></a>
                 </div>
-                <div style="display:flex;gap:8px;align-items:center">
-                  <span style="font-size:12.5px;color:var(--text-dim)">Rentang kalender:</span>
-                  <select id="heatmapRange">
-                    <option value="90">3 bulan</option>
-                    <option value="180">6 bulan</option>
-                    <option value="365">1 tahun</option>
-                  </select>
+                <div class="navbar-container container-fluid">
+                    <ul class="nav-left">
+                        <li><a href="#!" onclick="javascript:toggleFullScreen()"><i class="feather icon-maximize full-screen"></i></a></li>
+                    </ul>
+                    <ul class="nav-right">
+                        <li class="user-profile header-notification">
+                            <div class="dropdown-primary dropdown">
+                                <div class="dropdown-toggle" data-toggle="dropdown">
+                                    <img src="/libraries/assets/images/avatar-4.jpg" class="img-radius" alt="User">
+                                    <span id="navUserName">Admin</span>
+                                    <i class="feather icon-chevron-down"></i>
+                                </div>
+                                <ul class="show-notification profile-notification dropdown-menu" data-dropdown-in="fadeIn" data-dropdown-out="fadeOut">
+                                    <li><a href="/admin/settings"><i class="feather icon-settings"></i> Settings</a></li>
+                                    <li><a href="#" id="btnLogoutNav"><i class="feather icon-log-out"></i> Logout</a></li>
+                                </ul>
+                            </div>
+                        </li>
+                    </ul>
                 </div>
-              </div>
-              <div id="heatmapContainer"></div>
             </div>
+        </nav>
 
-            <div class="card">
-              <div class="main-header" style="margin-bottom:10px">
-                <h3 style="margin:0" id="detailDateLabel">Detail Harian</h3>
-                <input type="date" id="detailDateInput">
-              </div>
+        <div class="pcoded-main-container">
+            <div class="pcoded-wrapper">
 
-              <div class="stat-mini-grid">
-                <div class="stat-mini"><div class="v" id="statOnline">-</div><div class="l">Total Online</div></div>
-                <div class="stat-mini"><div class="v" id="statInArea">-</div><div class="l">Di Area Pabrik</div></div>
-                <div class="stat-mini"><div class="v" id="statOutArea">-</div><div class="l">Di Luar Area</div></div>
-              </div>
+                <!-- SIDEBAR -->
+                <nav class="pcoded-navbar">
+                    <div class="pcoded-inner-navbar main-menu">
+                        <div class="pcoded-navigatio-lavel">DASHBOARDS</div>
+                        <ul class="pcoded-item pcoded-left-item">
+                            <li><a href="/admin/dashboard"><span class="pcoded-micon"><i class="feather icon-home"></i></span><span class="pcoded-mtext">Dashboard</span></a></li>
+                            <li><a href="/admin/layout-plant"><span class="pcoded-micon"><i class="feather icon-map"></i></span><span class="pcoded-mtext">Layout Plant</span></a></li>
+                        </ul>
+                        <div class="pcoded-navigatio-lavel">WORK ORDER</div>
+                        <ul class="pcoded-item pcoded-left-item">
+                            <li><a href="/admin/tasks"><span class="pcoded-micon"><i class="feather icon-file-text"></i></span><span class="pcoded-mtext">Work Order</span></a></li>
+                            <li><a href="/admin/emergency"><span class="pcoded-micon"><i class="feather icon-alert-triangle"></i></span><span class="pcoded-mtext">Emergency</span></a></li>
+                            <li><a href="/admin/lapor-kendala"><span class="pcoded-micon"><i class="feather icon-message-square"></i></span><span class="pcoded-mtext">Lapor Kendala</span></a></li>
+                        </ul>
+                        <div class="pcoded-navigatio-lavel">MANAJEMEN MEKANIK</div>
+                        <ul class="pcoded-item pcoded-left-item">
+                            <li><a href="/admin/users"><span class="pcoded-micon"><i class="feather icon-users"></i></span><span class="pcoded-mtext">Data Mekanik</span></a></li>
+                            <li class="active"><a href="/admin/kehadiran"><span class="pcoded-micon"><i class="feather icon-check-square"></i></span><span class="pcoded-mtext">Absensi Shift</span></a></li>
+                            <li class=""><a href="/admin/hak-akses"><span class="pcoded-micon"><i class="feather icon-lock"></i></span><span class="pcoded-mtext">Hak Akses</span></a></li>
+                        </ul>
+                        <div class="pcoded-navigatio-lavel">MASTER DATA</div>
+                        <ul class="pcoded-item pcoded-left-item">
+                            <li class=""><a href="/admin/master-shift"><span class="pcoded-micon"><i class="feather icon-clock"></i></span><span class="pcoded-mtext">Master Shift</span></a></li>
+                        </ul>
+                        <div class="pcoded-navigatio-lavel">ACCOUNT</div>
+                        <ul class="pcoded-item pcoded-left-item">
+                            <li><a href="/admin/settings"><span class="pcoded-micon"><i class="feather icon-settings"></i></span><span class="pcoded-mtext">Settings</span></a></li>
+                        </ul>
+                        <div class="pcoded-navigatio-lavel">AUTHENTICATIONS</div>
+                        <ul class="pcoded-item pcoded-left-item">
+                            <li><a href="/admin/login"><span class="pcoded-micon"><i class="feather icon-log-in"></i></span><span class="pcoded-mtext">Login</span></a></li>
+                            <li><a href="/admin/register"><span class="pcoded-micon"><i class="feather icon-user-plus"></i></span><span class="pcoded-mtext">Register</span></a></li>
+                        </ul>
+                        <ul class="pcoded-item pcoded-left-item">
+                            <li><a href="#" id="btnLogout"><span class="pcoded-micon"><i class="feather icon-log-out"></i></span><span class="pcoded-mtext">Logout</span></a></li>
+                        </ul>
+                    </div>
+                </nav>
 
-              <div class="session-section-title session-online"><span class="dot"></span> Rentang Waktu Online</div>
-              <div id="onlineList" class="session-list"></div>
+                <!-- CONTENT -->
+                <div class="pcoded-content">
+                    <div class="pcoded-inner-content">
+                        <div class="main-body">
+                            <div class="page-wrapper">
 
-              <div class="session-section-title session-in"><span class="dot"></span> Rentang Waktu di Dalam Area</div>
-              <div id="inAreaList" class="session-list"></div>
+                                <!-- Page Header -->
+                                <div class="page-header">
+                                    <div class="row align-items-end">
+                                        <div class="col-lg-8">
+                                            <div class="page-header-title">
+                                                <div class="d-inline">
+                                                    <h4>Absensi &amp; KPI Kehadiran</h4>
+                                                    <span>Rekap waktu online, kehadiran area, dan aktivitas mekanik</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-4">
+                                            <div class="page-header-breadcrumb">
+                                                <ul class="breadcrumb-title">
+                                                    <li class="breadcrumb-item"><a href="/admin/dashboard"><i class="feather icon-home"></i></a></li>
+                                                    <li class="breadcrumb-item"><a href="#!">Absensi Shift</a></li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
 
-              <div class="session-section-title session-out"><span class="dot"></span> Rentang Waktu di Luar Area</div>
-              <div id="outAreaList" class="session-list"></div>
+                                <div class="page-body">
+                                    <div class="row">
+
+                                        <!-- ═══ KIRI: Daftar Mekanik ═══ -->
+                                        <div class="col-lg-4 col-md-5">
+                                            <div class="card">
+                                                <div class="card-header">
+                                                    <h5><i class="feather icon-users"></i> &nbsp;Daftar Mekanik</h5>
+                                                </div>
+                                                <div class="card-block" style="padding-bottom: 8px;">
+                                                    <!-- Filter Shift & Tanggal -->
+                                                    <div class="row m-b-10" style="margin-left: 0; margin-right: 0;">
+                                                        <div class="col-6 p-l-0 p-r-5">
+                                                            <input type="date" id="filterDate" class="form-control form-control-sm">
+                                                        </div>
+                                                        <div class="col-6 p-r-0 p-l-5">
+                                                            <select id="filterShift" class="form-control form-control-sm">
+                                                                <option value="">-- Semua Shift --</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                    <!-- Cari -->
+                                                    <div class="input-group m-b-10">
+                                                        <span class="input-group-addon"><i class="feather icon-search"></i></span>
+                                                        <input type="text" id="searchInput" class="form-control form-control-sm" placeholder="Cari nama mekanik…">
+                                                    </div>
+                                                    <!-- Tabel -->
+                                                    <div class="table-responsive">
+                                                        <table class="table table-sm table-hover" style="font-size:13px;">
+                                                            <thead class="thead-light">
+                                                                <tr>
+                                                                    <th>Nama</th>
+                                                                    <th>Total Online</th>
+                                                                    <th>Luar Area</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody id="tbody">
+                                                                <tr><td colspan="3" class="text-center text-muted">Memuat...</td></tr>
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                    <!-- Paginasi -->
+                                                    <div class="row align-items-center m-t-5">
+                                                        <div class="col-6">
+                                                            <small class="text-muted" id="pageInfo"></small>
+                                                        </div>
+                                                        <div class="col-6 text-right">
+                                                            <button class="btn btn-sm btn-outline-secondary" id="btnPrev" disabled>← Prev</button>
+                                                            <button class="btn btn-sm btn-outline-secondary" id="btnNext" disabled>Next →</button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- ═══ KANAN: Detail Kehadiran ═══ -->
+                                        <div class="col-lg-8 col-md-7">
+
+                                            <!-- Empty state -->
+                                            <div id="detailEmpty" class="card">
+                                                <div class="card-block">
+                                                    <div class="detail-empty">
+                                                        <i class="feather icon-user"></i>
+                                                        Pilih salah satu mekanik di daftar kiri untuk melihat detail kehadirannya
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Detail panel (hidden until selected) -->
+                                            <div id="detailWrap" style="display:none;">
+
+                                                <!-- Header mekanik -->
+                                                <div class="card m-b-15">
+                                                    <div class="card-block">
+                                                        <div class="row align-items-center">
+                                                            <div class="col-lg-7">
+                                                                <h5 id="detailNama" class="m-b-0" style="font-size:17px; font-weight:700;"></h5>
+                                                                <small id="detailJabatan" class="text-muted"></small>
+                                                            </div>
+                                                            <div class="col-lg-5 text-right">
+                                                                <label class="m-b-0 m-r-5" style="font-size:12px; color:#888;">Rentang:</label>
+                                                                <select id="heatmapRange" class="form-control form-control-sm d-inline-block" style="width:auto;">
+                                                                    <option value="90">3 Bulan</option>
+                                                                    <option value="180">6 Bulan</option>
+                                                                    <option value="365">1 Tahun</option>
+                                                                </select>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Heatmap kalender -->
+                                                <div class="card m-b-15">
+                                                    <div class="card-header"><h5><i class="feather icon-calendar"></i> &nbsp;Kalender Kehadiran</h5></div>
+                                                    <div class="card-block">
+                                                        <div class="heatmap-wrap">
+                                                            <div id="heatmapContainer"></div>
+                                                        </div>
+                                                        <div class="m-t-8" style="font-size:11px; color:#aaa;">
+                                                            <span style="display:inline-flex;align-items:center;gap:4px;">
+                                                                Kurang
+                                                                <span style="display:inline-flex;gap:2px;">
+                                                                    <span style="width:11px;height:11px;background:#eee;border-radius:2px;display:inline-block;"></span>
+                                                                    <span style="width:11px;height:11px;background:#c6e48b;border-radius:2px;display:inline-block;"></span>
+                                                                    <span style="width:11px;height:11px;background:#7bc96f;border-radius:2px;display:inline-block;"></span>
+                                                                    <span style="width:11px;height:11px;background:#239a3b;border-radius:2px;display:inline-block;"></span>
+                                                                    <span style="width:11px;height:11px;background:#196127;border-radius:2px;display:inline-block;"></span>
+                                                                </span>
+                                                                Banyak
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Detail harian -->
+                                                <div class="card">
+                                                    <div class="card-header">
+                                                        <div class="row align-items-center">
+                                                            <div class="col-7">
+                                                                <h5 class="m-b-0" id="detailDateLabel">Detail Harian</h5>
+                                                            </div>
+                                                            <div class="col-5 text-right">
+                                                                <input type="date" id="detailDateInput" class="form-control form-control-sm d-inline-block" style="width:auto;">
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="card-block">
+                                                        <!-- KPI mini -->
+                                                        <div class="stat-mini-row">
+                                                            <div class="stat-mini-card bg-online">
+                                                                <div class="val" id="statOnline">-</div>
+                                                                <div class="lbl">Total Online</div>
+                                                            </div>
+                                                            <div class="stat-mini-card bg-in">
+                                                                <div class="val" id="statInArea">-</div>
+                                                                <div class="lbl">Di Area Pabrik</div>
+                                                            </div>
+                                                            <div class="stat-mini-card bg-out">
+                                                                <div class="val" id="statOutArea">-</div>
+                                                                <div class="lbl">Luar Area</div>
+                                                            </div>
+                                                        </div>
+
+                                                        <!-- Sesi-sesi dalam 3 kolom -->
+                                                        <div class="row">
+                                                            <!-- Sesi Online -->
+                                                            <div class="col-md-4 session-block">
+                                                                <div class="session-block-title online w-100 text-center">
+                                                                    <i class="feather icon-wifi"></i> &nbsp;Sesi Online
+                                                                </div>
+                                                                <div id="onlineList"></div>
+                                                            </div>
+
+                                                            <!-- Sesi Di Area -->
+                                                            <div class="col-md-4 session-block">
+                                                                <div class="session-block-title in w-100 text-center">
+                                                                    <i class="feather icon-map-pin"></i> &nbsp;Di Area
+                                                                </div>
+                                                                <div id="inAreaList"></div>
+                                                            </div>
+
+                                                            <!-- Sesi Luar Area -->
+                                                            <div class="col-md-4 session-block">
+                                                                <div class="session-block-title out w-100 text-center">
+                                                                    <i class="feather icon-alert-circle"></i> &nbsp;Luar Area
+                                                                </div>
+                                                                <div id="outAreaList"></div>
+                                                            </div>
+                                                        </div>
+
+                                                    </div>
+                                                </div>
+
+                                            </div><!-- /detailWrap -->
+                                        </div>
+
+                                    </div><!-- /row -->
+                                </div><!-- /page-body -->
+
+                            </div>
+                        </div>
+                        <div id="styleSelector"></div>
+                    </div>
+                </div>
+
             </div>
-          </div>
         </div>
-      </div>
-    </main>
-  </div>
+    </div>
+</div>
 
-  <script src="/js/api.js"></script>
-  <script src="/js/license-banner.js"></script>
-  <script src="/js/calendar-heatmap.js"></script>
-  <script>
-    Api.init('admin');
+<!-- SCRIPTS -->
+<script type="text/javascript" src="/libraries/bower_components/jquery/js/jquery.min.js"></script>
+<script type="text/javascript" src="/libraries/bower_components/jquery-ui/js/jquery-ui.min.js"></script>
+<script type="text/javascript" src="/libraries/bower_components/popper.js/js/popper.min.js"></script>
+<script type="text/javascript" src="/libraries/bower_components/bootstrap/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="/libraries/bower_components/jquery-slimscroll/js/jquery.slimscroll.js"></script>
+<script type="text/javascript" src="/libraries/bower_components/modernizr/js/modernizr.js"></script>
+<script type="text/javascript" src="/libraries/bower_components/modernizr/js/css-scrollbars.js"></script>
+<script type="text/javascript" src="/libraries/bower_components/i18next/js/i18next.min.js"></script>
+<script type="text/javascript" src="/libraries/bower_components/i18next-xhr-backend/js/i18nextXHRBackend.min.js"></script>
+<script type="text/javascript" src="/libraries/bower_components/i18next-browser-languagedetector/js/i18nextBrowserLanguageDetector.min.js"></script>
+<script type="text/javascript" src="/libraries/bower_components/jquery-i18next/js/jquery-i18next.min.js"></script>
+<script src="/libraries/assets/js/pcoded.min.js"></script>
+<script src="/libraries/assets/js/vartical-layout.min.js"></script>
+<script src="/libraries/assets/js/jquery.mCustomScrollbar.concat.min.js"></script>
+<script type="text/javascript" src="/libraries/assets/js/script.js"></script>
+<script src="/js/api.js"></script>
+<script src="/js/license-banner.js"></script>
+
+<script>
+    Api.init('auth');
     const me = Api.getUser();
-    document.getElementById('userBadge').textContent = me ? `${me.nama} (${me.role})` : '';
-    document.getElementById('btnLogout').onclick = () => Api.logout();
+    if (me && document.getElementById('navUserName')) document.getElementById('navUserName').textContent = me.nama;
+    const logoutFn = () => Api.logout();
+    document.getElementById('btnLogout').onclick    = logoutFn;
+    document.getElementById('btnLogoutNav').onclick = logoutFn;
 
-    function fmtHours(seconds) { return CalendarHeatmap.fmtHours(seconds || 0); }
+    // ── Utils ─────────────────────────────────────────────────
+    function fmtHours(seconds) {
+        if (!seconds || seconds < 60) return '< 1 mnt';
+        const h = Math.floor(seconds / 3600);
+        const m = Math.floor((seconds % 3600) / 60);
+        return h > 0 ? `${h}j ${m}mnt` : `${m} mnt`;
+    }
     function todayStr() { return new Date().toISOString().slice(0, 10); }
 
     function periodRange(period) {
-      const to = todayStr();
-      const now = new Date();
-      if (period === 'today') return { from: to, to };
-      if (period === 'week') {
-        const day = now.getDay() === 0 ? 7 : now.getDay(); // Senin=1..Minggu=7
-        const monday = new Date(now);
-        monday.setDate(now.getDate() - (day - 1));
-        return { from: monday.toISOString().slice(0, 10), to };
-      }
-      // month
-      const first = new Date(now.getFullYear(), now.getMonth(), 1);
-      return { from: first.toISOString().slice(0, 10), to };
+        const to  = todayStr();
+        const now = new Date();
+        if (period === 'today') return { from: to, to };
+        if (period === 'week') {
+            const day    = now.getDay() === 0 ? 7 : now.getDay();
+            const monday = new Date(now);
+            monday.setDate(now.getDate() - (day - 1));
+            return { from: monday.toISOString().slice(0, 10), to };
+        }
+        const first = new Date(now.getFullYear(), now.getMonth(), 1);
+        return { from: first.toISOString().slice(0, 10), to };
     }
 
-    let state = { period: 'today', page: 1, pageSize: 20, q: '', selectedId: null, selectedNama: '' };
+    // ── Load Shifts ──────────────────────────────────────────
+    function loadShiftOptions() {
+        Api.get('/api/master/shifts').then(res => {
+            if (res.data) {
+                const sel = document.getElementById('filterShift');
+                res.data.forEach(s => {
+                    const opt = document.createElement('option');
+                    opt.value = s.id;
+                    opt.textContent = `${s.nama} (${s.start_time} - ${s.end_time})`;
+                    sel.appendChild(opt);
+                });
+            }
+        });
+    }
 
-    document.querySelectorAll('.period-tabs button').forEach(btn => {
-      btn.onclick = () => {
-        document.querySelectorAll('.period-tabs button').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        state.period = btn.dataset.period;
+    // ── State ─────────────────────────────────────────────────
+    let state = { date: todayStr(), shift_id: '', page: 1, pageSize: 15, q: '', selectedId: null };
+
+    // ── Setup Filters ──────────────────────────────────────────
+    document.getElementById('filterDate').value = state.date;
+    document.getElementById('filterDate').addEventListener('change', e => {
+        state.date = e.target.value;
         state.page = 1;
         loadList();
-      };
+    });
+    
+    document.getElementById('filterShift').addEventListener('change', e => {
+        state.shift_id = e.target.value;
+        state.page = 1;
+        loadList();
     });
 
-    let searchDebounce;
-    document.getElementById('searchInput').addEventListener('input', (e) => {
-      clearTimeout(searchDebounce);
-      searchDebounce = setTimeout(() => { state.q = e.target.value.trim(); state.page = 1; loadList(); }, 300);
+    // ── Search ────────────────────────────────────────────────
+    let debounce;
+    document.getElementById('searchInput').addEventListener('input', e => {
+        clearTimeout(debounce);
+        debounce = setTimeout(() => { state.q = e.target.value.trim(); state.page = 1; loadList(); }, 300);
     });
 
+    // ── Paginasi ──────────────────────────────────────────────
     document.getElementById('btnPrev').onclick = () => { if (state.page > 1) { state.page--; loadList(); } };
     document.getElementById('btnNext').onclick = () => { state.page++; loadList(); };
 
+    // ── Load List ─────────────────────────────────────────────
     async function loadList() {
-      const { from, to } = periodRange(state.period);
-      const q = new URLSearchParams({
-        from: `${from} 00:00:00`, to: `${to} 23:59:59`,
-        page: state.page, pageSize: state.pageSize,
-      });
-      if (state.q) q.set('q', state.q);
+        const q = new URLSearchParams({
+            date: state.date,
+            page: state.page, pageSize: state.pageSize,
+        });
+        if (state.shift_id) q.set('shift_id', state.shift_id);
+        if (state.q) q.set('q', state.q);
 
-      const res = await Api.get(`/api/kpi/ringkasan?${q.toString()}`);
-      if (!res.success) return;
+        const res = await Api.get(`/api/kpi/ringkasan?${q}`);
+        if (!res.success) {
+            document.getElementById('tbody').innerHTML = '<tr><td colspan="3" class="text-center text-danger">Gagal memuat data</td></tr>';
+            return;
+        }
 
-      document.getElementById('tbody').innerHTML = res.teknisi.map(t => `
-        <tr class="teknisi-row ${t.id === state.selectedId ? 'selected' : ''}" onclick="selectTeknisi(${t.id}, '${t.nama.replace(/'/g, "\\'")}', '${(t.jabatan || '').replace(/'/g, "\\'")}')">
-          <td>${t.nama}</td>
-          <td>${fmtHours(t.online_seconds)}</td>
-          <td>${t.out_area_seconds > 0 ? `<span style="color:var(--danger)">${fmtHours(t.out_area_seconds)}</span>` : '-'}</td>
-        </tr>`).join('') || '<tr><td colspan="3" class="empty-state">Tidak ada karyawan yang cocok</td></tr>';
+        document.getElementById('tbody').innerHTML = (res.teknisi || []).map(t => `
+            <tr class="teknisi-row ${t.id === state.selectedId ? 'selected' : ''}"
+                onclick="selectTeknisi(${t.id}, '${t.nama.replace(/'/g, "\\'")}', '${(t.jabatan || '').replace(/'/g, "\\'")}')">
+                <td>${t.nama}</td>
+                <td><span class="badge badge-success">${fmtHours(t.online_seconds)}</span></td>
+                <td>${t.out_area_seconds > 0
+                    ? `<span class="badge badge-warning">${fmtHours(t.out_area_seconds)}</span>`
+                    : '<span class="text-muted">—</span>'}</td>
+            </tr>`).join('') || '<tr><td colspan="3" class="text-center text-muted" style="padding:20px">Tidak ada data</td></tr>';
 
-      const totalPages = Math.max(Math.ceil(res.total / state.pageSize), 1);
-      document.getElementById('pageInfo').textContent = `Halaman ${state.page} / ${totalPages} · ${res.total} karyawan`;
-      document.getElementById('btnPrev').disabled = state.page <= 1;
-      document.getElementById('btnNext').disabled = state.page >= totalPages;
+        const total      = res.total || 0;
+        const totalPages = Math.max(Math.ceil(total / state.pageSize), 1);
+        document.getElementById('pageInfo').textContent    = `Hal. ${state.page}/${totalPages} · ${total} orang`;
+        document.getElementById('btnPrev').disabled = state.page <= 1;
+        document.getElementById('btnNext').disabled = state.page >= totalPages;
     }
 
-    window.selectTeknisi = (id, nama, jabatan) => {
-      state.selectedId = id;
-      state.selectedNama = nama;
-      document.getElementById('emptyDetail').classList.add('hidden');
-      document.getElementById('detailWrap').classList.remove('hidden');
-      document.getElementById('detailNama').textContent = nama;
-      document.getElementById('detailJabatan').textContent = jabatan || '';
-      document.getElementById('detailDateInput').value = todayStr();
-      loadList(); // refresh biar row highlight
-      loadHeatmap();
-      loadHarian(todayStr());
+    // ── Pilih Teknisi ─────────────────────────────────────────
+    window.selectTeknisi = function(id, nama, jabatan) {
+        state.selectedId = id;
+        document.getElementById('detailEmpty').style.display = 'none';
+        document.getElementById('detailWrap').style.display  = 'block';
+        document.getElementById('detailNama').textContent    = nama;
+        document.getElementById('detailJabatan').textContent = jabatan || '';
+        document.getElementById('detailDateInput').value     = todayStr();
+        loadList();
+        loadHeatmap();
+        loadHarian(todayStr());
     };
 
+    // ── Heatmap ───────────────────────────────────────────────
     async function loadHeatmap() {
-      if (!state.selectedId) return;
-      const days = document.getElementById('heatmapRange').value;
-      const res = await Api.get(`/api/kpi/heatmap/${state.selectedId}?days=${days}`);
-      if (!res.success) return;
-      CalendarHeatmap.render(document.getElementById('heatmapContainer'), res.days, {
-        valueKey: 'online_seconds',
-        onClickDay: (date) => { document.getElementById('detailDateInput').value = date; loadHarian(date); },
-      });
-    }
-    document.getElementById('heatmapRange').onchange = loadHeatmap;
-    document.getElementById('detailDateInput').onchange = (e) => loadHarian(e.target.value);
-
-    async function loadHarian(date) {
-      if (!state.selectedId) return;
-      const res = await Api.get(`/api/kpi/harian/${state.selectedId}?date=${date}`);
-      if (!res.success) return;
-      document.getElementById('detailDateLabel').textContent = `Detail Harian — ${new Date(date + 'T00:00:00').toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}`;
-      document.getElementById('statOnline').textContent = fmtHours(res.online_seconds);
-      document.getElementById('statInArea').textContent = fmtHours(res.in_area_seconds);
-      document.getElementById('statOutArea').textContent = fmtHours(res.out_area_seconds);
-
-      renderSessions('onlineList', res.online_sessions, res.online_sessions_hidden_count, 'session-online', 'Karyawan ini gak online sama sekali hari ini');
-      renderSessions('inAreaList', res.in_area_sessions, res.in_area_sessions_hidden_count, 'session-in', 'Gak ada waktu di dalam area hari ini');
-      renderSessions('outAreaList', res.out_area_sessions, res.out_area_sessions_hidden_count, 'session-out', 'Tidak keluar area sepanjang hari ini 🎉');
+        if (!state.selectedId) return;
+        const days = document.getElementById('heatmapRange').value;
+        const res  = await Api.get(`/api/kpi/heatmap/${state.selectedId}?days=${days}`);
+        if (!res.success) return;
+        renderHeatmap(res.days || []);
     }
 
-    // Sesi kependekan (< 1 menit, biasanya cuma noise blip GPS/network)
-    // udah disaring server-side biar daftarnya gak kepanjangan -- di
-    // sini tinggal nampilin catatan kecil kalau ada yang disembunyikan.
-    function renderSessions(elementId, sessions, hiddenCount, cls, emptyMsg) {
-      const rows = (sessions || []).map(s => `
-        <div class="session-row ${cls}">
-          <span>${s.start.slice(11, 16)} – ${s.end.slice(11, 16)}</span>
-          <span class="dur">${fmtHours(s.duration_seconds)}</span>
-        </div>`).join('');
-      const hint = hiddenCount > 0
-        ? `<div class="session-hint">+${hiddenCount} sesi singkat (&lt; 1 menit) disembunyikan</div>` : '';
-      document.getElementById(elementId).innerHTML = (rows || `<div class="empty-state">${emptyMsg}</div>`) + hint;
-    }
+    function renderHeatmap(days) {
+        const container = document.getElementById('heatmapContainer');
+        if (!days.length) { container.innerHTML = '<p class="text-muted" style="font-size:12px;">Belum ada data kehadiran</p>'; return; }
 
-    // Kalau dibuka dari popup peta dashboard (?teknisiId=), langsung pilih karyawan itu
-    const preselect = new URLSearchParams(window.location.search).get('teknisiId');
-
-    loadList().then(() => {
-      if (preselect) {
-        Api.get(`/api/teknisi/${preselect}`).then(res => {
-          if (res.success) selectTeknisi(Number(preselect), res.teknisi.nama, res.teknisi.jabatan);
+        // Group by week columns
+        const maxOnline = Math.max(...days.map(d => d.online_seconds || 0), 1);
+        const cellsByWeek = {};
+        days.forEach(d => {
+            const date = new Date(d.date + 'T00:00:00');
+            const week = getWeekKey(date);
+            if (!cellsByWeek[week]) cellsByWeek[week] = { label: '', cells: [] };
+            // label month on 1st of month
+            if (date.getDate() === 1) cellsByWeek[week].label = date.toLocaleDateString('id-ID', { month: 'short' });
+            const level = d.online_seconds === 0 ? 0
+                : d.online_seconds < maxOnline * 0.25 ? 1
+                : d.online_seconds < maxOnline * 0.5  ? 2
+                : d.online_seconds < maxOnline * 0.75 ? 3 : 4;
+            cellsByWeek[week].cells.push({ date: d.date, level, online: d.online_seconds });
         });
-      }
+
+        const weeks = Object.values(cellsByWeek);
+        container.innerHTML = `<div class="heatmap-grid">${
+            weeks.map(w => `
+                <div class="heatmap-col">
+                    <div class="heatmap-month-label">${w.label || ''}</div>
+                    ${w.cells.map(c => `
+                        <div class="heatmap-cell" data-v="${c.level}"
+                             title="${c.date}: ${fmtHours(c.online)}"
+                             onclick="pickDate('${c.date}')"></div>
+                    `).join('')}
+                </div>
+            `).join('')
+        }</div>`;
+    }
+
+    function getWeekKey(date) {
+        const d = new Date(date);
+        d.setHours(0,0,0,0);
+        d.setDate(d.getDate() - d.getDay()); // Start of week (Sunday)
+        return d.toISOString().slice(0,10);
+    }
+
+    window.pickDate = function(date) {
+        document.getElementById('detailDateInput').value = date;
+        loadHarian(date);
+    };
+
+    document.getElementById('heatmapRange').onchange    = loadHeatmap;
+    document.getElementById('detailDateInput').onchange = e => loadHarian(e.target.value);
+
+    // ── Detail Harian ─────────────────────────────────────────
+    async function loadHarian(date) {
+        if (!state.selectedId) return;
+        let url = `/api/kpi/harian/${state.selectedId}?date=${date}`;
+        if (state.shift_id) url += `&shift_id=${state.shift_id}`;
+        const res = await Api.get(url);
+        const label = new Date(date + 'T00:00:00').toLocaleDateString('id-ID', {
+            weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+        });
+        document.getElementById('detailDateLabel').textContent = `Detail Harian — ${label}`;
+
+        if (!res.success) {
+            document.getElementById('statOnline').textContent  = '-';
+            document.getElementById('statInArea').textContent  = '-';
+            document.getElementById('statOutArea').textContent = '-';
+            ['onlineList','inAreaList','outAreaList'].forEach(id => {
+                document.getElementById(id).innerHTML = '<p class="text-muted" style="font-size:12px;">Gagal memuat data</p>';
+            });
+            return;
+        }
+
+        document.getElementById('statOnline').textContent  = fmtHours(res.online_seconds);
+        document.getElementById('statInArea').textContent  = fmtHours(res.in_area_seconds);
+        document.getElementById('statOutArea').textContent = fmtHours(res.out_area_seconds);
+
+        renderSessions('onlineList',  res.online_sessions,   res.online_sessions_hidden_count,   'Tidak ada sesi online hari ini');
+        renderSessions('inAreaList',  res.in_area_sessions,  res.in_area_sessions_hidden_count,  'Tidak ada waktu di dalam area');
+        renderSessions('outAreaList', res.out_area_sessions, res.out_area_sessions_hidden_count, 'Tidak keluar area hari ini 🎉');
+    }
+
+    function renderSessions(elId, sessions, hiddenCount, emptyMsg) {
+        const rows = (sessions || []).map(s => `
+            <div class="session-row">
+                <span><i class="feather icon-clock" style="font-size:11px;margin-right:4px;"></i>
+                      ${s.start.slice(11,16)} – ${s.end.slice(11,16)}</span>
+                <span class="text-muted">${fmtHours(s.duration_seconds)}</span>
+            </div>`).join('');
+        const hint = hiddenCount > 0
+            ? `<div class="session-hint">+${hiddenCount} sesi singkat (&lt; 1 menit) disembunyikan</div>` : '';
+        document.getElementById(elId).innerHTML = rows
+            ? rows + hint
+            : `<p class="text-muted" style="font-size:12px; padding: 4px 0;">${emptyMsg}</p>`;
+    }
+
+    // ── Init ─────────────────────────────────────────────────
+    loadShiftOptions();
+    loadList().then(() => {
+        const preselect = new URLSearchParams(window.location.search).get('teknisiId');
+        if (preselect) {
+            Api.get(`/api/users/${preselect}`).then(res => {
+                if (res.success) selectTeknisi(Number(preselect), res.user.nama, res.user.jabatan || res.user.role);
+            });
+        }
     });
-  </script>
+</script>
 </body>
 </html>

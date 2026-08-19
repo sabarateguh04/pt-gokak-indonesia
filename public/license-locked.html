@@ -6,12 +6,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Lisensi Tidak Aktif — Monitoring App</title>
 <link rel="stylesheet" href="/css/style.css">
+<script src="https://unpkg.com/@phosphor-icons/web"></script>
+<style>
+  .theme-toggle-icon { font-family: 'Phosphor', sans-serif !important; }
+</style>
 </head>
 <body>
-  <button class="theme-toggle-btn theme-toggle-fixed" title="Ganti tema"><span class="theme-toggle-icon">🌙</span></button>
+  <button class="theme-toggle-btn theme-toggle-fixed" title="Ganti tema"><span class="theme-toggle-icon"><i class="ph ph-moon"></i></span></button>
   <div class="auth-page">
     <div class="auth-card card" style="max-width:460px;text-align:center">
-      <div style="font-size:40px;margin-bottom:6px">🔒</div>
+      <div style="font-size:40px;margin-bottom:6px"><i class="ph ph-lock-key"></i></div>
       <h1 id="title">Lisensi Tidak Aktif</h1>
       <p class="sub" id="message">Memuat status lisensi…</p>
 
@@ -24,14 +28,14 @@
       <form id="activateForm" class="hidden" style="text-align:left;margin-top:20px">
         <label>Sudah punya token dari vendor? Tempel di sini</label>
         <textarea id="a_token" rows="3" placeholder="Tempel license key (token) yang dikirim vendor…" style="font-family:monospace;font-size:11px"></textarea>
-        <button type="submit" style="width:100%;margin-top:10px">🔑 Aktifkan Lisensi</button>
+        <button type="submit" style="width:100%;margin-top:10px"><i class="ph ph-key" style="margin-right: 6px;"></i> Aktifkan Lisensi</button>
         <div class="auth-error" id="activateErr"></div>
         <div id="activateOk" class="hidden" style="color:var(--success);font-size:13px;margin-top:10px"></div>
       </form>
 
       <div style="display:flex;flex-direction:column;gap:10px;margin-top:20px">
         <button class="secondary" id="btnRetry" style="width:100%">🔄 Cek Ulang</button>
-        <button id="btnShowForm" style="width:100%">✉️ Ajukan Perpanjangan ke Vendor</button>
+        <button id="btnShowForm" style="width:100%"><i class="ph ph-envelope-simple" style="margin-right: 6px;"></i> Ajukan Perpanjangan ke Vendor</button>
       </div>
 
       <form id="requestForm" class="hidden" style="text-align:left;margin-top:16px">

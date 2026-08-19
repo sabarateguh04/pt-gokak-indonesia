@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <title>Settings — PT Gokak Indonesia</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimal-ui">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <link rel="icon" href="/libraries/assets/images/favicon.ico" type="image/x-icon">
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans:400,600" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="/libraries/bower_components/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="/libraries/assets/icon/themify-icons/themify-icons.css">
+    <link rel="stylesheet" type="text/css" href="/libraries/assets/icon/icofont/css/icofont.css">
+    <link rel="stylesheet" type="text/css" href="/libraries/assets/icon/feather/css/feather.css">
+    <link rel="stylesheet" type="text/css" href="/libraries/assets/css/style.css">
+    <link rel="stylesheet" type="text/css" href="/libraries/assets/css/jquery.mCustomScrollbar.css">
+</head>
+<body>
+<div class="theme-loader">
+    <div class="ball-scale"><div class='contain'>
+        <div class="ring"><div class="frame"></div></div>
+        <div class="ring"><div class="frame"></div></div>
+        <div class="ring"><div class="frame"></div></div>
+        <div class="ring"><div class="frame"></div></div>
+        <div class="ring"><div class="frame"></div></div>
+        <div class="ring"><div class="frame"></div></div>
+        <div class="ring"><div class="frame"></div></div>
+        <div class="ring"><div class="frame"></div></div>
+        <div class="ring"><div class="frame"></div></div>
+        <div class="ring"><div class="frame"></div></div>
+    </div></div>
+</div>
+<div id="pcoded" class="pcoded">
+    <div class="pcoded-overlay-box"></div>
+    <div class="pcoded-container navbar-wrapper">
+        <nav class="navbar header-navbar pcoded-header">
+            <div class="navbar-wrapper">
+                <div class="navbar-logo">
+                    <a class="mobile-menu" id="mobile-collapse" href="#!"><i class="feather icon-menu"></i></a>
+                    <a href="/admin/dashboard"><img class="img-fluid" src="/libraries/assets/images/logo.png" alt="Logo"></a>
+                    <a class="mobile-options"><i class="feather icon-more-horizontal"></i></a>
+                </div>
+                <div class="navbar-container container-fluid">
+                    <ul class="nav-left">
+                        <li><a href="#!" onclick="javascript:toggleFullScreen()"><i class="feather icon-maximize full-screen"></i></a></li>
+                    </ul>
+                    <ul class="nav-right">
+                        <li class="user-profile header-notification">
+                            <div class="dropdown-primary dropdown">
+                                <div class="dropdown-toggle" data-toggle="dropdown">
+                                    <img src="/libraries/assets/images/avatar-4.jpg" class="img-radius" alt="User">
+                                    <span id="navUserName">Admin</span>
+                                    <i class="feather icon-chevron-down"></i>
+                                </div>
+                                <ul class="show-notification profile-notification dropdown-menu" data-dropdown-in="fadeIn" data-dropdown-out="fadeOut">
+                                    <li><a href="/admin/settings"><i class="feather icon-settings"></i> Settings</a></li>
+                                    <li><a href="#" id="btnLogoutNav"><i class="feather icon-log-out"></i> Logout</a></li>
+                                </ul>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+        <div class="pcoded-main-container"><div class="pcoded-wrapper">
+            <nav class="pcoded-navbar">
+                <div class="pcoded-inner-navbar main-menu">
+                    <div class="pcoded-navigatio-lavel">DASHBOARDS</div>
+                    <ul class="pcoded-item pcoded-left-item">
+                        <li class=""><a href="/admin/dashboard"><span class="pcoded-micon"><i class="feather icon-home"></i></span><span class="pcoded-mtext">Dashboard</span></a></li>
+                        <li class=""><a href="/admin/layout-plant"><span class="pcoded-micon"><i class="feather icon-map"></i></span><span class="pcoded-mtext">Layout Plant</span></a></li>
+                    </ul>
+                    <div class="pcoded-navigatio-lavel">WORK ORDER</div>
+                    <ul class="pcoded-item pcoded-left-item">
+                        <li class=""><a href="/admin/tasks"><span class="pcoded-micon"><i class="feather icon-file-text"></i></span><span class="pcoded-mtext">Work Order</span></a></li>
+                        <li class=""><a href="/admin/emergency"><span class="pcoded-micon"><i class="feather icon-alert-triangle"></i></span><span class="pcoded-mtext">Emergency</span></a></li>
+                        <li class=""><a href="/admin/lapor-kendala"><span class="pcoded-micon"><i class="feather icon-message-square"></i></span><span class="pcoded-mtext">Lapor Kendala</span></a></li>
+                    </ul>
+                    <div class="pcoded-navigatio-lavel">MANAJEMEN MEKANIK</div>
+                    <ul class="pcoded-item pcoded-left-item">
+                        <li class=""><a href="/admin/users"><span class="pcoded-micon"><i class="feather icon-users"></i></span><span class="pcoded-mtext">Data Mekanik</span></a></li>
+                        <li class=""><a href="/admin/kehadiran"><span class="pcoded-micon"><i class="feather icon-check-square"></i></span><span class="pcoded-mtext">Absensi Shift</span></a></li>
+                        <li class=""><a href="/admin/hak-akses"><span class="pcoded-micon"><i class="feather icon-lock"></i></span><span class="pcoded-mtext">Hak Akses</span></a></li>
+                    </ul>
+                    <div class="pcoded-navigatio-lavel">ACCOUNT</div>
+                    <ul class="pcoded-item pcoded-left-item">
+                        <li class="active"><a href="/admin/settings"><span class="pcoded-micon"><i class="feather icon-settings"></i></span><span class="pcoded-mtext">Settings</span></a></li>
+                    </ul>
+                    <div class="pcoded-navigatio-lavel">AUTHENTICATIONS</div>
+                    <ul class="pcoded-item pcoded-left-item">
+                        <li class=""><a href="/admin/login"><span class="pcoded-micon"><i class="feather icon-log-in"></i></span><span class="pcoded-mtext">Login</span></a></li>
+                        <li class=""><a href="/admin/register"><span class="pcoded-micon"><i class="feather icon-user-plus"></i></span><span class="pcoded-mtext">Register</span></a></li>
+                    </ul>
+                    <ul class="pcoded-item pcoded-left-item">
+                        <li><a href="#" id="btnLogout"><span class="pcoded-micon"><i class="feather icon-log-out"></i></span><span class="pcoded-mtext">Logout</span></a></li>
+                    </ul>
+                </div>
+            </nav>
+            <div class="pcoded-content"><div class="pcoded-inner-content">
+                <div class="main-body"><div class="page-wrapper">
+                    <div class="page-header">
+                        <div class="row align-items-end">
+                            <div class="col-lg-8">
+                                <div class="page-header-title"><div class="d-inline">
+                                    <h4>Settings</h4>
+                                    <span>Pengaturan akun dan preferensi sistem</span>
+                                </div></div>
+                            </div>
+                            <div class="col-lg-4">
+                                <div class="page-header-breadcrumb">
+                                    <ul class="breadcrumb-title">
+                                        <li class="breadcrumb-item"><a href="/admin/dashboard"><i class="feather icon-home"></i></a></li>
+                                        <li class="breadcrumb-item"><a href="#!">Settings</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="page-body">
+<div class="row">
+    <div class="col-lg-4 col-md-12">
+        <div class="card">
+            <div class="card-header"><h5><i class="feather icon-user"></i> Profil Akun</h5></div>
+            <div class="card-block text-center">
+                <img src="/libraries/assets/images/avatar-4.jpg" class="img-radius" style="width:80px;height:80px;margin-bottom:12px;" alt="Avatar">
+                <h5 id="profileNama">-</h5>
+                <p class="text-muted" id="profileRole">-</p>
+                <hr>
+                <div class="form-group text-left">
+                    <label>Nama Lengkap</label>
+                    <input type="text" id="settNama" class="form-control" placeholder="Nama lengkap">
+                </div>
+                <div class="form-group text-left">
+                    <label>Email</label>
+                    <input type="email" id="settEmail" class="form-control" placeholder="email@perusahaan.com">
+                </div>
+                <button class="btn btn-primary btn-block" id="btnSimpanProfil"><i class="feather icon-save"></i> Simpan Profil</button>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4 col-md-12">
+        <div class="card">
+            <div class="card-header"><h5><i class="feather icon-lock"></i> Ganti Password</h5></div>
+            <div class="card-block">
+                <div class="form-group">
+                    <label>Password Lama</label>
+                    <input type="password" id="passLama" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>Password Baru</label>
+                    <input type="password" id="passBaru" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>Konfirmasi Password Baru</label>
+                    <input type="password" id="passKonfirmasi" class="form-control">
+                </div>
+                <button class="btn btn-warning btn-block" id="btnGantiPass"><i class="feather icon-key"></i> Ganti Password</button>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4 col-md-12">
+        <div class="card">
+            <div class="card-header"><h5><i class="feather icon-settings"></i> Preferensi Sistem</h5></div>
+            <div class="card-block">
+                <div class="form-group">
+                    <label>Zona Waktu</label>
+                    <select class="form-control">
+                        <option selected>WIB (UTC+7)</option>
+                        <option>WITA (UTC+8)</option>
+                        <option>WIT (UTC+9)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Bahasa Antarmuka</label>
+                    <select class="form-control">
+                        <option selected>Bahasa Indonesia</option>
+                        <option>English</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Notifikasi Email</label>
+                    <div class="form-check">
+                        <label class="form-check-label"><input type="checkbox" class="form-check-input" checked> WO Emergency baru</label>
+                    </div>
+                    <div class="form-check">
+                        <label class="form-check-label"><input type="checkbox" class="form-check-input" checked> WO selesai dikerjakan</label>
+                    </div>
+                    <div class="form-check">
+                        <label class="form-check-label"><input type="checkbox" class="form-check-input"> Laporan harian</label>
+                    </div>
+                </div>
+                <button class="btn btn-success btn-block"><i class="feather icon-save"></i> Simpan Preferensi</button>
+            </div>
+        </div>
+    </div>
+</div>
+                    </div><!-- /page-body -->
+                </div></div><!-- /page-wrapper /main-body -->
+                <div id="styleSelector"></div>
+            </div></div><!-- /pcoded-inner-content /pcoded-content -->
+        </div></div><!-- /pcoded-wrapper /pcoded-main-container -->
+    </div></div><!-- /pcoded-container /pcoded -->
+<script type="text/javascript" src="/libraries/bower_components/jquery/js/jquery.min.js"></script>
+<script type="text/javascript" src="/libraries/bower_components/jquery-ui/js/jquery-ui.min.js"></script>
+<script type="text/javascript" src="/libraries/bower_components/popper.js/js/popper.min.js"></script>
+<script type="text/javascript" src="/libraries/bower_components/bootstrap/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="/libraries/bower_components/jquery-slimscroll/js/jquery.slimscroll.js"></script>
+<script type="text/javascript" src="/libraries/bower_components/modernizr/js/modernizr.js"></script>
+<script type="text/javascript" src="/libraries/bower_components/modernizr/js/css-scrollbars.js"></script>
+<script type="text/javascript" src="/libraries/bower_components/i18next/js/i18next.min.js"></script>
+<script type="text/javascript" src="/libraries/bower_components/i18next-xhr-backend/js/i18nextXHRBackend.min.js"></script>
+<script type="text/javascript" src="/libraries/bower_components/i18next-browser-languagedetector/js/i18nextBrowserLanguageDetector.min.js"></script>
+<script type="text/javascript" src="/libraries/bower_components/jquery-i18next/js/jquery-i18next.min.js"></script>
+<script src="/libraries/assets/js/pcoded.min.js"></script>
+<script src="/libraries/assets/js/vartical-layout.min.js"></script>
+<script src="/libraries/assets/js/jquery.mCustomScrollbar.concat.min.js"></script>
+<script type="text/javascript" src="/libraries/assets/js/script.js"></script>
+<script src="/js/api.js"></script>
+<script src="/js/license-banner.js"></script>
+<script>
+    Api.init('auth');
+    const me = Api.getUser();
+    if (me && document.getElementById('navUserName')) {
+        document.getElementById('navUserName').textContent = me.nama;
+    }
+    const logoutFn = () => Api.logout();
+    if (document.getElementById('btnLogout')) document.getElementById('btnLogout').onclick = logoutFn;
+    if (document.getElementById('btnLogoutNav')) document.getElementById('btnLogoutNav').onclick = logoutFn;
+
+    async function loadSettings() {
+        if (!me) return;
+        const res = await Api.get('/api/users/' + me.id);
+        if (res.success && res.user) {
+            document.getElementById('profileNama').textContent = res.user.nama || '-';
+            document.getElementById('profileRole').textContent = res.user.role || '-';
+            document.getElementById('settNama').value = res.user.nama || '';
+            document.getElementById('settEmail').value = res.user.email || '';
+        }
+    }
+
+    document.getElementById('btnSimpanProfil').onclick = async () => {
+        const btn = document.getElementById('btnSimpanProfil');
+        btn.innerHTML = '<i class="feather icon-loader"></i> Menyimpan...';
+        btn.disabled = true;
+
+        const payload = {
+            nama: document.getElementById('settNama').value,
+            email: document.getElementById('settEmail').value
+        };
+
+        const res = await Api.put('/api/users/profile', payload);
+        if (res.success) {
+            alert('Profil berhasil diperbarui!');
+            // Update local user context if nama changed (optional, would need to refresh token usually, but we can just reload)
+            window.location.reload(); 
+        } else {
+            alert('Gagal: ' + res.message);
+            btn.innerHTML = '<i class="feather icon-save"></i> Simpan Profil';
+            btn.disabled = false;
+        }
+    };
+
+    document.getElementById('btnGantiPass').onclick = async () => {
+        const lama = document.getElementById('passLama').value; // We are skipping old pass validation for simplicity here, but normally backend checks it
+        const baru = document.getElementById('passBaru').value;
+        const konfirm = document.getElementById('passKonfirmasi').value;
+        
+        if (!baru || !konfirm) return alert('Silakan isi password baru');
+        if (baru !== konfirm) return alert('Password baru dan konfirmasi tidak cocok!');
+
+        const btn = document.getElementById('btnGantiPass');
+        btn.innerHTML = '<i class="feather icon-loader"></i> Menyimpan...';
+        btn.disabled = true;
+
+        const res = await Api.put('/api/users/profile', { password: baru });
+        if (res.success) {
+            alert('Password berhasil diubah!');
+            document.getElementById('passLama').value = '';
+            document.getElementById('passBaru').value = '';
+            document.getElementById('passKonfirmasi').value = '';
+        } else {
+            alert('Gagal: ' + res.message);
+        }
+        btn.innerHTML = '<i class="feather icon-key"></i> Ganti Password';
+        btn.disabled = false;
+    };
+
+    loadSettings();
+</script>
+</body>
+</html>

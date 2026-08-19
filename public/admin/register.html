@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <title>Register Pengguna — PT Gokak Indonesia</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimal-ui">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <link rel="icon" href="/libraries/assets/images/favicon.ico" type="image/x-icon">
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans:400,600" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="/libraries/bower_components/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="/libraries/assets/icon/themify-icons/themify-icons.css">
+    <link rel="stylesheet" type="text/css" href="/libraries/assets/icon/icofont/css/icofont.css">
+    <link rel="stylesheet" type="text/css" href="/libraries/assets/icon/feather/css/feather.css">
+    <link rel="stylesheet" type="text/css" href="/libraries/assets/css/style.css">
+    <link rel="stylesheet" type="text/css" href="/libraries/assets/css/jquery.mCustomScrollbar.css">
+</head>
+<body>
+<div class="theme-loader">
+    <div class="ball-scale"><div class='contain'>
+        <div class="ring"><div class="frame"></div></div>
+        <div class="ring"><div class="frame"></div></div>
+        <div class="ring"><div class="frame"></div></div>
+        <div class="ring"><div class="frame"></div></div>
+        <div class="ring"><div class="frame"></div></div>
+        <div class="ring"><div class="frame"></div></div>
+        <div class="ring"><div class="frame"></div></div>
+        <div class="ring"><div class="frame"></div></div>
+        <div class="ring"><div class="frame"></div></div>
+        <div class="ring"><div class="frame"></div></div>
+    </div></div>
+</div>
+<div id="pcoded" class="pcoded">
+    <div class="pcoded-overlay-box"></div>
+    <div class="pcoded-container navbar-wrapper">
+        <nav class="navbar header-navbar pcoded-header">
+            <div class="navbar-wrapper">
+                <div class="navbar-logo">
+                    <a class="mobile-menu" id="mobile-collapse" href="#!"><i class="feather icon-menu"></i></a>
+                    <a href="/admin/dashboard"><img class="img-fluid" src="/libraries/assets/images/logo.png" alt="Logo"></a>
+                    <a class="mobile-options"><i class="feather icon-more-horizontal"></i></a>
+                </div>
+                <div class="navbar-container container-fluid">
+                    <ul class="nav-left">
+                        <li><a href="#!" onclick="javascript:toggleFullScreen()"><i class="feather icon-maximize full-screen"></i></a></li>
+                    </ul>
+                    <ul class="nav-right">
+                        <li class="user-profile header-notification">
+                            <div class="dropdown-primary dropdown">
+                                <div class="dropdown-toggle" data-toggle="dropdown">
+                                    <img src="/libraries/assets/images/avatar-4.jpg" class="img-radius" alt="User">
+                                    <span id="navUserName">Admin</span>
+                                    <i class="feather icon-chevron-down"></i>
+                                </div>
+                                <ul class="show-notification profile-notification dropdown-menu" data-dropdown-in="fadeIn" data-dropdown-out="fadeOut">
+                                    <li><a href="/admin/settings"><i class="feather icon-settings"></i> Settings</a></li>
+                                    <li><a href="#" id="btnLogoutNav"><i class="feather icon-log-out"></i> Logout</a></li>
+                                </ul>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+        <div class="pcoded-main-container"><div class="pcoded-wrapper">
+            <nav class="pcoded-navbar">
+                <div class="pcoded-inner-navbar main-menu">
+                    <div class="pcoded-navigatio-lavel">DASHBOARDS</div>
+                    <ul class="pcoded-item pcoded-left-item">
+                        <li class=""><a href="/admin/dashboard"><span class="pcoded-micon"><i class="feather icon-home"></i></span><span class="pcoded-mtext">Dashboard</span></a></li>
+                        <li class=""><a href="/admin/layout-plant"><span class="pcoded-micon"><i class="feather icon-map"></i></span><span class="pcoded-mtext">Layout Plant</span></a></li>
+                    </ul>
+                    <div class="pcoded-navigatio-lavel">WORK ORDER</div>
+                    <ul class="pcoded-item pcoded-left-item">
+                        <li class=""><a href="/admin/tasks"><span class="pcoded-micon"><i class="feather icon-file-text"></i></span><span class="pcoded-mtext">Work Order</span></a></li>
+                        <li class=""><a href="/admin/emergency"><span class="pcoded-micon"><i class="feather icon-alert-triangle"></i></span><span class="pcoded-mtext">Emergency</span></a></li>
+                        <li class=""><a href="/admin/lapor-kendala"><span class="pcoded-micon"><i class="feather icon-message-square"></i></span><span class="pcoded-mtext">Lapor Kendala</span></a></li>
+                    </ul>
+                    <div class="pcoded-navigatio-lavel">MANAJEMEN MEKANIK</div>
+                    <ul class="pcoded-item pcoded-left-item">
+                        <li class=""><a href="/admin/users"><span class="pcoded-micon"><i class="feather icon-users"></i></span><span class="pcoded-mtext">Data Mekanik</span></a></li>
+                        <li class=""><a href="/admin/kehadiran"><span class="pcoded-micon"><i class="feather icon-check-square"></i></span><span class="pcoded-mtext">Absensi Shift</span></a></li>
+                        <li class=""><a href="/admin/hak-akses"><span class="pcoded-micon"><i class="feather icon-lock"></i></span><span class="pcoded-mtext">Hak Akses</span></a></li>
+                    </ul>
+                    <div class="pcoded-navigatio-lavel">ACCOUNT</div>
+                    <ul class="pcoded-item pcoded-left-item">
+                        <li class=""><a href="/admin/settings"><span class="pcoded-micon"><i class="feather icon-settings"></i></span><span class="pcoded-mtext">Settings</span></a></li>
+                    </ul>
+                    <div class="pcoded-navigatio-lavel">AUTHENTICATIONS</div>
+                    <ul class="pcoded-item pcoded-left-item">
+                        <li class=""><a href="/admin/login"><span class="pcoded-micon"><i class="feather icon-log-in"></i></span><span class="pcoded-mtext">Login</span></a></li>
+                        <li class="active"><a href="/admin/register"><span class="pcoded-micon"><i class="feather icon-user-plus"></i></span><span class="pcoded-mtext">Register</span></a></li>
+                    </ul>
+                    <ul class="pcoded-item pcoded-left-item">
+                        <li><a href="#" id="btnLogout"><span class="pcoded-micon"><i class="feather icon-log-out"></i></span><span class="pcoded-mtext">Logout</span></a></li>
+                    </ul>
+                </div>
+            </nav>
+            <div class="pcoded-content"><div class="pcoded-inner-content">
+                <div class="main-body"><div class="page-wrapper">
+                    <div class="page-header">
+                        <div class="row align-items-end">
+                            <div class="col-lg-8">
+                                <div class="page-header-title"><div class="d-inline">
+                                    <h4>Register Pengguna</h4>
+                                    <span>Tambah akun baru ke dalam sistem</span>
+                                </div></div>
+                            </div>
+                            <div class="col-lg-4">
+                                <div class="page-header-breadcrumb">
+                                    <ul class="breadcrumb-title">
+                                        <li class="breadcrumb-item"><a href="/admin/dashboard"><i class="feather icon-home"></i></a></li>
+                                        <li class="breadcrumb-item"><a href="#!">Register</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="page-body">
+<div class="row justify-content-center">
+    <div class="col-lg-7 col-md-10">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="feather icon-user-plus"></i> &nbsp;Daftarkan Pengguna Baru</h5>
+                <span>Tambah akun admin atau mekanik ke dalam sistem</span>
+            </div>
+            <div class="card-block">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Nama Lengkap <span class="text-danger">*</span></label>
+                            <input type="text" id="regNama" class="form-control" placeholder="Nama lengkap">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>NIP / Username <span class="text-danger">*</span></label>
+                            <input type="text" id="regUsername" class="form-control" placeholder="NIP atau username login">
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Role <span class="text-danger">*</span></label>
+                            <select id="regRole" class="form-control">
+                                <option value="mekanik">Mekanik</option>
+                                <option value="admin">Admin</option>
+                                <option value="leader">Leader</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Jabatan</label>
+                            <input type="text" id="regJabatan" class="form-control" placeholder="Contoh: Teknisi Senior">
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Password <span class="text-danger">*</span></label>
+                            <input type="password" id="regPassword" class="form-control" placeholder="Min. 6 karakter">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Konfirmasi Password <span class="text-danger">*</span></label>
+                            <input type="password" id="regPasswordKonfirm" class="form-control">
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>No. Telpon / WhatsApp</label>
+                    <input type="text" id="regTelpon" class="form-control" placeholder="08xxxxxxxxxx">
+                </div>
+                <hr>
+                <button class="btn btn-primary" id="btnRegister"><i class="feather icon-user-plus"></i> &nbsp;Daftarkan Pengguna</button>
+                <a href="/admin/users" class="btn btn-secondary m-l-10"><i class="feather icon-arrow-left"></i> Kembali ke Data Mekanik</a>
+            </div>
+        </div>
+    </div>
+</div>
+                    </div><!-- /page-body -->
+                </div></div><!-- /page-wrapper /main-body -->
+                <div id="styleSelector"></div>
+            </div></div><!-- /pcoded-inner-content /pcoded-content -->
+        </div></div><!-- /pcoded-wrapper /pcoded-main-container -->
+    </div></div><!-- /pcoded-container /pcoded -->
+<script type="text/javascript" src="/libraries/bower_components/jquery/js/jquery.min.js"></script>
+<script type="text/javascript" src="/libraries/bower_components/jquery-ui/js/jquery-ui.min.js"></script>
+<script type="text/javascript" src="/libraries/bower_components/popper.js/js/popper.min.js"></script>
+<script type="text/javascript" src="/libraries/bower_components/bootstrap/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="/libraries/bower_components/jquery-slimscroll/js/jquery.slimscroll.js"></script>
+<script type="text/javascript" src="/libraries/bower_components/modernizr/js/modernizr.js"></script>
+<script type="text/javascript" src="/libraries/bower_components/modernizr/js/css-scrollbars.js"></script>
+<script type="text/javascript" src="/libraries/bower_components/i18next/js/i18next.min.js"></script>
+<script type="text/javascript" src="/libraries/bower_components/i18next-xhr-backend/js/i18nextXHRBackend.min.js"></script>
+<script type="text/javascript" src="/libraries/bower_components/i18next-browser-languagedetector/js/i18nextBrowserLanguageDetector.min.js"></script>
+<script type="text/javascript" src="/libraries/bower_components/jquery-i18next/js/jquery-i18next.min.js"></script>
+<script src="/libraries/assets/js/pcoded.min.js"></script>
+<script src="/libraries/assets/js/vartical-layout.min.js"></script>
+<script src="/libraries/assets/js/jquery.mCustomScrollbar.concat.min.js"></script>
+<script type="text/javascript" src="/libraries/assets/js/script.js"></script>
+<script src="/js/api.js"></script>
+<script src="/js/license-banner.js"></script>
+<script>
+    document.getElementById('btnRegister').onclick = async () => {
+        const nama = document.getElementById('regNama').value.trim();
+        const username = document.getElementById('regUsername').value.trim();
+        const password = document.getElementById('regPassword').value;
+        const konfirm = document.getElementById('regPasswordKonfirm').value;
+        const role = document.getElementById('regRole').value;
+
+        if (!nama || !username || !password) { alert('Nama, username, dan password wajib diisi!'); return; }
+        if (password !== konfirm) { alert('Password dan konfirmasi password tidak cocok!'); return; }
+        if (password.length < 6) { alert('Password minimal 6 karakter!'); return; }
+
+        const payload = {
+            nama, username, password, role,
+            jabatan: document.getElementById('regJabatan').value,
+            telpon: document.getElementById('regTelpon').value,
+        };
+
+        const res = await Api.post('/api/users', payload);
+        if (res.success) {
+            alert('Pengguna berhasil didaftarkan!');
+            window.location.href = '/admin/users';
+        } else {
+            alert('Gagal: ' + (res.message || 'Terjadi kesalahan'));
+        }
+    };
+</script>
+<script>
+    Api.init('auth');
+    const me = Api.getUser();
+    if (me && document.getElementById('navUserName')) document.getElementById('navUserName').textContent = me.nama;
+    const logoutFn = () => Api.logout();
+    if (document.getElementById('btnLogout')) document.getElementById('btnLogout').onclick = logoutFn;
+    if (document.getElementById('btnLogoutNav')) document.getElementById('btnLogoutNav').onclick = logoutFn;
+</script>
+</body>
+</html>

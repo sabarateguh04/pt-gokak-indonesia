@@ -12,24 +12,23 @@
  *   await Api.upload('/api/tiket/5/files', formData);
  */
 const Api = (() => {
-  let scope = 'admin'; // 'admin' | 'teknisi'
+  let scope = 'auth'; // Default scope untuk backward compatibility
 
   function storageKey(suffix) {
-    return `pt_gokak_${scope}_${suffix}`;
+    return `pt_gokak_session_${suffix}`;
   }
 
   function loginPath() {
-    return `/${scope}/login`;
+    return `/`; // Unified login page ada di root index.html
   }
 
   function init(scopeName) {
     scope = scopeName;
-    // Halaman selain login wajib punya token, kalau enggak tendang ke login.
-    const isLoginPage = window.location.pathname.replace(/\/$/, '').endsWith('/login');
+    const isLoginPage = window.location.pathname === '/' || window.location.pathname === '/index.html';
     if (!isLoginPage && !getToken()) {
       window.location.href = loginPath();
     }
-    if (scope === 'admin' && !isLoginPage) injectMitraLinkIfMaster();
+    if (!isLoginPage) injectMitraLinkIfMaster();
   }
 
   // Link sidebar "🤝 Kelola Mitra" SENGAJA gak di-hardcode di HTML
@@ -85,12 +84,7 @@ const Api = (() => {
       return { success: false, message: 'Sesi habis' };
     }
     const data = await res.json();
-    // Lisensi invalid/expired -- lempar ke halaman penjelasan full-screen,
-    // KECUALI lagi di halaman login sendiri (biar pesannya tampil inline
-    // di form, gak usah pindah halaman -- lihat admin/login.html).
-    if (res.status === 403 && data.licenseError && !window.location.pathname.endsWith('/login')) {
-      window.location.href = '/license-locked';
-    }
+    // License check removed
     return data;
   }
 

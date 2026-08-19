@@ -18,7 +18,7 @@ function toggleTheme() {
   const next = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
   document.documentElement.setAttribute('data-theme', next);
   localStorage.setItem('pt_gokak_theme', next);
-  document.querySelectorAll('.theme-toggle-icon').forEach(el => { el.textContent = next === 'dark' ? '🌙' : '☀️'; });
+  document.querySelectorAll('.theme-toggle-icon').forEach(el => { el.innerHTML = next === 'dark' ? '<i class="ph-fill ph-moon"></i>' : '<i class="ph-fill ph-sun"></i>'; });
   return next;
 }
 
@@ -27,7 +27,7 @@ function toggleTheme() {
  * udah 'light' dari localStorage). */
 function initThemeToggle() {
   const current = document.documentElement.getAttribute('data-theme') || 'dark';
-  document.querySelectorAll('.theme-toggle-icon').forEach(el => { el.textContent = current === 'dark' ? '🌙' : '☀️'; });
+  document.querySelectorAll('.theme-toggle-icon').forEach(el => { el.innerHTML = current === 'dark' ? '<i class="ph-fill ph-moon"></i>' : '<i class="ph-fill ph-sun"></i>'; });
   document.querySelectorAll('.theme-toggle-btn').forEach(btn => { btn.onclick = toggleTheme; });
 }
 

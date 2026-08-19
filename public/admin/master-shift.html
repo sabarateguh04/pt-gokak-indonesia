@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <title>Master Shift — PT Gokak Indonesia</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimal-ui">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <link rel="icon" href="/libraries/assets/images/favicon.ico" type="image/x-icon">
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans:400,600" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="/libraries/bower_components/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="/libraries/assets/icon/themify-icons/themify-icons.css">
+    <link rel="stylesheet" type="text/css" href="/libraries/assets/icon/icofont/css/icofont.css">
+    <link rel="stylesheet" type="text/css" href="/libraries/assets/icon/feather/css/feather.css">
+    <link rel="stylesheet" type="text/css" href="/libraries/assets/css/style.css">
+    <link rel="stylesheet" type="text/css" href="/libraries/assets/css/jquery.mCustomScrollbar.css">
+    <!-- MapLibre -->
+    <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" />
+</head>
+<body>
+<div class="theme-loader">
+    <div class="ball-scale"><div class='contain'>
+        <div class="ring"><div class="frame"></div></div>
+        <div class="ring"><div class="frame"></div></div>
+        <div class="ring"><div class="frame"></div></div>
+        <div class="ring"><div class="frame"></div></div>
+        <div class="ring"><div class="frame"></div></div>
+        <div class="ring"><div class="frame"></div></div>
+        <div class="ring"><div class="frame"></div></div>
+        <div class="ring"><div class="frame"></div></div>
+        <div class="ring"><div class="frame"></div></div>
+        <div class="ring"><div class="frame"></div></div>
+    </div></div>
+</div>
+<div id="pcoded" class="pcoded">
+    <div class="pcoded-overlay-box"></div>
+    <div class="pcoded-container navbar-wrapper">
+        <nav class="navbar header-navbar pcoded-header">
+            <div class="navbar-wrapper">
+                <div class="navbar-logo">
+                    <a class="mobile-menu" id="mobile-collapse" href="#!"><i class="feather icon-menu"></i></a>
+                    <a href="/admin/dashboard"><img class="img-fluid" src="/libraries/assets/images/logo.png" alt="Logo"></a>
+                    <a class="mobile-options"><i class="feather icon-more-horizontal"></i></a>
+                </div>
+                <div class="navbar-container container-fluid">
+                    <ul class="nav-left">
+                        <li><a href="#!" onclick="javascript:toggleFullScreen()"><i class="feather icon-maximize full-screen"></i></a></li>
+                    </ul>
+                    <ul class="nav-right">
+                        <li class="user-profile header-notification">
+                            <div class="dropdown-primary dropdown">
+                                <div class="dropdown-toggle" data-toggle="dropdown">
+                                    <img src="/libraries/assets/images/avatar-4.jpg" class="img-radius" alt="User">
+                                    <span id="navUserName">Admin</span>
+                                    <i class="feather icon-chevron-down"></i>
+                                </div>
+                                <ul class="show-notification profile-notification dropdown-menu" data-dropdown-in="fadeIn" data-dropdown-out="fadeOut">
+                                    <li><a href="/admin/settings"><i class="feather icon-settings"></i> Settings</a></li>
+                                    <li><a href="#" id="btnLogoutNav"><i class="feather icon-log-out"></i> Logout</a></li>
+                                </ul>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+        <div class="pcoded-main-container"><div class="pcoded-wrapper">
+            <nav class="pcoded-navbar">
+                <div class="pcoded-inner-navbar main-menu">
+                    <div class="pcoded-navigatio-lavel">DASHBOARDS</div>
+                    <ul class="pcoded-item pcoded-left-item">
+                        <li class=""><a href="/admin/dashboard"><span class="pcoded-micon"><i class="feather icon-home"></i></span><span class="pcoded-mtext">Dashboard</span></a></li>
+                        <li class=""><a href="/admin/layout-plant"><span class="pcoded-micon"><i class="feather icon-map"></i></span><span class="pcoded-mtext">Layout Plant</span></a></li>
+                    </ul>
+                    <div class="pcoded-navigatio-lavel">WORK ORDER</div>
+                    <ul class="pcoded-item pcoded-left-item">
+                        <li class=""><a href="/admin/tasks"><span class="pcoded-micon"><i class="feather icon-file-text"></i></span><span class="pcoded-mtext">Work Order</span></a></li>
+                        <li class=""><a href="/admin/emergency"><span class="pcoded-micon"><i class="feather icon-alert-triangle"></i></span><span class="pcoded-mtext">Emergency</span></a></li>
+                        <li class=""><a href="/admin/lapor-kendala"><span class="pcoded-micon"><i class="feather icon-message-square"></i></span><span class="pcoded-mtext">Lapor Kendala</span></a></li>
+                    </ul>
+                    <div class="pcoded-navigatio-lavel">MANAJEMEN MEKANIK</div>
+                    <ul class="pcoded-item pcoded-left-item">
+                        <li class=""><a href="/admin/users"><span class="pcoded-micon"><i class="feather icon-users"></i></span><span class="pcoded-mtext">Data Mekanik</span></a></li>
+                        <li class=""><a href="/admin/kehadiran"><span class="pcoded-micon"><i class="feather icon-check-square"></i></span><span class="pcoded-mtext">Absensi Shift</span></a></li>
+                        <li class=""><a href="/admin/hak-akses"><span class="pcoded-micon"><i class="feather icon-lock"></i></span><span class="pcoded-mtext">Hak Akses</span></a></li>
+                    </ul>
+                    <div class="pcoded-navigatio-lavel">MASTER DATA</div>
+                    <ul class="pcoded-item pcoded-left-item">
+                        <li class="active"><a href="/admin/master-shift"><span class="pcoded-micon"><i class="feather icon-clock"></i></span><span class="pcoded-mtext">Master Shift</span></a></li>
+                    </ul>
+                    <div class="pcoded-navigatio-lavel">ACCOUNT</div>
+                    <ul class="pcoded-item pcoded-left-item">
+                        <li class=""><a href="/admin/settings"><span class="pcoded-micon"><i class="feather icon-settings"></i></span><span class="pcoded-mtext">Settings</span></a></li>
+                    </ul>
+                    <div class="pcoded-navigatio-lavel">AUTHENTICATIONS</div>
+                    <ul class="pcoded-item pcoded-left-item">
+                        <li class=""><a href="/admin/login"><span class="pcoded-micon"><i class="feather icon-log-in"></i></span><span class="pcoded-mtext">Login</span></a></li>
+                        <li class=""><a href="/admin/register"><span class="pcoded-micon"><i class="feather icon-user-plus"></i></span><span class="pcoded-mtext">Register</span></a></li>
+                    </ul>
+                    <ul class="pcoded-item pcoded-left-item">
+                        <li><a href="#" id="btnLogout"><span class="pcoded-micon"><i class="feather icon-log-out"></i></span><span class="pcoded-mtext">Logout</span></a></li>
+                    </ul>
+                </div>
+            </nav>
+            <div class="pcoded-content"><div class="pcoded-inner-content">
+                <div class="main-body"><div class="page-wrapper">
+                    <div class="page-header">
+                        <div class="row align-items-end">
+                            <div class="col-lg-8">
+                                <div class="page-header-title"><div class="d-inline">
+                                    <h4>Pengaturan Master Shift</h4>
+                                    <span>Mengelola jadwal operasional shift karyawan</span>
+                                </div></div>
+                            </div>
+                            <div class="col-lg-4">
+                                <div class="page-header-breadcrumb">
+                                    <ul class="breadcrumb-title">
+                                        <li class="breadcrumb-item"><a href="/admin/dashboard"><i class="feather icon-home"></i></a></li>
+                                        <li class="breadcrumb-item"><a href="#!">Master Shift</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="page-body">
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>Daftar Shift</h5>
+                <button class="btn btn-primary btn-sm float-right" onclick="tambahShift()">+ Tambah Shift</button>
+            </div>
+            <div class="card-block">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nama Shift</th>
+                                <th>Jam Mulai</th>
+                                <th>Jam Selesai</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="shiftTableBody">
+                            <tr><td colspan="5" class="text-center">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Form Shift -->
+<div class="modal fade" id="modalShift" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <form id="formShift" onsubmit="saveShift(event)">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalShiftTitle">Tambah Shift</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="shiftId">
+        <div class="form-group">
+            <label>Nama Shift</label>
+            <input type="text" id="shiftNama" class="form-control" required placeholder="Misal: Shift 1">
+        </div>
+        <div class="form-group">
+            <label>Jam Mulai</label>
+            <input type="time" id="shiftMulai" class="form-control" required>
+        </div>
+        <div class="form-group">
+            <label>Jam Selesai</label>
+            <input type="time" id="shiftSelesai" class="form-control" required>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
+        <button type="submit" class="btn btn-primary">Simpan</button>
+      </div>
+      </form>
+    </div>
+  </div>
+</div>
+                    </div><!-- /page-body -->
+                </div></div><!-- /page-wrapper /main-body -->
+                <div id="styleSelector"></div>
+            </div></div><!-- /pcoded-inner-content /pcoded-content -->
+        </div></div><!-- /pcoded-wrapper /pcoded-main-container -->
+    </div></div><!-- /pcoded-container /pcoded -->
+<script type="text/javascript" src="/libraries/bower_components/jquery/js/jquery.min.js"></script>
+<script type="text/javascript" src="/libraries/bower_components/jquery-ui/js/jquery-ui.min.js"></script>
+<script type="text/javascript" src="/libraries/bower_components/popper.js/js/popper.min.js"></script>
+<script type="text/javascript" src="/libraries/bower_components/bootstrap/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="/libraries/bower_components/jquery-slimscroll/js/jquery.slimscroll.js"></script>
+<script type="text/javascript" src="/libraries/bower_components/modernizr/js/modernizr.js"></script>
+<script type="text/javascript" src="/libraries/bower_components/modernizr/js/css-scrollbars.js"></script>
+<script type="text/javascript" src="/libraries/bower_components/i18next/js/i18next.min.js"></script>
+<script type="text/javascript" src="/libraries/bower_components/i18next-xhr-backend/js/i18nextXHRBackend.min.js"></script>
+<script type="text/javascript" src="/libraries/bower_components/i18next-browser-languagedetector/js/i18nextBrowserLanguageDetector.min.js"></script>
+<script type="text/javascript" src="/libraries/bower_components/jquery-i18next/js/jquery-i18next.min.js"></script>
+<script src="/libraries/assets/js/pcoded.min.js"></script>
+<script src="/libraries/assets/js/vartical-layout.min.js"></script>
+<script src="/libraries/assets/js/jquery.mCustomScrollbar.concat.min.js"></script>
+<script type="text/javascript" src="/libraries/assets/js/script.js"></script>
+<script src="/js/api.js"></script>
+<script src="/js/license-banner.js"></script><script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<script>
+    Api.init('auth');
+    const me = Api.getUser();
+    if (me && document.getElementById('navUserName')) document.getElementById('navUserName').textContent = me.nama;
+    const logoutFn = () => Api.logout();
+    if (document.getElementById('btnLogout')) document.getElementById('btnLogout').onclick = logoutFn;
+    if (document.getElementById('btnLogoutNav')) document.getElementById('btnLogoutNav').onclick = logoutFn;
+
+    function loadShifts() {
+        Api.get('/api/master/shifts').then(res => {
+            let html = '';
+            if (!res.data || res.data.length === 0) {
+                html = '<tr><td colspan="5" class="text-center">Belum ada shift.</td></tr>';
+            } else {
+                res.data.forEach(s => {
+                    html += `
+                    <tr>
+                        <td>${s.id}</td>
+                        <td>${s.nama}</td>
+                        <td>${s.start_time}</td>
+                        <td>${s.end_time}</td>
+                        <td>
+                            <button class="btn btn-warning btn-sm" onclick="editShift(${s.id}, '${s.nama}', '${s.start_time}', '${s.end_time}')">Edit</button>
+                            <button class="btn btn-danger btn-sm" onclick="deleteShift(${s.id})">Hapus</button>
+                        </td>
+                    </tr>
+                    `;
+                });
+            }
+            document.getElementById('shiftTableBody').innerHTML = html;
+        }).catch(err => {
+            document.getElementById('shiftTableBody').innerHTML = '<tr><td colspan="5" class="text-center text-danger">Gagal memuat data</td></tr>';
+        });
+    }
+
+    function tambahShift() {
+        document.getElementById('formShift').reset();
+        document.getElementById('shiftId').value = '';
+        document.getElementById('modalShiftTitle').textContent = 'Tambah Shift';
+        $('#modalShift').modal('show');
+    }
+
+    function editShift(id, nama, start, end) {
+        document.getElementById('formShift').reset();
+        document.getElementById('shiftId').value = id;
+        document.getElementById('shiftNama').value = nama;
+        document.getElementById('shiftMulai').value = start;
+        document.getElementById('shiftSelesai').value = end;
+        document.getElementById('modalShiftTitle').textContent = 'Edit Shift';
+        $('#modalShift').modal('show');
+    }
+
+    function saveShift(e) {
+        e.preventDefault();
+        const id = document.getElementById('shiftId').value;
+        const payload = {
+            nama: document.getElementById('shiftNama').value,
+            start_time: document.getElementById('shiftMulai').value,
+            end_time: document.getElementById('shiftSelesai').value
+        };
+
+        const req = id ? Api.put(`/api/master/shifts/${id}`, payload) : Api.post('/api/master/shifts', payload);
+        req.then(() => {
+            $('#modalShift').modal('hide');
+            loadShifts();
+        }).catch(err => alert('Gagal menyimpan shift: ' + (err.message || err)));
+    }
+
+    function deleteShift(id) {
+        if (confirm('Yakin ingin menghapus shift ini?')) {
+            Api.del(`/api/master/shifts/${id}`).then(() => loadShifts())
+            .catch(err => alert('Gagal menghapus: ' + (err.message || err)));
+        }
+    }
+
+    window.addEventListener('load', loadShifts);
+</script>
+</body>
+</html>

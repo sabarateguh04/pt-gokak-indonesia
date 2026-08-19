@@ -7,11 +7,11 @@ const http = require('http');
 require('dotenv').config();
 
 const { initSocket } = require('./socket');
-const { requireValidLicense } = require('./middleware/license');
-
 const authRoute      = require('./routes/auth.route');
-const teknisiRoute   = require('./routes/teknisi.route');
-const tiketRoute     = require('./routes/tiket.route');
+const userRoute      = require('./routes/user.route');
+const taskRoute      = require('./routes/task.route');
+const masterRoute    = require('./routes/master.route');
+const pmRoute        = require('./routes/pm.route');
 const dashboardRoute = require('./routes/dashboard.route');
 const areaRoute      = require('./routes/area.route');
 const kpiRoute       = require('./routes/kpi.route');
@@ -121,16 +121,12 @@ app.use('/api/auth', authRoute);
 
 // Gerbang lisensi -- SEMUA route /api/* LAINNYA di bawah ini ditolak
 // kalau lisensi gak valid/udah expired. Di-scope ke prefix '/api'
-// doang (BUKAN app.use(requireValidLicense) tanpa prefix) -- kalau
-// gak di-scope, halaman statis (clean-URL handler & static file
-// serving yang didaftarin belakangan di file ini) ikut keblokir juga,
-// padahal justru itu yang perlu tetap kebuka biar halaman
-// /license-locked & /admin/login bisa NUNJUKIN pesannya ke user, bukan
-// ikut dapet 403 mentah. Lihat notesubscribe.md buat alur lengkapnya.
-app.use('/api', requireValidLicense);
+// License middleware removed
 
-app.use('/api/teknisi', teknisiRoute);
-app.use('/api/tiket', tiketRoute);
+app.use('/api/users', userRoute);
+app.use('/api/tasks', taskRoute);
+app.use('/api/master', masterRoute);
+app.use('/api/pm', pmRoute);
 app.use('/api/dashboard', dashboardRoute);
 app.use('/api/area', areaRoute);
 app.use('/api/kpi', kpiRoute);
@@ -167,13 +163,6 @@ const httpServer = http.createServer(app);
 initSocket(httpServer);
 
 httpServer.listen(PORT, () => {
-  const { verifyLicense } = require('./helpers/license');
-  const license = verifyLicense({ forceRefresh: true });
-  if (license.valid) {
-    console.log(`🔑 Lisensi aktif -- customer: ${license.payload.customer}, seat: ${license.payload.base_seats + license.payload.addon_seats}, berlaku s/d ${new Date(license.payload.exp * 1000).toLocaleDateString('id-ID')}`);
-  } else {
-    console.log(`🔒 LISENSI TIDAK VALID (${license.reason}) -- semua endpoint /api/* selain /api/license & /health bakal ditolak. Lihat notesubscribe.md.`);
-  }
   console.log(`🚀 Monitoring App — Tracking & Tiket System jalan di http://localhost:${PORT}`);
   console.log(`   🖥️  Portal Admin   : http://localhost:${PORT}/admin/login`);
   console.log(`   🧑‍🔧 Portal Teknisi : http://localhost:${PORT}/teknisi/login`);

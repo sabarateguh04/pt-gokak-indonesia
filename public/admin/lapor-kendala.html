@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <title>Lapor Kendala — PT Gokak Indonesia</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimal-ui">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <link rel="icon" href="/libraries/assets/images/favicon.ico" type="image/x-icon">
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans:400,600" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="/libraries/bower_components/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="/libraries/assets/icon/themify-icons/themify-icons.css">
+    <link rel="stylesheet" type="text/css" href="/libraries/assets/icon/icofont/css/icofont.css">
+    <link rel="stylesheet" type="text/css" href="/libraries/assets/icon/feather/css/feather.css">
+    <link rel="stylesheet" type="text/css" href="/libraries/assets/css/style.css">
+    <link rel="stylesheet" type="text/css" href="/libraries/assets/css/jquery.mCustomScrollbar.css">
+    <style>
+        .badge-LOW { background: #2ecc71; color: #fff; }
+        .badge-MEDIUM { background: #f39c12; color: #fff; }
+        .badge-HIGH { background: #e74c3c; color: #fff; }
+        .badge-OPEN { background: #3498db; color: #fff; }
+        .badge-ON_PROGRESS { background: #f39c12; color: #fff; }
+        .badge-CLOSED { background: #2ecc71; color: #fff; }
+    </style>
+</head>
+<body>
+<!-- Pre-loader -->
+<div class="theme-loader">
+    <div class="ball-scale"><div class='contain'>
+        <div class="ring"><div class="frame"></div></div>
+        <div class="ring"><div class="frame"></div></div>
+        <div class="ring"><div class="frame"></div></div>
+        <div class="ring"><div class="frame"></div></div>
+        <div class="ring"><div class="frame"></div></div>
+        <div class="ring"><div class="frame"></div></div>
+        <div class="ring"><div class="frame"></div></div>
+        <div class="ring"><div class="frame"></div></div>
+        <div class="ring"><div class="frame"></div></div>
+        <div class="ring"><div class="frame"></div></div>
+    </div></div>
+</div>
+
+<div id="pcoded" class="pcoded">
+    <div class="pcoded-overlay-box"></div>
+    <div class="pcoded-container navbar-wrapper">
+
+        <!-- NAVBAR -->
+        <nav class="navbar header-navbar pcoded-header">
+            <div class="navbar-wrapper">
+                <div class="navbar-logo">
+                    <a class="mobile-menu" id="mobile-collapse" href="#!"><i class="feather icon-menu"></i></a>
+                    <a href="/admin/dashboard"><img class="img-fluid" src="/libraries/assets/images/logo.png" alt="Logo"></a>
+                    <a class="mobile-options"><i class="feather icon-more-horizontal"></i></a>
+                </div>
+                <div class="navbar-container container-fluid">
+                    <ul class="nav-left">
+                        <li><a href="#!" onclick="javascript:toggleFullScreen()"><i class="feather icon-maximize full-screen"></i></a></li>
+                    </ul>
+                    <ul class="nav-right">
+                        <li class="user-profile header-notification">
+                            <div class="dropdown-primary dropdown">
+                                <div class="dropdown-toggle" data-toggle="dropdown">
+                                    <img src="/libraries/assets/images/avatar-4.jpg" class="img-radius" alt="User">
+                                    <span id="navUserName">Admin</span>
+                                    <i class="feather icon-chevron-down"></i>
+                                </div>
+                                <ul class="show-notification profile-notification dropdown-menu" data-dropdown-in="fadeIn" data-dropdown-out="fadeOut">
+                                    <li><a href="/admin/settings"><i class="feather icon-settings"></i> Settings</a></li>
+                                    <li><a href="#" id="btnLogoutNav"><i class="feather icon-log-out"></i> Logout</a></li>
+                                </ul>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+
+        <div class="pcoded-main-container">
+            <div class="pcoded-wrapper">
+
+                <!-- SIDEBAR -->
+                <nav class="pcoded-navbar">
+                    <div class="pcoded-inner-navbar main-menu">
+                        <div class="pcoded-navigatio-lavel">DASHBOARDS</div>
+                        <ul class="pcoded-item pcoded-left-item">
+                            <li><a href="/admin/dashboard"><span class="pcoded-micon"><i class="feather icon-home"></i></span><span class="pcoded-mtext">Dashboard</span></a></li>
+                            <li><a href="/admin/layout-plant"><span class="pcoded-micon"><i class="feather icon-map"></i></span><span class="pcoded-mtext">Layout Plant</span></a></li>
+                        </ul>
+                        <div class="pcoded-navigatio-lavel">WORK ORDER</div>
+                        <ul class="pcoded-item pcoded-left-item">
+                            <li><a href="/admin/tasks"><span class="pcoded-micon"><i class="feather icon-file-text"></i></span><span class="pcoded-mtext">Work Order</span></a></li>
+                            <li><a href="/admin/emergency"><span class="pcoded-micon"><i class="feather icon-alert-triangle"></i></span><span class="pcoded-mtext">Emergency</span></a></li>
+                            <li class="active"><a href="/admin/lapor-kendala"><span class="pcoded-micon"><i class="feather icon-message-square"></i></span><span class="pcoded-mtext">Lapor Kendala</span></a></li>
+                        </ul>
+                        <div class="pcoded-navigatio-lavel">MANAJEMEN MEKANIK</div>
+                        <ul class="pcoded-item pcoded-left-item">
+                            <li><a href="/admin/users"><span class="pcoded-micon"><i class="feather icon-users"></i></span><span class="pcoded-mtext">Data Mekanik</span></a></li>
+                            <li><a href="/admin/kehadiran"><span class="pcoded-micon"><i class="feather icon-check-square"></i></span><span class="pcoded-mtext">Absensi Shift</span></a></li>
+                            <li><a href="/admin/hak-akses"><span class="pcoded-micon"><i class="feather icon-lock"></i></span><span class="pcoded-mtext">Hak Akses</span></a></li>
+                        </ul>
+                        <div class="pcoded-navigatio-lavel">ACCOUNT</div>
+                        <ul class="pcoded-item pcoded-left-item">
+                            <li><a href="/admin/settings"><span class="pcoded-micon"><i class="feather icon-settings"></i></span><span class="pcoded-mtext">Settings</span></a></li>
+                        </ul>
+                        <div class="pcoded-navigatio-lavel">AUTHENTICATIONS</div>
+                        <ul class="pcoded-item pcoded-left-item">
+                            <li><a href="/admin/login"><span class="pcoded-micon"><i class="feather icon-log-in"></i></span><span class="pcoded-mtext">Login</span></a></li>
+                            <li><a href="/admin/register"><span class="pcoded-micon"><i class="feather icon-user-plus"></i></span><span class="pcoded-mtext">Register</span></a></li>
+                        </ul>
+                        <ul class="pcoded-item pcoded-left-item">
+                            <li><a href="#" id="btnLogout"><span class="pcoded-micon"><i class="feather icon-log-out"></i></span><span class="pcoded-mtext">Logout</span></a></li>
+                        </ul>
+                    </div>
+                </nav>
+
+                <!-- CONTENT -->
+                <div class="pcoded-content">
+                    <div class="pcoded-inner-content">
+                        <div class="main-body">
+                            <div class="page-wrapper">
+
+                                <!-- Page Header -->
+                                <div class="page-header">
+                                    <div class="row align-items-end">
+                                        <div class="col-lg-8">
+                                            <div class="page-header-title">
+                                                <div class="d-inline">
+                                                    <h4>Lapor Kendala</h4>
+                                                    <span>Sampaikan laporan masalah mesin atau peralatan</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-4">
+                                            <div class="page-header-breadcrumb">
+                                                <ul class="breadcrumb-title">
+                                                    <li class="breadcrumb-item"><a href="/admin/dashboard"><i class="feather icon-home"></i></a></li>
+                                                    <li class="breadcrumb-item"><a href="#!">Lapor Kendala</a></li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="page-body">
+                                    <div class="row">
+                                        
+                                        <!-- Form Input -->
+                                        <div class="col-lg-5 col-md-12">
+                                            <div class="card">
+                                                <div class="card-header">
+                                                    <h5><i class="feather icon-message-square text-primary"></i> &nbsp;Form Laporan Kendala</h5>
+                                                    <span>Silakan lengkapi data kendala dengan jelas</span>
+                                                </div>
+                                                <div class="card-block">
+                                                    <form id="formKendala">
+                                                        <div class="form-group">
+                                                            <label class="font-weight-bold">Judul Kendala <span class="text-danger">*</span></label>
+                                                            <input type="text" id="lkJudul" class="form-control" placeholder="Contoh: Getaran abnormal mesin gerinda" required>
+                                                        </div>
+                                                        <div class="form-group">
+                                                            <label class="font-weight-bold">Kategori</label>
+                                                            <select id="lkKategori" class="form-control">
+                                                                <option value="">-- Pilih Kategori --</option>
+                                                                <option value="Mekanik">Mekanik</option>
+                                                                <option value="Elektrik">Elektrik</option>
+                                                                <option value="Pneumatik">Pneumatik</option>
+                                                                <option value="Hidrolik">Hidrolik</option>
+                                                                <option value="Instrumentasi">Instrumentasi</option>
+                                                                <option value="Lainnya">Lainnya</option>
+                                                            </select>
+                                                        </div>
+                                                        <div class="row">
+                                                            <div class="col-md-6">
+                                                                <div class="form-group">
+                                                                    <label class="font-weight-bold">Mesin / Area</label>
+                                                                    <input type="text" id="lkMesin" class="form-control" placeholder="Nama mesin / area">
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-md-6">
+                                                                <div class="form-group">
+                                                                    <label class="font-weight-bold">Tingkat Urgensi</label>
+                                                                    <select id="lkPriority" class="form-control">
+                                                                        <option value="LOW">LOW — Bisa ditunda</option>
+                                                                        <option value="MEDIUM" selected>MEDIUM — Segera</option>
+                                                                        <option value="HIGH">HIGH — Sangat Kritis</option>
+                                                                    </select>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="form-group">
+                                                            <label class="font-weight-bold">Deskripsi Lengkap <span class="text-danger">*</span></label>
+                                                            <textarea id="lkDeskripsi" class="form-control" rows="5" placeholder="Jelaskan gejala, kapan pertama kali terjadi, dan kondisi saat ini secara mendetail..." required></textarea>
+                                                        </div>
+                                                        <hr>
+                                                        <button type="submit" class="btn btn-primary btn-block btn-round shadow-sm" id="btnLapor">
+                                                            <i class="feather icon-send"></i> &nbsp;Kirim Laporan
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Table Riwayat -->
+                                        <div class="col-lg-7 col-md-12">
+                                            <div class="card">
+                                                <div class="card-header">
+                                                    <h5><i class="feather icon-list text-primary"></i> &nbsp;Riwayat Laporan Anda</h5>
+                                                    <div class="card-header-right">
+                                                        <ul class="list-unstyled card-option">
+                                                            <li><i class="feather icon-maximize full-card"></i></li>
+                                                            <li><i class="feather icon-minus minimize-card"></i></li>
+                                                            <li><i class="feather icon-trash-2 close-card"></i></li>
+                                                        </ul>
+                                                    </div>
+                                                </div>
+                                                <div class="card-block">
+                                                    <div class="table-responsive">
+                                                        <table class="table table-hover table-bordered" style="font-size: 13px;">
+                                                            <thead class="thead-light">
+                                                                <tr>
+                                                                    <th>No. WO / Judul</th>
+                                                                    <th>Kategori</th>
+                                                                    <th>Priority</th>
+                                                                    <th>Status</th>
+                                                                    <th>Tanggal</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody id="tbodyKendala">
+                                                                <!-- Dummy Data for visualization -->
+                                                                <tr>
+                                                                    <td>
+                                                                        <strong>TSK-20260819-001</strong><br>
+                                                                        <span class="text-muted">Getaran abnormal mesin gerinda</span>
+                                                                    </td>
+                                                                    <td>Mekanik</td>
+                                                                    <td><span class="badge badge-MEDIUM" style="padding:5px 10px;">MEDIUM</span></td>
+                                                                    <td><span class="badge badge-OPEN" style="padding:5px 10px;">OPEN</span></td>
+                                                                    <td>19 Aug 2026</td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <td>
+                                                                        <strong>TSK-20260818-042</strong><br>
+                                                                        <span class="text-muted">Sensor konveyor mati total</span>
+                                                                    </td>
+                                                                    <td>Elektrik</td>
+                                                                    <td><span class="badge badge-HIGH" style="padding:5px 10px;">HIGH</span></td>
+                                                                    <td><span class="badge badge-ON_PROGRESS" style="padding:5px 10px;">ON PROGRESS</span></td>
+                                                                    <td>18 Aug 2026</td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <td>
+                                                                        <strong>TSK-20260815-011</strong><br>
+                                                                        <span class="text-muted">Pipa kompresor bocor halus</span>
+                                                                    </td>
+                                                                    <td>Pneumatik</td>
+                                                                    <td><span class="badge badge-LOW" style="padding:5px 10px;">LOW</span></td>
+                                                                    <td><span class="badge badge-CLOSED" style="padding:5px 10px;">CLOSED</span></td>
+                                                                    <td>15 Aug 2026</td>
+                                                                </tr>
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="styleSelector"></div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SCRIPTS -->
+<script type="text/javascript" src="/libraries/bower_components/jquery/js/jquery.min.js"></script>
+<script type="text/javascript" src="/libraries/bower_components/jquery-ui/js/jquery-ui.min.js"></script>
+<script type="text/javascript" src="/libraries/bower_components/popper.js/js/popper.min.js"></script>
+<script type="text/javascript" src="/libraries/bower_components/bootstrap/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="/libraries/bower_components/jquery-slimscroll/js/jquery.slimscroll.js"></script>
+<script type="text/javascript" src="/libraries/bower_components/modernizr/js/modernizr.js"></script>
+<script type="text/javascript" src="/libraries/bower_components/modernizr/js/css-scrollbars.js"></script>
+<script type="text/javascript" src="/libraries/bower_components/i18next/js/i18next.min.js"></script>
+<script type="text/javascript" src="/libraries/bower_components/i18next-xhr-backend/js/i18nextXHRBackend.min.js"></script>
+<script type="text/javascript" src="/libraries/bower_components/i18next-browser-languagedetector/js/i18nextBrowserLanguageDetector.min.js"></script>
+<script type="text/javascript" src="/libraries/bower_components/jquery-i18next/js/jquery-i18next.min.js"></script>
+<script src="/libraries/assets/js/pcoded.min.js"></script>
+<script src="/libraries/assets/js/vartical-layout.min.js"></script>
+<script src="/libraries/assets/js/jquery.mCustomScrollbar.concat.min.js"></script>
+<script type="text/javascript" src="/libraries/assets/js/script.js"></script>
+<script src="/js/api.js"></script>
+<script src="/js/license-banner.js"></script>
+
+<script>
+    // Inisialisasi API & User State
+    Api.init('auth');
+    const me = Api.getUser();
+    if (me && document.getElementById('navUserName')) {
+        document.getElementById('navUserName').textContent = me.nama;
+    }
+    const logoutFn = () => Api.logout();
+    document.getElementById('btnLogout').onclick = logoutFn;
+    document.getElementById('btnLogoutNav').onclick = logoutFn;
+
+    // Load form data (Kategori & Mesin)
+    async function loadFormData() {
+        const res = await Api.get('/api/tasks/form-data');
+        if (res.success) {
+            const catSelect = document.getElementById('lkKategori');
+            catSelect.innerHTML = '<option value="">-- Pilih Kategori --</option>' + 
+                res.data.categories.map(c => `<option value="${c.id}">${c.nama}</option>`).join('');
+                
+            const mesSelect = document.getElementById('lkMesin');
+            // Change text input to select if it wasn't already, but we need to replace the HTML node or just use it.
+            // Wait, lkMesin is currently an input type="text". Let's convert it to a select.
+            const parent = mesSelect.parentNode;
+            parent.innerHTML = `<label class="font-weight-bold">Mesin / Area</label>
+                                <select id="lkMesin" class="form-control">
+                                    <option value="">-- Pilih Mesin --</option>
+                                    ${res.data.machines.map(m => `<option value="${m.id}">${m.nama}</option>`).join('')}
+                                </select>`;
+        }
+    }
+
+    // Load riwayat laporan
+    async function loadRiwayat() {
+        const res = await Api.get('/api/tasks');
+        const tbody = document.getElementById('tbodyKendala');
+        if (res.success && res.data.length > 0) {
+            tbody.innerHTML = res.data.map(t => {
+                let badgeClass = 'badge-primary';
+                if (t.priority === 'HIGH') badgeClass = 'badge-danger';
+                else if (t.priority === 'LOW') badgeClass = 'badge-success';
+                else if (t.priority === 'MEDIUM') badgeClass = 'badge-warning';
+
+                let statClass = 'badge-primary';
+                if (t.status === 'OPEN') statClass = 'badge-info';
+                else if (t.status === 'IN_PROGRESS') statClass = 'badge-warning';
+                else if (t.status === 'SELESAI') statClass = 'badge-success';
+
+                return `
+                <tr>
+                    <td>
+                        <strong>${t.task_no}</strong><br>
+                        <span class="text-muted">${t.judul}</span>
+                    </td>
+                    <td>${t.category_nama || '-'}</td>
+                    <td><span class="badge ${badgeClass}" style="padding:5px 10px;">${t.priority}</span></td>
+                    <td><span class="badge ${statClass}" style="padding:5px 10px;">${t.status}</span></td>
+                    <td>${new Date(t.created_at).toLocaleDateString('id-ID')}</td>
+                </tr>`;
+            }).join('');
+        } else {
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">Belum ada riwayat laporan</td></tr>';
+        }
+    }
+
+    // Handle Form Submit
+    document.getElementById('formKendala').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById('btnLapor');
+        btn.innerHTML = '<i class="feather icon-loader"></i> &nbsp;Mengirim...';
+        btn.disabled = true;
+
+        const payload = {
+            judul: document.getElementById('lkJudul').value,
+            category_id: document.getElementById('lkKategori').value,
+            machine_id: document.getElementById('lkMesin').value, // This is now a select
+            priority: document.getElementById('lkPriority').value,
+            deskripsi: document.getElementById('lkDeskripsi').value
+        };
+
+        const res = await Api.post('/api/tasks', payload);
+        if (res.success) {
+            alert('Laporan berhasil dikirim!');
+            document.getElementById('formKendala').reset();
+            loadRiwayat(); // Refresh table
+        } else {
+            alert('Gagal: ' + res.message);
+        }
+
+        btn.innerHTML = '<i class="feather icon-send"></i> &nbsp;Kirim Laporan';
+        btn.disabled = false;
+    });
+
+    // Initialize
+    loadFormData();
+    loadRiwayat();
+</script>
+</body>
+</html>

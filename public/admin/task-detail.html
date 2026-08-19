@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Adminty - Premium Admin Template by Colorlib </title>
+    <!-- HTML5 Shim and Respond.js IE10 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 10]>
+    <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+    <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+    <!-- Meta -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimal-ui">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="description" content="#">
+    <meta name="keywords" content="flat ui, admin Admin , Responsive, Landing, Bootstrap, App, Template, Mobile, iOS, Android, apple, creative app">
+    <meta name="author" content="#">
+    <!-- Favicon icon -->
+    <link rel="icon" href="/libraries/assets\images\favicon.ico" type="image/x-icon">
+    <!-- Google font-->
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans:400,600" rel="stylesheet">
+    <!-- Required Fremwork -->
+    <link rel="stylesheet" type="text/css" href="/libraries/bower_components\bootstrap\css\bootstrap.min.css">
+    <!-- themify-icons line icon -->
+    <link rel="stylesheet" type="text/css" href="/libraries/assets\icon\themify-icons\themify-icons.css">
+    <!-- ico font -->
+    <link rel="stylesheet" type="text/css" href="/libraries/assets\icon\icofont\css\icofont.css">
+    <!-- feather Awesome -->
+    <link rel="stylesheet" type="text/css" href="/libraries/assets\icon\feather\css\feather.css">
+    <!-- Style.css -->
+    <link rel="stylesheet" type="text/css" href="/libraries/assets\css\style.css">
+    <link rel="stylesheet" type="text/css" href="/libraries/assets\css\jquery.mCustomScrollbar.css">
+    <link rel="stylesheet" href="/libraries/assets\scss\partials\menu\_pcmenu.htm">
+</head>
+
+<body>
+<!-- Pre-loader start -->
+<div class="theme-loader">
+    <div class="ball-scale">
+        <div class='contain'>
+            <div class="ring">
+                <div class="frame"></div>
+            </div>
+            <div class="ring">
+                <div class="frame"></div>
+            </div>
+            <div class="ring">
+                <div class="frame"></div>
+            </div>
+            <div class="ring">
+                <div class="frame"></div>
+            </div>
+            <div class="ring">
+                <div class="frame"></div>
+            </div>
+            <div class="ring">
+                <div class="frame"></div>
+            </div>
+            <div class="ring">
+                <div class="frame"></div>
+            </div>
+            <div class="ring">
+                <div class="frame"></div>
+            </div>
+            <div class="ring">
+                <div class="frame"></div>
+            </div>
+            <div class="ring">
+                <div class="frame"></div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Pre-loader end -->
+<div id="pcoded" class="pcoded">
+    <div class="pcoded-overlay-box"></div>
+    <div class="pcoded-container navbar-wrapper">
+
+        <nav class="navbar header-navbar pcoded-header">
+            <div class="navbar-wrapper">
+
+                <div class="navbar-logo">
+                    <a class="mobile-menu" id="mobile-collapse" href="#!">
+                        <i class="feather icon-menu"></i>
+                    </a>
+                    <a href="index-1.htm">
+                        <img class="img-fluid" src="/libraries/assets\images\logo.png" alt="Theme-Logo">
+                    </a>
+                    <a class="mobile-options">
+                        <i class="feather icon-more-horizontal"></i>
+                    </a>
+                </div>
+
+                <div class="navbar-container container-fluid">
+                    <ul class="nav-left">
+                        <li class="header-search">
+                            <div class="main-search morphsearch-search">
+                                <div class="input-group">
+                                    <span class="input-group-addon search-close"><i class="feather icon-x"></i></span>
+                                    <input type="text" class="form-control">
+                                    <span class="input-group-addon search-btn"><i class="feather icon-search"></i></span>
+                                </div>
+                            </div>
+                        </li>
+                        <li>
+                            <a href="#!" onclick="javascript:toggleFullScreen()">
+                                <i class="feather icon-maximize full-screen"></i>
+                            </a>
+                        </li>
+                    </ul>
+                    <ul class="nav-right">
+                        <li class="header-notification">
+                            <div class="dropdown-primary dropdown">
+                                <div class="dropdown-toggle" data-toggle="dropdown">
+                                    <i class="feather icon-bell"></i>
+                                    <span class="badge bg-c-pink">5</span>
+                                </div>
+                                <ul class="show-notification notification-view dropdown-menu" data-dropdown-in="fadeIn" data-dropdown-out="fadeOut">
+                                    <li>
+                                        <h6>Notifications</h6>
+                                        <label class="label label-danger">New</label>
+                                    </li>
+                                    <li>
+                                        <div class="media">
+                                            <img class="d-flex align-self-center img-radius" src="/libraries/assets\images\avatar-4.jpg" alt="Generic placeholder image">
+                                            <div class="media-body">
+                                                <h5 class="notification-user">John Doe</h5>
+                                                <p class="notification-msg">Lorem ipsum dolor sit amet, consectetuer elit.</p>
+                                                <span class="notification-time">30 minutes ago</span>
+                                            </div>
+                                        </div>
+                                    </li>
+                                    <li>
+                                        <div class="media">
+                                            <img class="d-flex align-self-center img-radius" src="/libraries/assets\images\avatar-3.jpg" alt="Generic placeholder image">
+                                            <div class="media-body">
+                                                <h5 class="notification-user">Joseph William</h5>
+                                                <p class="notification-msg">Lorem ipsum dolor sit amet, consectetuer elit.</p>
+                                                <span class="notification-time">30 minutes ago</span>
+                                            </div>
+                                        </div>
+                                    </li>
+                                    <li>
+                                        <div class="media">
+                                            <img class="d-flex align-self-center img-radius" src="/libraries/assets\images\avatar-4.jpg" alt="Generic placeholder image">
+                                            <div class="media-body">
+                                                <h5 class="notification-user">Sara Soudein</h5>
+                                                <p class="notification-msg">Lorem ipsum dolor sit amet, consectetuer elit.</p>
+                                                <span class="notification-time">30 minutes ago</span>
+                                            </div>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </div>
+                        </li>
+                        <li class="header-notification">
+                            <div class="dropdown-primary dropdown">
+                                <div class="displayChatbox dropdown-toggle" data-toggle="dropdown">
+                                    <i class="feather icon-message-square"></i>
+                                    <span class="badge bg-c-green">3</span>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="user-profile header-notification">
+                            <div class="dropdown-primary dropdown">
+                                <div class="dropdown-toggle" data-toggle="dropdown">
+                                    <img src="/libraries/assets\images\avatar-4.jpg" class="img-radius" alt="User-Profile-Image">
+                                    <span>John Doe</span>
+                                    <i class="feather icon-chevron-down"></i>
+                                </div>
+                                <ul class="show-notification profile-notification dropdown-menu" data-dropdown-in="fadeIn" data-dropdown-out="fadeOut">
+                                    <li>
+                                        <a href="#!">
+                                            <i class="feather icon-settings"></i> Settings
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="user-profile.htm">
+                                            <i class="feather icon-user"></i> Profile
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="email-inbox.htm">
+                                            <i class="feather icon-mail"></i> My Messages
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="auth-lock-screen.htm">
+                                            <i class="feather icon-lock"></i> Lock Screen
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="auth-normal-sign-in.htm">
+                                            <i class="feather icon-log-out"></i> Logout
+                                        </a>
+                                    </li>
+                                </ul>
+
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Sidebar chat start -->
+        <div id="sidebar" class="users p-chat-user showChat">
+            <div class="had-container">
+                <div class="card card_main p-fixed users-main">
+                    <div class="user-box">
+                        <div class="chat-inner-header">
+                            <div class="back_chatBox">
+                                <div class="right-icon-control">
+                                    <input type="text" class="form-control  search-text" placeholder="Search Friend" id="search-friends">
+                                    <div class="form-icon">
+                                        <i class="icofont icofont-search"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="main-friend-list">
+                            <div class="media userlist-box" data-id="1" data-status="online" data-username="Josephin Doe" data-toggle="tooltip" data-placement="left" title="Josephin Doe">
+                                <a class="media-left" href="#!">
+                                    <img class="media-object img-radius img-radius" src="/libraries/assets\images\avatar-3.jpg" alt="Generic placeholder image ">
+                                    <div class="live-status bg-success"></div>
+                                </a>
+                                <div class="media-body">
+                                    <div class="f-13 chat-header">Josephin Doe</div>
+                                </div>
+                            </div>
+                            <div class="media userlist-box" data-id="2" data-status="online" data-username="Lary Doe" data-toggle="tooltip" data-placement="left" title="Lary Doe">
+                                <a class="media-left" href="#!">
+                                    <img class="media-object img-radius" src="/libraries/assets\images\avatar-2.jpg" alt="Generic placeholder image">
+                                    <div class="live-status bg-success"></div>
+                                </a>
+                                <div class="media-body">
+                                    <div class="f-13 chat-header">Lary Doe</div>
+                                </div>
+                            </div>
+                            <div class="media userlist-box" data-id="3" data-status="online" data-username="Alice" data-toggle="tooltip" data-placement="left" title="Alice">
+                                <a class="media-left" href="#!">
+                                    <img class="media-object img-radius" src="/libraries/assets\images\avatar-4.jpg" alt="Generic placeholder image">
+                                    <div class="live-status bg-success"></div>
+                                </a>
+                                <div class="media-body">
+                                    <div class="f-13 chat-header">Alice</div>
+                                </div>
+                            </div>
+                            <div class="media userlist-box" data-id="4" data-status="online" data-username="Alia" data-toggle="tooltip" data-placement="left" title="Alia">
+                                <a class="media-left" href="#!">
+                                    <img class="media-object img-radius" src="/libraries/assets\images\avatar-3.jpg" alt="Generic placeholder image">
+                                    <div class="live-status bg-success"></div>
+                                </a>
+                                <div class="media-body">
+                                    <div class="f-13 chat-header">Alia</div>
+                                </div>
+                            </div>
+                            <div class="media userlist-box" data-id="5" data-status="online" data-username="Suzen" data-toggle="tooltip" data-placement="left" title="Suzen">
+                                <a class="media-left" href="#!">
+                                    <img class="media-object img-radius" src="/libraries/assets\images\avatar-2.jpg" alt="Generic placeholder image">
+                                    <div class="live-status bg-success"></div>
+                                </a>
+                                <div class="media-body">
+                                    <div class="f-13 chat-header">Suzen</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Sidebar inner chat start-->
+        <div class="showChat_inner">
+            <div class="media chat-inner-header">
+                <a class="back_chatBox">
+                    <i class="feather icon-chevron-left"></i> Josephin Doe
+                </a>
+            </div>
+            <div class="media chat-messages">
+                <a class="media-left photo-table" href="#!">
+                    <img class="media-object img-radius img-radius m-t-5" src="/libraries/assets\images\avatar-3.jpg" alt="Generic placeholder image">
+                </a>
+                <div class="media-body chat-menu-content">
+                    <div class="">
+                        <p class="chat-cont">I'm just looking around. Will you tell me something about yourself?</p>
+                        <p class="chat-time">8:20 a.m.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="media chat-messages">
+                <div class="media-body chat-menu-reply">
+                    <div class="">
+                        <p class="chat-cont">I'm just looking around. Will you tell me something about yourself?</p>
+                        <p class="chat-time">8:20 a.m.</p>
+                    </div>
+                </div>
+                <div class="media-right photo-table">
+                    <a href="#!">
+                        <img class="media-object img-radius img-radius m-t-5" src="/libraries/assets\images\avatar-4.jpg" alt="Generic placeholder image">
+                    </a>
+                </div>
+            </div>
+            <div class="chat-reply-box p-b-20">
+                <div class="right-icon-control">
+                    <input type="text" class="form-control search-text" placeholder="Share Your Thoughts">
+                    <div class="form-icon">
+                        <i class="feather icon-navigation"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Sidebar inner chat end-->
+        <div class="pcoded-main-container">
+            <div class="pcoded-wrapper">
+                
+<nav class="pcoded-navbar">
+    <div class="pcoded-inner-navbar main-menu">
+        <div class="pcoded-navigatio-lavel">DASHBOARDS</div>
+        <ul class="pcoded-item pcoded-left-item">
+            <li class="">
+                <a href="/admin/dashboard">
+                    <span class="pcoded-micon"><i class="feather icon-home"></i></span>
+                    <span class="pcoded-mtext">Dashboard</span>
+                </a>
+            </li>
+            <li class="">
+                <a href="/admin/layout-plant"><span class="pcoded-micon"><i class="feather icon-map"></i></span><span class="pcoded-mtext">Layout Plant</span>
+                </a>
+            </li>
+        </ul>
+
+        <div class="pcoded-navigatio-lavel">WORK ORDER</div>
+        <ul class="pcoded-item pcoded-left-item">
+            <li class="">
+                <a href="/admin/tasks">
+                    <span class="pcoded-micon"><i class="feather icon-file-text"></i></span>
+                    <span class="pcoded-mtext">Work Order</span>
+                </a>
+            </li>
+            <li class="">
+                <a href="/admin/emergency"><span class="pcoded-micon"><i class="feather icon-alert-triangle"></i></span><span class="pcoded-mtext">Emergency</span>
+                </a>
+            </li>
+            <li class="">
+                <a href="/admin/lapor-kendala"><span class="pcoded-micon"><i class="feather icon-message-square"></i></span><span class="pcoded-mtext">Lapor Kendala</span>
+                </a>
+            </li>
+        </ul>
+
+        <div class="pcoded-navigatio-lavel">MANAJEMEN MEKANIK</div>
+        <ul class="pcoded-item pcoded-left-item">
+            <li class="">
+                <a href="/admin/users">
+                    <span class="pcoded-micon"><i class="feather icon-users"></i></span>
+                    <span class="pcoded-mtext">Data Mekanik</span>
+                </a>
+            </li>
+            <li class="">
+                <a href="/admin/kehadiran">
+                    <span class="pcoded-micon"><i class="feather icon-check-square"></i></span>
+                    <span class="pcoded-mtext">Absensi Shift</span>
+                </a>
+            </li>
+            <li class="">
+                <a href="/admin/hak-akses"><span class="pcoded-micon"><i class="feather icon-lock"></i></span><span class="pcoded-mtext">Hak Akses</span>
+                </a>
+            </li>
+        </ul>
+
+        <div class="pcoded-navigatio-lavel">ACCOUNT</div>
+        <ul class="pcoded-item pcoded-left-item">
+            <li class="">
+                <a href="/admin/settings"><span class="pcoded-micon"><i class="feather icon-settings"></i></span><span class="pcoded-mtext">Settings</span>
+                </a>
+            </li>
+        </ul>
+
+        <div class="pcoded-navigatio-lavel">AUTHENTICATIONS</div>
+        <ul class="pcoded-item pcoded-left-item">
+            <li class="">
+                <a href="/admin/login">
+                    <span class="pcoded-micon"><i class="feather icon-log-in"></i></span>
+                    <span class="pcoded-mtext">Login</span>
+                </a>
+            </li>
+            <li class="">
+                <a href="/admin/register"><span class="pcoded-micon"><i class="feather icon-user-plus"></i></span><span class="pcoded-mtext">Register</span>
+                </a>
+            </li>
+        </ul>
+        <ul class="pcoded-item pcoded-left-item">
+            <li>
+                <a href="#" id="btnLogout">
+                    <span class="pcoded-micon"><i class="feather icon-log-out"></i></span>
+                    <span class="pcoded-mtext">Logout</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+</nav>
+
+                <div class="pcoded-content">
+                    <div class="pcoded-inner-content">
+                        <!-- Main-body start -->
+                        <div class="main-body">
+                            <div class="page-wrapper">
+                                <!-- Page-header start -->
+                                <div class="page-header">
+                                    <div class="row align-items-end">
+                                        <div class="col-lg-8">
+                                            <div class="page-header-title">
+                                                <div class="d-inline">
+                                                    <h4>Sample Page</h4>
+                                                    <span>lorem ipsum dolor sit amet, consectetur adipisicing elit</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-4">
+                                            <div class="page-header-breadcrumb">
+                                                <ul class="breadcrumb-title">
+                                                    <li class="breadcrumb-item">
+                                                        <a href="index-1.htm"> <i class="feather icon-home"></i> </a>
+                                                    </li>
+                                                    <li class="breadcrumb-item"><a href="#!">Widget</a> </li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- Page-header end -->
+
+                                <div class="page-body">
+  <div class="page-header">
+      <div class="row align-items-end">
+          <div class="col-lg-8">
+              <div class="page-header-title">
+                  <div class="d-inline">
+                      <h4>Page</h4>
+                  </div>
+              </div>
+          </div>
+      </div>
+  </div>
+  
+<div class="page-body">
+    <div class="row">
+        <!-- Form Section -->
+        <div class="col-sm-12 col-xl-8">
+            <div class="card" id="formCard">
+                <div class="card-header">
+                    <h5 id="pageTitle">Buat Tugas Baru</h5>
+                    <a href="/admin/tasks" class="btn btn-default btn-sm" style="float:right">← Kembali</a>
+                </div>
+                <div class="card-block">
+                    <form id="tiketForm">
+                        <div class="form-group">
+                            <label>Judul</label>
+                            <input type="text" id="f_judul" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Deskripsi</label>
+                            <textarea id="f_deskripsi" class="form-control" style="min-height:100px"></textarea>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label>Kategori</label>
+                                    <select id="f_category_id" class="form-control" required><option value="">Memuat...</option></select>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label>Priority</label>
+                                    <select id="f_priority" class="form-control">
+                                        <option value="LOW">Low</option>
+                                        <option value="MEDIUM" selected>Medium</option>
+                                        <option value="HIGH">High</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label>Line (Area)</label>
+                                    <select id="f_line_id" class="form-control"><option value="">-- Pilih Line --</option></select>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label>Mesin</label>
+                                    <select id="f_machine_id" class="form-control"><option value="">-- Pilih Mesin --</option></select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Mekanik (Assign Ke)</label>
+                            <select id="f_assigned_to_id" class="form-control"><option value="">-- Lempar ke Antrean --</option></select>
+                        </div>
+
+                        <button type="submit" id="btnSimpan" class="btn btn-primary btn-block m-t-20"><i class="feather icon-save"></i> Simpan Tugas</button>
+                        <div class="text-danger m-t-10" id="formErr"></div>
+                    </form>
+                    
+                    <div id="actionArea" style="display:none;margin-top:30px;padding-top:20px;border-top:1px solid #eee">
+                        <button id="btnCancel" class="btn btn-danger btn-block"><i class="feather icon-x-circle"></i> Batalkan Tugas (CANCELLED)</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- History Section -->
+        <div class="col-sm-12 col-xl-4" style="display:none" id="historyCard">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Status & Riwayat</h5>
+                </div>
+                <div class="card-block">
+                    <div class="m-b-20 f-14">Status saat ini: <span id="statusBadge"></span></div>
+                    <div id="timelineList"></div>
+                    
+                    <h5 class="m-t-30 m-b-10">Foto Bukti</h5>
+                    <div id="filesList"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script src="/js/api.js"></script>
+<script src="/js/license-banner.js"></script>
+<script>
+    Api.init('auth');
+    document.getElementById('btnLogout').onclick = () => Api.logout();
+
+    const taskId = new URLSearchParams(window.location.search).get('id');
+    const isEdit = !!taskId;
+    if (isEdit) document.getElementById('pageTitle').textContent = `Detail Tugas #${taskId}`;
+    function statusBadge(v) { return `<span class="badge badge-${v}">${v}</span>`; }
+
+    async function loadOptions() {
+      const [catRes, lineRes, machRes, userRes] = await Promise.all([
+        Api.get('/api/master/task-categories'),
+        Api.get('/api/master/lines'),
+        Api.get('/api/master/machines'),
+        Api.get('/api/master/users')
+      ]);
+
+      if (catRes.success) document.getElementById('f_category_id').innerHTML = '<option value="">-- Pilih Kategori --</option>' + catRes.data.map(c => `<option value="${c.id}">${c.nama}</option>`).join('');
+      if (lineRes.success) document.getElementById('f_line_id').innerHTML = '<option value="">-- Pilih Line --</option>' + lineRes.data.map(l => `<option value="${l.id}">${l.nama}</option>`).join('');
+      if (machRes.success) document.getElementById('f_machine_id').innerHTML = '<option value="">-- Pilih Mesin --</option>' + machRes.data.map(m => `<option value="${m.id}">${m.kode} - ${m.nama}</option>`).join('');
+      
+      if (userRes.success) {
+        const mekaniks = userRes.data.filter(u => u.role === 'MEKANIK');
+        document.getElementById('f_assigned_to_id').innerHTML = '<option value="">-- Lempar ke Antrean --</option>' + mekaniks.map(u => `<option value="${u.id}">${u.nama} (${u.line_nama || 'No Line'})</option>`).join('');
+      }
+    }
+
+    async function loadDetail() {
+      const res = await Api.get(`/api/tasks/${taskId}`);
+      if (!res.success) { alert(res.message); window.location.href='/admin/tasks'; return; }
+      const t = res.data;
+
+      document.getElementById('pageTitle').textContent = `Detail: ${t.task_no}`;
+      document.getElementById('f_judul').value = t.judul;
+      document.getElementById('f_deskripsi').value = t.deskripsi || '';
+      document.getElementById('f_category_id').value = t.category_id || '';
+      document.getElementById('f_priority').value = t.priority;
+      document.getElementById('f_line_id').value = t.line_id || '';
+      document.getElementById('f_machine_id').value = t.machine_id || '';
+      document.getElementById('f_assigned_to_id').value = t.assigned_to_id || '';
+
+      const locked = ['SELESAI', 'TERVERIFIKASI', 'CANCELLED'].includes(t.status);
+      document.getElementById('f_judul').disabled = locked;
+      document.getElementById('f_deskripsi').disabled = locked;
+      document.getElementById('f_category_id').disabled = locked;
+      document.getElementById('f_priority').disabled = locked;
+      document.getElementById('f_line_id').disabled = locked;
+      document.getElementById('f_machine_id').disabled = locked;
+      document.getElementById('f_assigned_to_id').disabled = locked;
+      document.getElementById('btnSimpan').style.display = locked ? 'none' : 'block';
+
+      if (!locked) {
+        document.getElementById('actionArea').style.display = 'block';
+        document.getElementById('btnCancel').onclick = async () => {
+          if (!confirm('Batalkan tugas ini?')) return;
+          await Api.post(`/api/tasks/${taskId}/status`, { status: 'CANCELLED' });
+          window.location.reload();
+        };
+      } else {
+        document.getElementById('actionArea').style.display = 'none';
+      }
+
+      document.getElementById('historyCard').style.display = 'block';
+      document.getElementById('statusBadge').innerHTML = statusBadge(t.status);
+
+      document.getElementById('timelineList').innerHTML = t.timeline.map(item => `
+        <div class="timeline-item">
+          <div>${item.note || item.event_type} <span style="color:var(--text-dim)">- ${item.actor_nama || 'System'}</span></div>
+          <div class="ts">${new Date(item.created_at).toLocaleString('id-ID')}</div>
+        </div>`).join('') || '<div class="empty-state">Belum ada aktivitas</div>';
+
+      document.getElementById('filesList').innerHTML = '<div class="row">' + (t.files.map(f => `
+        <div class="col-6 col-md-4 mb-2">
+            <a href="${f.file_url}" target="_blank">
+                <img src="${f.file_url}" class="img-thumbnail w-100" style="object-fit:cover; height:100px; border-radius:8px;" alt="Bukti">
+            </a>
+            <div class="text-center mt-1"><small class="text-muted text-truncate d-block" style="font-size:10px;">${f.judul || f.file_url.split('/').pop()}</small></div>
+        </div>
+      `).join('') || '<div class="col-12"><div class="empty-state">Belum ada foto bukti</div></div>') + '</div>';
+
+      if (!locked) {
+        const uploadFormHTML = `
+            <div class="mt-4 pt-3" style="border-top:1px dashed #ddd;">
+                <h6><i class="feather icon-upload-cloud"></i> Tambah Foto Baru</h6>
+                <form id="uploadForm" class="d-flex align-items-center mt-2">
+                    <input type="file" id="filePhoto" class="form-control form-control-sm mr-2" accept="image/*" required>
+                    <button type="submit" id="btnUpload" class="btn btn-sm btn-primary btn-round shadow-sm"><i class="feather icon-upload"></i> Upload</button>
+                </form>
+            </div>
+        `;
+        document.getElementById('filesList').insertAdjacentHTML('afterend', uploadFormHTML);
+        document.getElementById('uploadForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const fileInput = document.getElementById('filePhoto');
+            if (!fileInput.files.length) return;
+            const btn = document.getElementById('btnUpload');
+            btn.innerHTML = '<i class="feather icon-loader"></i> ...';
+            btn.disabled = true;
+            const fd = new FormData();
+            fd.append('files', fileInput.files[0]);
+            const res = await Api.upload('/api/tasks/' + taskId + '/files', fd);
+            if (res.success) {
+                window.location.reload();
+            } else {
+                alert(res.message || 'Gagal upload foto');
+                btn.innerHTML = '<i class="feather icon-upload"></i> Upload';
+                btn.disabled = false;
+            }
+        };
+      }
+    }
+
+    document.getElementById('tiketForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const body = {
+        judul: document.getElementById('f_judul').value.trim(),
+        deskripsi: document.getElementById('f_deskripsi').value.trim(),
+        category_id: document.getElementById('f_category_id').value || null,
+        priority: document.getElementById('f_priority').value,
+        line_id: document.getElementById('f_line_id').value || null,
+        machine_id: document.getElementById('f_machine_id').value || null,
+        assigned_to_id: document.getElementById('f_assigned_to_id').value || null,
+      };
+
+      let res;
+      if (isEdit) {
+        res = await Api.put('/api/tasks/' + taskId, body);
+      } else {
+        res = await Api.post('/api/tasks', body);
+      }
+
+      const errBox = document.getElementById('formErr');
+      if (!res.success) { errBox.textContent = res.message || 'Gagal menyimpan'; return; }
+      window.location.href = isEdit ? `/admin/tasks` : `/admin/task-detail?id=${res.taskId}`;
+    });
+
+    (async () => {
+      await loadOptions();
+      if (isEdit) await loadDetail();
+    })();
+  </script>
+
+
+                            </div>
+</div>
+                            </div>
+                        </div>
+                        <div id="styleSelector">
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- Warning Section Starts -->
+<!-- Older IE warning message -->
+<!--[if lt IE 10]>
+<div class="ie-warning">
+    <h1>Warning!!</h1>
+    <p>You are using an outdated version of Internet Explorer, please upgrade <br/>to any of the following web browsers
+        to access this website.</p>
+    <div class="iew-container">
+        <ul class="iew-download">
+            <li>
+                <a href="http://www.google.com/chrome/">
+                    <img src="../files/assets/images/browser/chrome.png" alt="Chrome">
+                    <div>Chrome</div>
+                </a>
+            </li>
+            <li>
+                <a href="https://www.mozilla.org/en-US/firefox/new/">
+                    <img src="../files/assets/images/browser/firefox.png" alt="Firefox">
+                    <div>Firefox</div>
+                </a>
+            </li>
+            <li>
+                <a href="http://www.opera.com">
+                    <img src="../files/assets/images/browser/opera.png" alt="Opera">
+                    <div>Opera</div>
+                </a>
+            </li>
+            <li>
+                <a href="https://www.apple.com/safari/">
+                    <img src="../files/assets/images/browser/safari.png" alt="Safari">
+                    <div>Safari</div>
+                </a>
+            </li>
+            <li>
+                <a href="http://windows.microsoft.com/en-us/internet-explorer/download-ie">
+                    <img src="../files/assets/images/browser/ie.png" alt="">
+                    <div>IE (9 & above)</div>
+                </a>
+            </li>
+        </ul>
+    </div>
+    <p>Sorry for the inconvenience!</p>
+</div>
+<![endif]-->
+<!-- Warning Section Ends -->
+<!-- Required Jquery -->
+<script type="text/javascript" src="/libraries/bower_components\jquery\js\jquery.min.js"></script>
+<script type="text/javascript" src="/libraries/bower_components\jquery-ui\js\jquery-ui.min.js"></script>
+<script type="text/javascript" src="/libraries/bower_components\popper.js\js\popper.min.js"></script>
+<script type="text/javascript" src="/libraries/bower_components\bootstrap\js\bootstrap.min.js"></script>
+<!-- jquery slimscroll js -->
+<script type="text/javascript" src="/libraries/bower_components\jquery-slimscroll\js\jquery.slimscroll.js"></script>
+<!-- modernizr js -->
+<script type="text/javascript" src="/libraries/bower_components\modernizr\js\modernizr.js"></script>
+<script type="text/javascript" src="/libraries/bower_components\modernizr\js\css-scrollbars.js"></script>
+
+<!-- i18next.min.js -->
+<script type="text/javascript" src="/libraries/bower_components\i18next\js\i18next.min.js"></script>
+<script type="text/javascript" src="/libraries/bower_components\i18next-xhr-backend\js\i18nextXHRBackend.min.js"></script>
+<script type="text/javascript" src="/libraries/bower_components\i18next-browser-languagedetector\js\i18nextBrowserLanguageDetector.min.js"></script>
+<script type="text/javascript" src="/libraries/bower_components\jquery-i18next\js\jquery-i18next.min.js"></script>
+<script src="/libraries/assets\js\pcoded.min.js"></script>
+<script src="/libraries/assets\js\vartical-layout.min.js"></script>
+<script src="/libraries/assets\js\jquery.mCustomScrollbar.concat.min.js"></script>
+    <!-- Custom js -->
+    <script type="text/javascript" src="/libraries/assets\js\script.js"></script>
+
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async="" src="https://www.googletagmanager.com/gtag/js?id=UA-23581568-13"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-23581568-13');
+</script>
+</body>
+
+</html>

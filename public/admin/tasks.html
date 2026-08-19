@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <title>Work Order — PT Gokak Indonesia</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimal-ui">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <link rel="icon" href="/libraries/assets/images/favicon.ico" type="image/x-icon">
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans:400,600" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="/libraries/bower_components/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="/libraries/assets/icon/themify-icons/themify-icons.css">
+    <link rel="stylesheet" type="text/css" href="/libraries/assets/icon/icofont/css/icofont.css">
+    <link rel="stylesheet" type="text/css" href="/libraries/assets/icon/feather/css/feather.css">
+    <link rel="stylesheet" type="text/css" href="/libraries/assets/css/style.css">
+    <link rel="stylesheet" type="text/css" href="/libraries/assets/css/jquery.mCustomScrollbar.css">
+</head>
+<body>
+<div class="theme-loader">
+    <div class="ball-scale"><div class='contain'>
+        <div class="ring"><div class="frame"></div></div>
+        <div class="ring"><div class="frame"></div></div>
+        <div class="ring"><div class="frame"></div></div>
+        <div class="ring"><div class="frame"></div></div>
+        <div class="ring"><div class="frame"></div></div>
+        <div class="ring"><div class="frame"></div></div>
+        <div class="ring"><div class="frame"></div></div>
+        <div class="ring"><div class="frame"></div></div>
+        <div class="ring"><div class="frame"></div></div>
+        <div class="ring"><div class="frame"></div></div>
+    </div></div>
+</div>
+<div id="pcoded" class="pcoded">
+    <div class="pcoded-overlay-box"></div>
+    <div class="pcoded-container navbar-wrapper">
+        <nav class="navbar header-navbar pcoded-header">
+            <div class="navbar-wrapper">
+                <div class="navbar-logo">
+                    <a class="mobile-menu" id="mobile-collapse" href="#!"><i class="feather icon-menu"></i></a>
+                    <a href="/admin/dashboard"><img class="img-fluid" src="/libraries/assets/images/logo.png" alt="Logo"></a>
+                    <a class="mobile-options"><i class="feather icon-more-horizontal"></i></a>
+                </div>
+                <div class="navbar-container container-fluid">
+                    <ul class="nav-left">
+                        <li><a href="#!" onclick="javascript:toggleFullScreen()"><i class="feather icon-maximize full-screen"></i></a></li>
+                    </ul>
+                    <ul class="nav-right">
+                        <li class="user-profile header-notification">
+                            <div class="dropdown-primary dropdown">
+                                <div class="dropdown-toggle" data-toggle="dropdown">
+                                    <img src="/libraries/assets/images/avatar-4.jpg" class="img-radius" alt="User">
+                                    <span id="navUserName">Admin</span>
+                                    <i class="feather icon-chevron-down"></i>
+                                </div>
+                                <ul class="show-notification profile-notification dropdown-menu" data-dropdown-in="fadeIn" data-dropdown-out="fadeOut">
+                                    <li><a href="/admin/settings"><i class="feather icon-settings"></i> Settings</a></li>
+                                    <li><a href="#" id="btnLogoutNav"><i class="feather icon-log-out"></i> Logout</a></li>
+                                </ul>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+        <div class="pcoded-main-container"><div class="pcoded-wrapper">
+            <nav class="pcoded-navbar">
+                <div class="pcoded-inner-navbar main-menu">
+                    <div class="pcoded-navigatio-lavel">DASHBOARDS</div>
+                    <ul class="pcoded-item pcoded-left-item">
+                        <li class=""><a href="/admin/dashboard"><span class="pcoded-micon"><i class="feather icon-home"></i></span><span class="pcoded-mtext">Dashboard</span></a></li>
+                        <li class=""><a href="/admin/layout-plant"><span class="pcoded-micon"><i class="feather icon-map"></i></span><span class="pcoded-mtext">Layout Plant</span></a></li>
+                    </ul>
+                    <div class="pcoded-navigatio-lavel">WORK ORDER</div>
+                    <ul class="pcoded-item pcoded-left-item">
+                        <li class="active"><a href="/admin/tasks"><span class="pcoded-micon"><i class="feather icon-file-text"></i></span><span class="pcoded-mtext">Work Order</span></a></li>
+                        <li class=""><a href="/admin/emergency"><span class="pcoded-micon"><i class="feather icon-alert-triangle"></i></span><span class="pcoded-mtext">Emergency</span></a></li>
+                        <li class=""><a href="/admin/lapor-kendala"><span class="pcoded-micon"><i class="feather icon-message-square"></i></span><span class="pcoded-mtext">Lapor Kendala</span></a></li>
+                    </ul>
+                    <div class="pcoded-navigatio-lavel">MANAJEMEN MEKANIK</div>
+                    <ul class="pcoded-item pcoded-left-item">
+                        <li class=""><a href="/admin/users"><span class="pcoded-micon"><i class="feather icon-users"></i></span><span class="pcoded-mtext">Data Mekanik</span></a></li>
+                        <li class=""><a href="/admin/kehadiran"><span class="pcoded-micon"><i class="feather icon-check-square"></i></span><span class="pcoded-mtext">Absensi Shift</span></a></li>
+                        <li class=""><a href="/admin/hak-akses"><span class="pcoded-micon"><i class="feather icon-lock"></i></span><span class="pcoded-mtext">Hak Akses</span></a></li>
+                    </ul>
+                    <div class="pcoded-navigatio-lavel">ACCOUNT</div>
+                    <ul class="pcoded-item pcoded-left-item">
+                        <li class=""><a href="/admin/settings"><span class="pcoded-micon"><i class="feather icon-settings"></i></span><span class="pcoded-mtext">Settings</span></a></li>
+                    </ul>
+                    <div class="pcoded-navigatio-lavel">AUTHENTICATIONS</div>
+                    <ul class="pcoded-item pcoded-left-item">
+                        <li class=""><a href="/admin/login"><span class="pcoded-micon"><i class="feather icon-log-in"></i></span><span class="pcoded-mtext">Login</span></a></li>
+                        <li class=""><a href="/admin/register"><span class="pcoded-micon"><i class="feather icon-user-plus"></i></span><span class="pcoded-mtext">Register</span></a></li>
+                    </ul>
+                    <ul class="pcoded-item pcoded-left-item">
+                        <li><a href="#" id="btnLogout"><span class="pcoded-micon"><i class="feather icon-log-out"></i></span><span class="pcoded-mtext">Logout</span></a></li>
+                    </ul>
+                </div>
+            </nav>
+            
+            <div class="pcoded-content"><div class="pcoded-inner-content">
+                <div class="main-body"><div class="page-wrapper">
+                    <!-- Page Header -->
+                    <div class="page-header">
+                        <div class="row align-items-end">
+                            <div class="col-lg-8">
+                                <div class="page-header-title"><div class="d-inline">
+                                    <h4>Work Order</h4>
+                                    <span>Kelola dan pantau seluruh laporan dan tugas perbaikan</span>
+                                </div></div>
+                            </div>
+                            <div class="col-lg-4">
+                                <div class="page-header-breadcrumb">
+                                    <ul class="breadcrumb-title">
+                                        <li class="breadcrumb-item"><a href="/admin/dashboard"><i class="feather icon-home"></i></a></li>
+                                        <li class="breadcrumb-item"><a href="#!">Work Order</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Page Body -->
+                    <div class="page-body">
+                        <div class="row">
+                            <div class="col-sm-12">
+                                <div class="card">
+                                    <div class="card-header border-bottom">
+                                        <div class="row align-items-center">
+                                            <div class="col-md-6">
+                                                <h5><i class="feather icon-file-text text-primary"></i> &nbsp;Daftar Work Order</h5>
+                                            </div>
+                                            <div class="col-md-6 text-right">
+                                                <!-- Action buttons -->
+                                                <button class="btn btn-primary btn-round btn-sm shadow-sm" onclick="window.location.href='/admin/lapor-kendala'">
+                                                    <i class="feather icon-plus"></i> Buat WO Baru
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="card-block bg-light">
+                                        <!-- Filters -->
+                                        <div class="row mb-3">
+                                            <div class="col-md-3 col-sm-6 mb-2">
+                                                <select id="fStatus" class="form-control" onchange="renderTasks()">
+                                                    <option value="">-- Semua Status --</option>
+                                                    <option value="OPEN">OPEN</option>
+                                                    <option value="IN_PROGRESS">IN PROGRESS</option>
+                                                    <option value="SELESAI">SELESAI</option>
+                                                    <option value="TERVERIFIKASI">TERVERIFIKASI</option>
+                                                    <option value="CANCELLED">CANCELLED</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-3 col-sm-6 mb-2">
+                                                <select id="fPriority" class="form-control" onchange="renderTasks()">
+                                                    <option value="">-- Semua Prioritas --</option>
+                                                    <option value="LOW">LOW</option>
+                                                    <option value="MEDIUM">MEDIUM</option>
+                                                    <option value="HIGH">HIGH</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="card-block p-0">
+                                        <div class="table-responsive">
+                                            <table class="table table-hover table-bordered table-striped m-b-0">
+                                                <thead class="thead-light">
+                                                    <tr>
+                                                        <th class="text-center" width="10%">No. WO</th>
+                                                        <th width="30%">Judul & Kendala</th>
+                                                        <th width="15%">Kategori</th>
+                                                        <th width="15%">Mesin / Area</th>
+                                                        <th class="text-center" width="10%">Prioritas</th>
+                                                        <th class="text-center" width="10%">Status</th>
+                                                        <th class="text-center" width="10%">Aksi</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="tbodyTasks">
+                                                    <tr><td colspan="7" class="text-center text-muted py-4"><i class="feather icon-loader"></i> Memuat data...</td></tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div><!-- /page-body -->
+                </div></div><!-- /page-wrapper /main-body -->
+                <div id="styleSelector"></div>
+            </div></div><!-- /pcoded-inner-content /pcoded-content -->
+        </div></div><!-- /pcoded-wrapper /pcoded-main-container -->
+    </div></div><!-- /pcoded-container /pcoded -->
+
+<!-- SCRIPTS -->
+<script type="text/javascript" src="/libraries/bower_components/jquery/js/jquery.min.js"></script>
+<script type="text/javascript" src="/libraries/bower_components/jquery-ui/js/jquery-ui.min.js"></script>
+<script type="text/javascript" src="/libraries/bower_components/popper.js/js/popper.min.js"></script>
+<script type="text/javascript" src="/libraries/bower_components/bootstrap/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="/libraries/bower_components/jquery-slimscroll/js/jquery.slimscroll.js"></script>
+<script type="text/javascript" src="/libraries/bower_components/modernizr/js/modernizr.js"></script>
+<script type="text/javascript" src="/libraries/bower_components/modernizr/js/css-scrollbars.js"></script>
+<script type="text/javascript" src="/libraries/bower_components/i18next/js/i18next.min.js"></script>
+<script type="text/javascript" src="/libraries/bower_components/i18next-xhr-backend/js/i18nextXHRBackend.min.js"></script>
+<script type="text/javascript" src="/libraries/bower_components/i18next-browser-languagedetector/js/i18nextBrowserLanguageDetector.min.js"></script>
+<script type="text/javascript" src="/libraries/bower_components/jquery-i18next/js/jquery-i18next.min.js"></script>
+<script src="/libraries/assets/js/pcoded.min.js"></script>
+<script src="/libraries/assets/js/vartical-layout.min.js"></script>
+<script src="/libraries/assets/js/jquery.mCustomScrollbar.concat.min.js"></script>
+<script type="text/javascript" src="/libraries/assets/js/script.js"></script>
+<script src="/js/api.js"></script>
+<script src="/js/license-banner.js"></script>
+
+<script>
+    Api.init('auth');
+    const me = Api.getUser();
+    if (me && document.getElementById('navUserName')) document.getElementById('navUserName').textContent = me.nama;
+    const logoutFn = () => Api.logout();
+    if (document.getElementById('btnLogout')) document.getElementById('btnLogout').onclick = logoutFn;
+    if (document.getElementById('btnLogoutNav')) document.getElementById('btnLogoutNav').onclick = logoutFn;
+
+    let allTasks = [];
+
+    async function fetchTasks() {
+        const res = await Api.get('/api/tasks');
+        if (res.success) {
+            allTasks = res.data;
+            renderTasks();
+        } else {
+            document.getElementById('tbodyTasks').innerHTML = `<tr><td colspan="7" class="text-center text-danger">Gagal memuat tugas</td></tr>`;
+        }
+    }
+
+    function renderTasks() {
+        const fStatus = document.getElementById('fStatus').value;
+        const fPriority = document.getElementById('fPriority').value;
+
+        // Filter data
+        const filtered = allTasks.filter(t => {
+            let passStatus = fStatus ? (t.status === fStatus) : true;
+            let passPriority = fPriority ? (t.priority === fPriority) : true;
+            return passStatus && passPriority;
+        });
+
+        const tbody = document.getElementById('tbodyTasks');
+        
+        if (filtered.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">Tidak ada Work Order ditemukan</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = filtered.map(t => {
+            let badgePri = 'badge-primary';
+            if (t.priority === 'HIGH') badgePri = 'badge-danger';
+            if (t.priority === 'LOW') badgePri = 'badge-success';
+            if (t.priority === 'MEDIUM') badgePri = 'badge-warning';
+
+            let statClass = 'badge-primary';
+            if (t.status === 'OPEN') statClass = 'badge-info';
+            if (t.status === 'IN_PROGRESS') statClass = 'badge-warning';
+            if (t.status === 'SELESAI') statClass = 'badge-success';
+            if (t.status === 'TERVERIFIKASI') statClass = 'badge-success px-3';
+            if (t.status === 'CANCELLED') statClass = 'badge-secondary';
+
+            const createdStr = new Date(t.created_at).toLocaleDateString('id-ID', {day:'2-digit', month:'short', year:'numeric'});
+
+            return `
+            <tr>
+                <td class="text-center font-weight-bold align-middle">${t.task_no}</td>
+                <td class="align-middle">
+                    <strong>${t.judul}</strong><br>
+                    <small class="text-muted"><i class="feather icon-calendar"></i> ${createdStr}</small>
+                </td>
+                <td class="align-middle">${t.category_nama || '-'}</td>
+                <td class="align-middle">${t.machine_nama || '-'}</td>
+                <td class="text-center align-middle"><span class="badge ${badgePri} px-2 py-1">${t.priority}</span></td>
+                <td class="text-center align-middle"><span class="badge ${statClass} px-2 py-1">${t.status.replace('_', ' ')}</span></td>
+                <td class="text-center align-middle">
+                    <button class="btn btn-outline-primary btn-sm btn-round shadow-sm" title="Lihat Detail" onclick="window.location.href='/admin/task-detail?id=${t.id}'">
+                        <i class="feather icon-eye"></i> Detail
+                    </button>
+                </td>
+            </tr>`;
+        }).join('');
+    }
+
+    fetchTasks();
+</script>
+</body>
+</html>

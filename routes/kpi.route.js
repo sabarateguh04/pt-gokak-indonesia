@@ -32,29 +32,44 @@ router.get('/ringkasan', async (req, res) => {
   const page = Math.max(Number(req.query.page) || 1, 1);
   const pageSize = Math.min(Number(req.query.pageSize) || 50, 200);
   const offset = (page - 1) * pageSize;
-  const from = req.query.from || new Date().toISOString().slice(0, 10) + ' 00:00:00';
-  const to = req.query.to || new Date().toISOString().slice(0, 10) + ' 23:59:59';
+  const dateParam = req.query.date || new Date().toISOString().slice(0, 10);
+  let from = req.query.from || dateParam + ' 00:00:00';
+  let to = req.query.to || dateParam + ' 23:59:59';
   const q = req.query.q ? `%${req.query.q}%` : null;
+  const shiftId = req.query.shift_id;
 
   try {
+    if (shiftId) {
+      const [[shift]] = await pool.query('SELECT start_time, end_time FROM pt_gokak_shifts WHERE id = ?', [shiftId]);
+      if (shift) {
+        from = `${dateParam} ${shift.start_time}`;
+        if (shift.end_time < shift.start_time) {
+          const nextDay = new Date(new Date(dateParam).getTime() + 86400000).toISOString().slice(0, 10);
+          to = `${nextDay} ${shift.end_time}`;
+        } else {
+          to = `${dateParam} ${shift.end_time}`;
+        }
+      }
+    }
+
     const whereSearch = q ? `AND (k.nama LIKE ? OR k.username LIKE ?)` : '';
     const searchParams = q ? [q, q] : [];
 
     const [[{ total }]] = await pool.query(
-      `SELECT COUNT(*) AS total FROM pt_kapuk_teknisi k WHERE k.is_active = 1 ${whereSearch}`,
+      `SELECT COUNT(*) AS total FROM pt_gokak_users k WHERE k.is_active = 1 AND k.role = 'MEKANIK' ${whereSearch}`,
       searchParams,
     );
 
     const [rows] = await pool.query(
-      `SELECT k.id, k.nama, k.jabatan, k.departemen, k.status,
+      `SELECT k.id, k.nama, k.role AS jabatan, NULL AS departemen, k.status,
               COUNT(l.id) * ? AS online_seconds,
-              COALESCE(SUM(l.in_area), 0) * ? AS in_area_seconds,
-              COALESCE(SUM(l.in_area = 0), 0) * ? AS out_area_seconds
-       FROM pt_kapuk_teknisi k
-       LEFT JOIN pt_kapuk_teknisi_lokasi l
-         ON l.teknisi_id = k.id AND l.recorded_at BETWEEN ? AND ?
-       WHERE k.is_active = 1 ${whereSearch}
-       GROUP BY k.id, k.nama, k.jabatan, k.departemen, k.status
+              COALESCE(SUM(l.in_line), 0) * ? AS in_area_seconds,
+              COALESCE(SUM(l.in_line = 0), 0) * ? AS out_area_seconds
+       FROM pt_gokak_users k
+       LEFT JOIN pt_gokak_user_locations l
+         ON l.user_id = k.id AND l.recorded_at BETWEEN ? AND ?
+       WHERE k.is_active = 1 AND k.role = 'MEKANIK' ${whereSearch}
+       GROUP BY k.id, k.nama, k.role, k.status
        ORDER BY online_seconds DESC, k.nama ASC
        LIMIT ? OFFSET ?`,
       [PING_INTERVAL_SECONDS, PING_INTERVAL_SECONDS, PING_INTERVAL_SECONDS, from, to, ...searchParams, pageSize, offset],
@@ -78,8 +93,8 @@ router.get('/heatmap/:teknisiId', async (req, res) => {
   const days = Math.min(Number(req.query.days) || 90, 366);
   try {
     const [pings] = await pool.query(
-      `SELECT recorded_at, in_area FROM pt_kapuk_teknisi_lokasi
-       WHERE teknisi_id = ? AND recorded_at >= DATE_SUB(CURDATE(), INTERVAL ? DAY)
+      `SELECT recorded_at, in_line AS in_area FROM pt_gokak_user_locations
+       WHERE user_id = ? AND recorded_at >= DATE_SUB(CURDATE(), INTERVAL ? DAY)
        ORDER BY recorded_at ASC`,
       [req.params.teknisiId, days - 1],
     );
@@ -121,15 +136,32 @@ router.get('/heatmap/:teknisiId', async (req, res) => {
 ═══════════════════════════════════════════════════ */
 router.get('/harian/:teknisiId', async (req, res) => {
   const date = req.query.date || new Date().toISOString().slice(0, 10);
+  const shiftId = req.query.shift_id;
+  let from = `${date} 00:00:00`;
+  let to = `${date} 23:59:59`;
+
   try {
-    const [[teknisi]] = await pool.query(`SELECT id, nama FROM pt_kapuk_teknisi WHERE id = ?`, [req.params.teknisiId]);
+    if (shiftId) {
+      const [[shift]] = await pool.query('SELECT start_time, end_time FROM pt_gokak_shifts WHERE id = ?', [shiftId]);
+      if (shift) {
+        from = `${date} ${shift.start_time}`;
+        if (shift.end_time < shift.start_time) {
+          const nextDay = new Date(new Date(date).getTime() + 86400000).toISOString().slice(0, 10);
+          to = `${nextDay} ${shift.end_time}`;
+        } else {
+          to = `${date} ${shift.end_time}`;
+        }
+      }
+    }
+
+    const [[teknisi]] = await pool.query(`SELECT id, nama, role AS jabatan FROM pt_gokak_users WHERE id = ?`, [req.params.teknisiId]);
     if (!teknisi) return res.status(404).json({ success: false, message: 'Teknisi tidak ditemukan' });
 
     const [pings] = await pool.query(
-      `SELECT recorded_at, in_area FROM pt_kapuk_teknisi_lokasi
-       WHERE teknisi_id = ? AND recorded_at BETWEEN ? AND ?
+      `SELECT recorded_at, in_line AS in_area FROM pt_gokak_user_locations
+       WHERE user_id = ? AND recorded_at BETWEEN ? AND ?
        ORDER BY recorded_at ASC`,
-      [req.params.teknisiId, `${date} 00:00:00`, `${date} 23:59:59`],
+      [req.params.teknisiId, from, to],
     );
 
     const byDay = summarizeByDay(pings);

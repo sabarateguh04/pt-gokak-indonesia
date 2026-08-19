@@ -1,23 +1,143 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
-<script src="/js/theme.js"></script>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Monitoring App — Tracking &amp; Tiket</title>
-<link rel="stylesheet" href="/css/style.css">
+    <title>Login — CMMS Gokak Indonesia</title>
+    <!-- Meta -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimal-ui">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <!-- Favicon icon -->
+    <link rel="icon" href="/libraries/assets/images/favicon.ico" type="image/x-icon">
+    <!-- Google font--><link href="https://fonts.googleapis.com/css?family=Open+Sans:400,600,800" rel="stylesheet">
+    <!-- Required Fremwork -->
+    <link rel="stylesheet" type="text/css" href="/libraries/bower_components/bootstrap/css/bootstrap.min.css">
+    <!-- themify-icons line icon -->
+    <link rel="stylesheet" type="text/css" href="/libraries/assets/icon/themify-icons/themify-icons.css">
+    <!-- ico font -->
+    <link rel="stylesheet" type="text/css" href="/libraries/assets/icon/icofont/css/icofont.css">
+    <!-- feather Awesome -->
+    <link rel="stylesheet" type="text/css" href="/libraries/assets/icon/feather/css/feather.css">
+    <!-- Style.css -->
+    <link rel="stylesheet" type="text/css" href="/libraries/assets/css/style.css">
 </head>
-<body>
-  <button class="theme-toggle-btn theme-toggle-fixed" title="Ganti tema"><span class="theme-toggle-icon">🌙</span></button>
-  <div class="auth-page">
-    <div class="auth-card card" style="text-align:center">
-      <h1>🏭 Monitoring App</h1>
-      <p class="sub">Sistem monitoring karyawan &amp; tiket tugas pabrik</p>
-      <div style="display:flex;flex-direction:column;gap:10px;margin-top:20px">
-        <a class="btn" href="/admin/login">Masuk sebagai Admin</a>
-        <a class="btn secondary" href="/teknisi/login">Masuk sebagai Teknisi</a>
-      </div>
+
+<body class="fix-menu">
+    <!-- Pre-loader start -->
+    <div class="theme-loader">
+        <div class="ball-scale">
+            <div class='contain'>
+                <div class="ring"><div class="frame"></div></div>
+                <div class="ring"><div class="frame"></div></div>
+                <div class="ring"><div class="frame"></div></div>
+                <div class="ring"><div class="frame"></div></div>
+                <div class="ring"><div class="frame"></div></div>
+                <div class="ring"><div class="frame"></div></div>
+                <div class="ring"><div class="frame"></div></div>
+                <div class="ring"><div class="frame"></div></div>
+                <div class="ring"><div class="frame"></div></div>
+                <div class="ring"><div class="frame"></div></div>
+            </div>
+        </div>
     </div>
-  </div>
+    <!-- Pre-loader end -->
+
+    <section class="login-block">
+        <!-- Container-fluid starts -->
+        <div class="container">
+            <div class="row">
+                <div class="col-sm-12">
+                    <!-- Authentication card start -->
+                        <form id="loginForm" class="md-float-material form-material">
+                            <div class="text-center">
+                                <h1 style="color: white; font-weight: 800; font-size: 32px;"><i class="feather icon-briefcase"></i> CMMS Gokak</h1>
+                            </div>
+                            <div class="auth-box card">
+                                <div class="card-block">
+                                    <div class="row m-b-20">
+                                        <div class="col-md-12">
+                                            <h3 class="text-center">Sign In</h3>
+                                        </div>
+                                    </div>
+                                    <div class="form-group form-primary">
+                                        <input type="text" id="username" name="username" class="form-control" required="" placeholder="Username">
+                                        <span class="form-bar"></span>
+                                    </div>
+                                    <div class="form-group form-primary">
+                                        <input type="password" id="password" name="password" class="form-control" required="" placeholder="Password">
+                                        <span class="form-bar"></span>
+                                    </div>
+                                    
+                                    <div class="row m-t-30">
+                                        <div class="col-md-12">
+                                            <button type="submit" class="btn btn-primary btn-md btn-block waves-effect waves-light text-center m-b-20">Masuk</button>
+                                        </div>
+                                    </div>
+                                    <div id="errMsg" class="text-center text-danger m-b-20"></div>
+                                </div>
+                            </div>
+                        </form>
+                        <!-- end of form -->
+                </div>
+                <!-- end of col-sm-12 -->
+            </div>
+            <!-- end of row -->
+        </div>
+        <!-- end of container-fluid -->
+    </section>
+
+    <!-- Required Jquery -->
+    <script type="text/javascript" src="/libraries/bower_components/jquery/js/jquery.min.js"></script>
+    <script type="text/javascript" src="/libraries/bower_components/jquery-ui/js/jquery-ui.min.js"></script>
+    <script type="text/javascript" src="/libraries/bower_components/popper.js/js/popper.min.js"></script>
+    <script type="text/javascript" src="/libraries/bower_components/bootstrap/js/bootstrap.min.js"></script>
+    <!-- jquery slimscroll js -->
+    <script type="text/javascript" src="/libraries/bower_components/jquery-slimscroll/js/jquery.slimscroll.js"></script>
+    <!-- modernizr js -->
+    <script type="text/javascript" src="/libraries/bower_components/modernizr/js/modernizr.js"></script>
+    <script type="text/javascript" src="/libraries/bower_components\modernizr\js\css-scrollbars.js"></script>
+    <!-- i18next.min.js -->
+    <script type="text/javascript" src="/libraries/bower_components/i18next/js/i18next.min.js"></script>
+    <script type="text/javascript" src="/libraries/bower_components/i18next-xhr-backend/js/i18nextXHRBackend.min.js"></script>
+    <script type="text/javascript" src="/libraries/bower_components/i18next-browser-languagedetector/js/i18nextBrowserLanguageDetector.min.js"></script>
+    <script type="text/javascript" src="/libraries/bower_components/jquery-i18next/js/jquery-i18next.min.js"></script>
+    <script type="text/javascript" src="/libraries/assets/js/common-pages.js"></script>
+
+    <script src="/js/api.js"></script>
+    <script>
+        Api.init('auth');
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const errMsg = document.getElementById('errMsg');
+        errMsg.textContent = '';
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value;
+        const res = await Api.post('/api/auth/login', { username, password });
+        if (!res.success) {
+            errMsg.textContent = res.message || 'Login gagal';
+            return;
+        }
+        
+        Api.setSession(res.token, res.user);
+        
+        // Redirect berdasarkan role
+        switch (res.user.role) {
+            case 'ADMIN':
+            window.location.href = '/admin/dashboard';
+            break;
+            case 'LEADER':
+            window.location.href = '/leader/dashboard';
+            break;
+            case 'MEKANIK':
+            window.location.href = '/mekanik/home';
+            break;
+            case 'EXECUTIVE':
+            window.location.href = '/executive/dashboard';
+            break;
+            default:
+            errMsg.textContent = 'Role tidak dikenal';
+        }
+        });
+    </script>
 </body>
 </html>

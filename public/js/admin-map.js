@@ -19,7 +19,7 @@ const FactoryMap = (() => {
   const DEFAULT_BEARING = -17;
 
   let map = null;
-  let factoryCenter = [106.8408239, -6.380064];
+  let factoryCenter = [106.8958, -6.4718];
 
   function statusLabel(status) {
     if (status === 'ONLINE') return 'Online';
@@ -215,9 +215,52 @@ const FactoryMap = (() => {
       paint: { 'text-color': '#ffffff', 'text-halo-color': 'rgba(15,23,42,.85)', 'text-halo-width': 1.4 },
     });
 
-    // Sengaja GAK ada popup buat area/gedung -- nama area-nya udah
-    // keliatan langsung dari pin label di atas, gak perlu diklik lagi.
-    // Klik yang beneran nampilin data cuma di titik teknisi (di bawah).
+  }
+
+  function addLayoutGeoJsonLayer() {
+    try {
+      map.addSource('kml-data', {
+        type: 'geojson',
+        data: '/data/layout.geojson',
+      });
+      map.addLayer({
+        id: 'kml-fill',
+        type: 'fill',
+        source: 'kml-data',
+        paint: {
+          'fill-color': ['coalesce', ['get', 'fill'], '#ff0000'],
+          'fill-opacity': ['coalesce', ['get', 'fill-opacity'], 0.65],
+        },
+      });
+      map.addLayer({
+        id: 'kml-outline',
+        type: 'line',
+        source: 'kml-data',
+        paint: {
+          'line-color': ['coalesce', ['get', 'stroke'], '#ffffff'],
+          'line-width': 1.5,
+          'line-opacity': 0.8,
+        },
+      });
+      map.addLayer({
+        id: 'kml-labels',
+        type: 'symbol',
+        source: 'kml-data',
+        layout: {
+          'text-field': ['get', 'name'],
+          'text-size': 11.5,
+          'text-font': ['Noto Sans Bold'],
+          'text-allow-overlap': false,
+        },
+        paint: {
+          'text-color': '#ffffff',
+          'text-halo-color': 'rgba(15,23,42,.85)',
+          'text-halo-width': 1.4,
+        },
+      });
+    } catch (e) {
+      console.error('[MAP] gagal load layout.geojson', e);
+    }
   }
 
   function addTeknisiLayers() {
@@ -328,7 +371,7 @@ const FactoryMap = (() => {
 
     // Radius kunci area (derajat) -- peta gak bisa di-pan/zoom-out keluar
     // dari kotak ini, biar fokusnya "khusus area situ aja".
-    const pad = 0.006;
+    const pad = 0.015;
     const bounds = [
       [factoryCenter[0] - pad, factoryCenter[1] - pad],
       [factoryCenter[0] + pad, factoryCenter[1] + pad],
@@ -342,7 +385,7 @@ const FactoryMap = (() => {
       pitch: DEFAULT_PITCH,
       bearing: DEFAULT_BEARING,
       maxBounds: bounds,
-      minZoom: 15.5,
+      minZoom: 14,
       maxZoom: 20,
       antialias: true,
     });
@@ -352,6 +395,7 @@ const FactoryMap = (() => {
     return new Promise((resolve) => {
       map.on('load', async () => {
         addAtmosphere();
+        addLayoutGeoJsonLayer();
         await addAreaLayers();
         addTeknisiLayers();
         resolve(map);

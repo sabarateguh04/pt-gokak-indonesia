@@ -41,7 +41,7 @@ const AreaMap = (() => {
   }
 
   async function init(elementId, opts = {}) {
-    let center = [106.8408239, -6.380064];
+    let center = [106.8958, -6.4718];
     try {
       const cfg = await fetch('/api/config').then(r => r.json());
       if (cfg?.factoryCenter) center = [cfg.factoryCenter.lng, cfg.factoryCenter.lat];
@@ -49,7 +49,7 @@ const AreaMap = (() => {
 
     onPointsChange = opts.onPointsChange || null;
 
-    const pad = 0.008;
+    const pad = 0.015;
     map = new maplibregl.Map({
       container: elementId,
       style: STYLE_URL,
@@ -58,7 +58,7 @@ const AreaMap = (() => {
       pitch: 50,
       bearing: -10,
       maxBounds: [[center[0] - pad, center[1] - pad], [center[0] + pad, center[1] + pad]],
-      minZoom: 14.5,
+      minZoom: 14,
       maxZoom: 20,
       antialias: true,
     });
@@ -70,6 +70,26 @@ const AreaMap = (() => {
     try {
       map.addLayer({ id: 'sky', type: 'sky', paint: { 'sky-type': 'atmosphere', 'sky-atmosphere-sun-intensity': 8, 'sky-atmosphere-color': 'rgba(135, 180, 255, 0.6)' } });
     } catch (e) { /* versi lama */ }
+
+    try {
+      map.addSource('kml-data', { type: 'geojson', data: '/data/layout.geojson' });
+      map.addLayer({
+        id: 'kml-fill', type: 'fill', source: 'kml-data',
+        paint: {
+          'fill-color': ['coalesce', ['get', 'fill'], '#ff0000'],
+          'fill-opacity': ['coalesce', ['get', 'fill-opacity'], 0.65],
+        },
+      });
+      map.addLayer({
+        id: 'kml-outline', type: 'line', source: 'kml-data',
+        paint: { 'line-color': ['coalesce', ['get', 'stroke'], '#ffffff'], 'line-width': 1.5, 'line-opacity': 0.8 },
+      });
+      map.addLayer({
+        id: 'kml-labels', type: 'symbol', source: 'kml-data',
+        layout: { 'text-field': ['get', 'name'], 'text-size': 11.5, 'text-font': ['Noto Sans Bold'], 'text-allow-overlap': false },
+        paint: { 'text-color': '#ffffff', 'text-halo-color': 'rgba(15,23,42,.85)', 'text-halo-width': 1.4 },
+      });
+    } catch (e) { console.error('[AREA MAP] gagal load layout.geojson', e); }
 
     map.addSource('existing-areas', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
     map.addLayer({

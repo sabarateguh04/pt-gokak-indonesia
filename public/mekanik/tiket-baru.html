@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<script src="/js/theme.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Buat Laporan Tugas — CMMS Gokak</title>
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="teknisi-shell">
+    <div class="teknisi-topbar">
+      <a href="/mekanik/home" style="color:var(--text-dim)">← Kembali</a>
+      <button class="theme-toggle-btn" title="Ganti tema"><span class="theme-toggle-icon">🌙</span></button>
+    </div>
+
+    <div class="card">
+      <h3 style="margin-top:0">Lapor Masalah / Pekerjaan</h3>
+      <p style="color:var(--text-dim);font-size:12.5px;margin-top:-6px">Tugas yang Anda buat akan langsung ditugaskan ke Anda.</p>
+      <form id="tiketForm">
+        <label>Judul</label>
+        <input id="f_judul" required placeholder="cth. Perbaikan mesin mati mendadak">
+        
+        <label>Deskripsi</label>
+        <textarea id="f_deskripsi"></textarea>
+        
+        <div style="display:flex;gap:10px">
+          <div style="flex:1">
+            <label>Kategori</label>
+            <select id="f_category_id" required>
+              <option value="">Memuat...</option>
+            </select>
+          </div>
+          <div style="flex:1">
+            <label>Priority</label>
+            <select id="f_priority">
+              <option value="LOW">Low</option>
+              <option value="MEDIUM" selected>Medium</option>
+              <option value="HIGH">High</option>
+            </select>
+          </div>
+        </div>
+        
+        <label>Mesin (Opsional)</label>
+        <select id="f_machine_id">
+          <option value="">-- Pilih Mesin --</option>
+        </select>
+        
+        <button type="submit" style="width:100%;margin-top:18px">Buat Laporan</button>
+        <div class="auth-error" id="formErr"></div>
+      </form>
+    </div>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script>
+    Api.init('auth');
+    const me = Api.getUser();
+
+    (async () => {
+      // Load Categories
+      const catRes = await Api.get('/api/master/task-categories');
+      if (catRes.success) {
+        document.getElementById('f_category_id').innerHTML = '<option value="">-- Pilih Kategori --</option>' + 
+          catRes.data.map(c => `<option value="${c.id}">${c.nama}</option>`).join('');
+      }
+
+      // Load Machines (filter by my line)
+      const machRes = await Api.get('/api/master/machines');
+      if (machRes.success) {
+        const myMachines = machRes.data.filter(m => m.line_id === me.line_id);
+        document.getElementById('f_machine_id').innerHTML = '<option value="">-- Pilih Mesin (Opsional) --</option>' +
+          myMachines.map(m => `<option value="${m.id}">${m.kode} - ${m.nama}</option>`).join('');
+      }
+    })();
+
+    document.getElementById('tiketForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const body = {
+        judul: document.getElementById('f_judul').value.trim(),
+        deskripsi: document.getElementById('f_deskripsi').value.trim(),
+        category_id: document.getElementById('f_category_id').value || null,
+        priority: document.getElementById('f_priority').value,
+        machine_id: document.getElementById('f_machine_id').value || null
+      };
+      
+      const res = await Api.post('/api/tasks', body);
+      const errBox = document.getElementById('formErr');
+      if (!res.success) { 
+        errBox.textContent = res.message || 'Gagal membuat tugas'; 
+        return; 
+      }
+      window.location.href = `/mekanik/tiket-detail?id=${res.taskId}`;
+    });
+  </script>
+</body>
+</html>

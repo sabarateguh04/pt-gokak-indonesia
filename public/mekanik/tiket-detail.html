@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<script src="/js/theme.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Detail Tugas — CMMS Gokak</title>
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="teknisi-shell">
+    <div class="teknisi-topbar">
+      <a href="/mekanik/home" style="color:var(--text-dim)">← Kembali</a>
+      <div style="display:flex;align-items:center;gap:10px">
+        <button class="theme-toggle-btn" title="Ganti tema"><span class="theme-toggle-icon">🌙</span></button>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div>
+          <div style="font-weight:700;font-size:16px" id="judul"></div>
+          <div style="color:var(--text-dim);font-size:13px" id="taskNo"></div>
+        </div>
+        <span class="badge" id="statusBadge"></span>
+      </div>
+      <p id="deskripsi" style="color:var(--text-dim);font-size:14px"></p>
+      
+      <div style="margin-top:10px; font-size:13px; color:var(--text-dim); display:flex; flex-direction:column; gap:4px;">
+        <div><strong>Kategori:</strong> <span id="kategoriNama"></span></div>
+        <div><strong>Mesin:</strong> <span id="mesinNama"></span></div>
+        <div><strong>Line:</strong> <span id="lineNama"></span></div>
+        <div><strong>Prioritas:</strong> <span id="priority"></span></div>
+        <div><strong>Jadwal:</strong> <span id="jadwal"></span></div>
+        <div><strong>Dibuat oleh:</strong> <span id="createdBy"></span></div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:14px" id="actionCard">
+      <h3 style="margin-top:0">Update Progres</h3>
+      
+      <div id="pmChecklistContainer" style="display:none; margin-bottom: 16px; background: var(--bg); padding: 12px; border-radius: 8px;">
+        <h4 style="margin-top:0;margin-bottom:8px;">Checklist Preventive Maintenance</h4>
+        <div id="pmChecklistItems" style="display:flex;flex-direction:column;gap:8px;"></div>
+      </div>
+
+      <div style="display:flex;gap:8px">
+        <button id="btnMulai" style="flex:1">Mulai Kerjakan</button>
+        <button id="btnSelesai" class="secondary" style="flex:1">Tandai Selesai</button>
+      </div>
+      <div style="margin-top:14px">
+        <label>Upload Foto Bukti</label>
+        <input type="file" id="fileInput" multiple accept="image/*">
+        <button id="btnUpload" class="secondary" style="width:100%;margin-top:8px">Upload</button>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:14px">
+      <h3 style="margin-top:0">Foto Bukti</h3>
+      <div id="filesList"></div>
+    </div>
+
+    <div class="card">
+      <h3 style="margin-top:0">Riwayat</h3>
+      <div id="timelineList"></div>
+    </div>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script>
+    Api.init('auth');
+    const me = Api.getUser();
+
+    const taskId = new URLSearchParams(window.location.search).get('id');
+    function statusBadge(v) { return `<span class="badge badge-${v}">${v}</span>`; }
+
+    async function loadDetail() {
+      const res = await Api.get(`/api/tasks/${taskId}`);
+      if (!res.success) { alert(res.message); window.location.href = '/mekanik/home'; return; }
+      const t = res.data;
+      
+      document.getElementById('judul').textContent = t.judul;
+      document.getElementById('taskNo').textContent = t.task_no;
+      document.getElementById('deskripsi').textContent = t.deskripsi || 'Tidak ada deskripsi tambahan';
+      document.getElementById('kategoriNama').textContent = t.category_nama || '-';
+      document.getElementById('mesinNama').textContent = t.machine_nama || '-';
+      document.getElementById('lineNama').textContent = t.line_nama || '-';
+      document.getElementById('priority').textContent = t.priority;
+      document.getElementById('createdBy').textContent = t.created_by_nama || '-';
+      
+      let jadwalStr = '-';
+      if (t.tanggal_mulai && t.tanggal_selesai) {
+        jadwalStr = `${t.tanggal_mulai.slice(0,10)} s/d ${t.tanggal_selesai.slice(0,10)}`;
+      } else if (t.tanggal_mulai) {
+        jadwalStr = `Mulai: ${t.tanggal_mulai.slice(0,10)}`;
+      }
+      document.getElementById('jadwal').textContent = jadwalStr;
+
+      const badge = document.getElementById('statusBadge');
+      badge.className = `badge badge-${t.status}`;
+      badge.textContent = t.status;
+
+      const locked = ['SELESAI', 'TERVERIFIKASI', 'CANCELLED'].includes(t.status);
+      document.getElementById('actionCard').style.display = locked ? 'none' : 'block';
+      document.getElementById('btnMulai').disabled = t.status !== 'OPEN';
+      document.getElementById('btnSelesai').disabled = t.status !== 'IN_PROGRESS';
+
+      // PM Checklist render
+      const chkContainer = document.getElementById('pmChecklistContainer');
+      if (t.category_id === 2 && t.pm_checklist) {
+        let cl = [];
+        try { cl = typeof t.pm_checklist === 'string' ? JSON.parse(t.pm_checklist) : t.pm_checklist; } catch(e){}
+        
+        let existingResult = [];
+        if (t.pm_checklist_result) {
+          try { existingResult = typeof t.pm_checklist_result === 'string' ? JSON.parse(t.pm_checklist_result) : t.pm_checklist_result; } catch(e){}
+        }
+
+        if(cl.length > 0) {
+          chkContainer.style.display = 'block';
+          document.getElementById('pmChecklistItems').innerHTML = cl.map((item) => {
+            const isChecked = existingResult.find(x => x.item === item)?.checked;
+            return `
+            <label style="display:flex;align-items:center;gap:8px;font-size:13px;">
+              <input type="checkbox" class="pm-check" data-item="${item}" ${isChecked ? 'checked' : ''} ${t.status !== 'IN_PROGRESS' ? 'disabled' : ''}>
+              ${item}
+            </label>
+            `;
+          }).join('');
+          
+          // Show readonly checklist if locked
+          if (locked) {
+            document.getElementById('actionCard').style.display = 'block';
+            document.getElementById('btnMulai').style.display = 'none';
+            document.getElementById('btnSelesai').style.display = 'none';
+          }
+        }
+      } else {
+        chkContainer.style.display = 'none';
+      }
+
+      document.getElementById('filesList').innerHTML = t.files.map(f => `
+        <a href="${f.file_url}" target="_blank" style="display:block;font-size:13px;margin:4px 0">📎 ${f.judul || f.file_url.split('/').pop()} (oleh ${f.uploader_nama || 'System'})</a>
+      `).join('') || '<div class="empty-state">Belum ada foto bukti</div>';
+
+      document.getElementById('timelineList').innerHTML = t.timeline.map(item => `
+        <div class="timeline-item">
+          <div>${item.note || item.event_type} <span style="color:var(--text-dim)">- ${item.actor_nama || 'System'}</span></div>
+          <div class="ts">${new Date(item.created_at).toLocaleString('id-ID')}</div>
+        </div>`).join('') || '<div class="empty-state">Belum ada aktivitas</div>';
+    }
+
+    document.getElementById('btnMulai').onclick = async () => {
+      const res = await Api.post(`/api/tasks/${taskId}/status`, { status: 'IN_PROGRESS' });
+      if (!res.success) return alert(res.message);
+      loadDetail();
+    };
+    document.getElementById('btnSelesai').onclick = async () => {
+      if (!confirm('Tandai tugas ini selesai?')) return;
+      
+      let pmResult = null;
+      if (document.getElementById('pmChecklistContainer').style.display === 'block') {
+        const checks = document.querySelectorAll('.pm-check');
+        pmResult = Array.from(checks).map(c => ({
+          item: c.getAttribute('data-item'),
+          checked: c.checked
+        }));
+      }
+
+      const res = await Api.post(`/api/tasks/${taskId}/status`, { 
+        status: 'SELESAI',
+        pm_checklist_result: pmResult
+      });
+      if (!res.success) return alert(res.message);
+      loadDetail();
+    };
+    document.getElementById('btnUpload').onclick = async () => {
+      const input = document.getElementById('fileInput');
+      if (!input.files.length) return;
+      const fd = new FormData();
+      [...input.files].forEach(f => fd.append('files', f));
+      const res = await Api.upload(`/api/tasks/${taskId}/files`, fd);
+      if (res.success) { input.value = ''; loadDetail(); }
+    };
+
+    loadDetail();
+  </script>
+</body>
+</html>
