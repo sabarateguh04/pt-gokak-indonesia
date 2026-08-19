@@ -16,6 +16,7 @@ const dashboardRoute = require('./routes/dashboard.route');
 const areaRoute      = require('./routes/area.route');
 const kpiRoute       = require('./routes/kpi.route');
 const licenseRoute   = require('./routes/license.route');
+const settingsRoute  = require('./routes/settings.route');
 
 const app = express();
 const PORT = process.env.PORT || 3010;
@@ -130,6 +131,7 @@ app.use('/api/pm', pmRoute);
 app.use('/api/dashboard', dashboardRoute);
 app.use('/api/area', areaRoute);
 app.use('/api/kpi', kpiRoute);
+app.use('/api/settings', settingsRoute);
 
 // Foto bukti pengerjaan tiket yang diupload admin/teknisi
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));

@@ -50,7 +50,8 @@
                     <!-- Authentication card start -->
                         <form id="loginForm" class="md-float-material form-material">
                             <div class="text-center">
-                                <h1 style="color: white; font-weight: 800; font-size: 32px;"><i class="feather icon-briefcase"></i> CMMS Gokak</h1>
+                                <!-- Kita tambahkan id="appNameDisplay" agar bisa diubah dinamis oleh JS -->
+                                <h1 style="color: white; font-weight: 800; font-size: 32px;"><i class="feather icon-briefcase"></i> <span id="appNameDisplay">Memuat...</span></h1>
                             </div>
                             <div class="auth-box card">
                                 <div class="card-block">
@@ -95,9 +96,28 @@
     <script type="text/javascript" src="/libraries/bower_components/jquery-slimscroll/js/jquery.slimscroll.js"></script>
     <!-- modernizr js -->
     <script type="text/javascript" src="/libraries/bower_components/modernizr/js/modernizr.js"></script>
-    <script type="text/javascript" src="/libraries/bower_components\modernizr\js\css-scrollbars.js"></script>
+    <script type="text/javascript" src="/libraries/bower_components/modernizr/js/css-scrollbars.js"></script>
     <!-- i18next.min.js -->
     <script type="text/javascript" src="/libraries/bower_components/i18next/js/i18next.min.js"></script>
+    <!-- Custom js -->
+    <script src="/js/api.js"></script>
+    <script>
+        // Load App Name from Settings
+        fetch('/api/settings/public')
+            .then(res => res.json())
+            .then(res => {
+                if(res.success && res.app_name) {
+                    document.getElementById('appNameDisplay').textContent = res.app_name;
+                    document.title = 'Login — ' + res.app_name;
+                } else {
+                    document.getElementById('appNameDisplay').textContent = 'CMMS Gokak';
+                }
+            })
+            .catch(() => {
+                document.getElementById('appNameDisplay').textContent = 'CMMS Gokak';
+            });
+    </script>
+
     <script type="text/javascript" src="/libraries/bower_components/i18next-xhr-backend/js/i18nextXHRBackend.min.js"></script>
     <script type="text/javascript" src="/libraries/bower_components/i18next-browser-languagedetector/js/i18nextBrowserLanguageDetector.min.js"></script>
     <script type="text/javascript" src="/libraries/bower_components/jquery-i18next/js/jquery-i18next.min.js"></script>

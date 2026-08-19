@@ -259,3 +259,5 @@ INSERT INTO pt_gokak_machines (kode, nama, tipe, merk, line_id) VALUES
   ('SPN-01', 'Mesin Ring Spinning 01', 'Ring Frame', 'Toyota', 1),
   ('SPN-02', 'Mesin Ring Spinning 02', 'Ring Frame', 'Toyota', 1),
   ('WVN-01', 'Mesin Loom 01', 'Air Jet Loom', 'Tsudakoma', 2);
+CREATE TABLE IF NOT EXISTS pt_gokak_settings (setting_key VARCHAR(50) PRIMARY KEY, setting_value VARCHAR(255));
+INSERT IGNORE INTO pt_gokak_settings (setting_key, setting_value) VALUES ('app_name', 'CMMS Gokak');

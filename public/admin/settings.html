@@ -192,6 +192,25 @@
             </div>
         </div>
     </div>
+    
+    <!-- PENGATURAN APLIKASI (NAMA & LOGO) -->
+    <div class="col-lg-4 col-md-12">
+        <div class="card">
+            <div class="card-header"><h5><i class="feather icon-monitor"></i> Pengaturan Aplikasi</h5></div>
+            <div class="card-block">
+                <div class="form-group">
+                    <label>Nama Sistem (Login Page)</label>
+                    <input type="text" id="settAppName" class="form-control" placeholder="Contoh: CMMS Gokak">
+                </div>
+                <div class="form-group">
+                    <label>Logo Aplikasi</label>
+                    <input type="file" id="settLogo" class="form-control" accept="image/png, image/jpeg">
+                    <small class="text-muted">Akan mengganti logo di navbar dan menu. Gunakan rasio persegi panjang.</small>
+                </div>
+                <button class="btn btn-primary btn-block" id="btnSimpanApp"><i class="feather icon-save"></i> Simpan Pengaturan</button>
+            </div>
+        </div>
+    </div>
 </div>
                     </div><!-- /page-body -->
                 </div></div><!-- /page-wrapper /main-body -->
@@ -278,11 +297,66 @@
             document.getElementById('passBaru').value = '';
             document.getElementById('passKonfirmasi').value = '';
         } else {
-            alert('Gagal: ' + res.message);
+            alert(res.error || 'Gagal mengganti password');
         }
         btn.innerHTML = '<i class="feather icon-key"></i> Ganti Password';
         btn.disabled = false;
     };
+
+    // --- Pengaturan Aplikasi ---
+    document.getElementById('btnSimpanApp').onclick = async () => {
+        const btn = document.getElementById('btnSimpanApp');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="feather icon-loader"></i> Menyimpan...';
+        btn.disabled = true;
+
+        const appName = document.getElementById('settAppName').value.trim();
+        const logoFile = document.getElementById('settLogo').files[0];
+
+        try {
+            // Update nama aplikasi jika ada
+            if (appName) {
+                const resName = await Api.post('/api/settings/app-name', { app_name: appName });
+                if (!resName.success) throw new Error(resName.error || 'Gagal menyimpan nama sistem');
+            }
+
+            // Update logo jika diupload
+            if (logoFile) {
+                const token = localStorage.getItem('token');
+                const formData = new FormData();
+                formData.append('logoFile', logoFile);
+
+                const resLogo = await fetch('/api/settings/logo', {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + token },
+                    body: formData
+                }).then(r => r.json());
+
+                if (!resLogo.success) throw new Error(resLogo.error || 'Gagal mengupload logo');
+                
+                // Tambahkan query parameter ke logo lama di document
+                const timestamp = resLogo.timestamp || Date.now();
+                document.querySelectorAll('img[src^="/libraries/assets/images/logo.png"]').forEach(img => {
+                    img.src = '/libraries/assets/images/logo.png?v=' + timestamp;
+                });
+            }
+
+            alert('Pengaturan aplikasi berhasil disimpan!');
+            document.getElementById('settLogo').value = ''; // reset file input
+        } catch (e) {
+            alert(e.message);
+        } finally {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }
+    };
+
+    // Load setelan app (optional, just to fill the input field)
+    Api.get('/api/settings/public').then(res => {
+        if(res.success && res.app_name) {
+            document.getElementById('settAppName').value = res.app_name;
+        }
+    });
 
     loadSettings();
 </script>
