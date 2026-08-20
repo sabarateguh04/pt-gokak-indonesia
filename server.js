@@ -13,7 +13,6 @@ const taskRoute      = require('./routes/task.route');
 const masterRoute    = require('./routes/master.route');
 const pmRoute        = require('./routes/pm.route');
 const dashboardRoute = require('./routes/dashboard.route');
-const areaRoute      = require('./routes/area.route');
 const kpiRoute       = require('./routes/kpi.route');
 const licenseRoute   = require('./routes/license.route');
 const settingsRoute  = require('./routes/settings.route');
@@ -129,7 +128,6 @@ app.use('/api/tasks', taskRoute);
 app.use('/api/master', masterRoute);
 app.use('/api/pm', pmRoute);
 app.use('/api/dashboard', dashboardRoute);
-app.use('/api/area', areaRoute);
 app.use('/api/kpi', kpiRoute);
 app.use('/api/settings', settingsRoute);
 

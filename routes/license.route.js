@@ -68,7 +68,7 @@ router.post('/request', async (req, res) => {
 
   try {
     const [result] = await pool.query(
-      `INSERT INTO pt_kapuk_license_requests (type, requested_seats, note, contact_name, contact_email)
+      `INSERT INTO pt_gokak_license_requests (type, requested_seats, note, contact_name, contact_email)
        VALUES (?, ?, ?, ?, ?)`,
       [validType, requested_seats || null, note || null, contact_name || null, contact_email || null],
     );
@@ -97,7 +97,7 @@ router.post('/request', async (req, res) => {
           }),
         });
         webhookSent = true;
-        await pool.query(`UPDATE pt_kapuk_license_requests SET webhook_sent = 1 WHERE id = ?`, [result.insertId]);
+        await pool.query(`UPDATE pt_gokak_license_requests SET webhook_sent = 1 WHERE id = ?`, [result.insertId]);
       } catch (e) {
         console.error('[LICENSE request webhook]', e.message);
       }
@@ -128,7 +128,7 @@ router.get('/requests', requireAuth, requireAdmin, async (req, res) => {
   try {
     const [rows] = await pool.query(
       `SELECT id, type, requested_seats, note, contact_name, contact_email, webhook_sent, created_at
-       FROM pt_kapuk_license_requests ORDER BY created_at DESC LIMIT 50`,
+       FROM pt_gokak_license_requests ORDER BY created_at DESC LIMIT 50`,
     );
     return res.json({ success: true, requests: rows });
   } catch (e) {

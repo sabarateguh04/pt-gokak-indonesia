@@ -3,8 +3,20 @@ const bcrypt = require('bcryptjs');
 const pool = require('../db');
 const { emitToDashboard } = require('../socket');
 const { requireAuth, requireAdmin } = require('../middleware/auth');
-const { getPrimaryAreasCached } = require('./area.route');
 const { classifyPoint } = require('../helpers/geo');
+
+// Cache primary areas dari pt_gokak_lines (refresh setiap 60 detik)
+let _areasCache = null;
+let _areasCacheAt = 0;
+async function getPrimaryLinesCached() {
+  if (_areasCache && Date.now() - _areasCacheAt < 60_000) return _areasCache;
+  const [rows] = await pool.query(
+    `SELECT id, polygon FROM pt_gokak_lines WHERE is_primary = 1 AND is_active = 1`
+  );
+  _areasCache = rows;
+  _areasCacheAt = Date.now();
+  return _areasCache;
+}
 
 const router = express.Router();
 
@@ -56,8 +68,8 @@ router.post('/:id/location', async (req, res) => {
       });
     }
 
-    // Classify point untuk Line geometry if any (simplified for now to just primary plant area)
-    const primaryAreas = await getPrimaryAreasCached();
+    // Classify point terhadap primary lines (area pabrik) dari database
+    const primaryAreas = await getPrimaryLinesCached();
     const { inArea, areaId } = classifyPoint(Number(longitude), Number(latitude), primaryAreas);
 
     const now = new Date();

@@ -144,7 +144,7 @@ router.get('/advanced', canViewDashboard, async (req, res) => {
         SUM(CASE WHEN category_id != 1 THEN 1 ELSE 0 END) as anomali_proses
       FROM pt_gokak_tasks
       WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL 15 DAY)
-      GROUP BY DATE(created_at)
+      GROUP BY DATE(created_at), DATE_FORMAT(created_at, '%d')
       ORDER BY DATE(created_at) ASC
     `);
 

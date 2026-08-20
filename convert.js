@@ -1,1 +1,0 @@
-const tj = require('@tmcw/togeojson'); const fs = require('fs'); const { JSDOM } = require('jsdom'); const DOMParser = new JSDOM().window.DOMParser; const kml = new DOMParser().parseFromString(fs.readFileSync('doc.kml', 'utf8'), 'text/xml'); const converted = tj.kml(kml); fs.writeFileSync('public/data/layout.geojson', JSON.stringify(converted)); console.log('Done!');

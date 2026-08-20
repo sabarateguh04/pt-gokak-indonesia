@@ -30,7 +30,7 @@ try {
 // bisnis di notesubscribe.md bagian 3. Kalau nanti admin juga mau
 // dihitung, tinggal ubah query di countUsedSeats().
 async function countUsedSeats(pool) {
-  const [[row]] = await pool.query(`SELECT COUNT(*) AS n FROM pt_kapuk_teknisi WHERE is_active = 1`);
+  const [[row]] = await pool.query(`SELECT COUNT(*) AS n FROM pt_gokak_users WHERE is_active = 1 AND role = 'MEKANIK'`);
   return row.n;
 }
 
