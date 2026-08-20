@@ -22,8 +22,7 @@ DROP TABLE IF EXISTS
 DROP TABLE IF EXISTS
   pt_gokak_task_files, pt_gokak_task_timeline, pt_gokak_tasks,
   pt_gokak_pm_parameters, pt_gokak_machines, pt_gokak_task_categories,
-  pt_gokak_user_locations, pt_gokak_users, pt_gokak_lines, pt_gokak_shifts,
-  pt_gokak_license_state, pt_gokak_license_requests;
+  pt_gokak_user_locations, pt_gokak_users, pt_gokak_lines, pt_gokak_shifts;
 
 -- ───────────────────────────────────────────────────────────
 -- MASTER DATA
@@ -189,25 +188,6 @@ CREATE TABLE pt_gokak_task_files (
   FOREIGN KEY (uploaded_by_id) REFERENCES pt_gokak_users(id)
 ) ENGINE=InnoDB;
 
--- ───────────────────────────────────────────────────────────
--- LICENSE (Sama seperti sebelumnya)
--- ───────────────────────────────────────────────────────────
-CREATE TABLE pt_gokak_license_state (
-  id                INT PRIMARY KEY,
-  last_verified_ms  BIGINT NOT NULL,
-  updated_at        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB;
-
-CREATE TABLE pt_gokak_license_requests (
-  id                INT AUTO_INCREMENT PRIMARY KEY,
-  type              ENUM('ADDON','RENEWAL','OTHER') NOT NULL DEFAULT 'ADDON',
-  requested_seats   INT NULL,
-  note              VARCHAR(500) NULL,
-  contact_name      VARCHAR(150) NULL,
-  contact_email     VARCHAR(150) NULL,
-  webhook_sent      TINYINT(1) NOT NULL DEFAULT 0,
-  created_at        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB;
 
 SET FOREIGN_KEY_CHECKS = 1;
 

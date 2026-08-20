@@ -62,10 +62,8 @@ const storage = multer.diskStorage({
 const upload = multer({
     storage: storage,
     fileFilter: (req, file, cb) => {
-        const filetypes = /jpeg|jpg|png/;
-        const mimetype = filetypes.test(file.mimetype);
-        const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
-        if (mimetype && extname) {
+        const extname = /\.(jpeg|jpg|png)$/i.test(path.extname(file.originalname));
+        if (extname) {
             return cb(null, true);
         }
         cb(new Error("Hanya file gambar (JPG/PNG) yang diperbolehkan!"));

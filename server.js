@@ -14,20 +14,10 @@ const masterRoute    = require('./routes/master.route');
 const pmRoute        = require('./routes/pm.route');
 const dashboardRoute = require('./routes/dashboard.route');
 const kpiRoute       = require('./routes/kpi.route');
-const licenseRoute   = require('./routes/license.route');
 const settingsRoute  = require('./routes/settings.route');
 
 const app = express();
 const PORT = process.env.PORT || 3010;
-
-// Mode "MASTER VENDOR" -- SATU-SATUNYA cara fitur kelola mitra
-// (routes/mitra.route.js + public/admin/mitra.html) bisa aktif. Cuma
-// boleh true di instalasi VENDOR SENDIRI (biasanya jalan lewat
-// `npm run dev`/`npm start` langsung, BUKAN dari Docker image yang
-// dikirim ke customer) -- lihat komentar lengkap di routes/mitra.route.js
-// & scripts/build-obfuscate.js soal kenapa fitur ini gak boleh
-// pernah ke-bundle ke image customer sama sekali.
-const VENDOR_MASTER_MODE = process.env.VENDOR_MASTER_MODE === 'true';
 
 // Percaya header X-Forwarded-For dari reverse proxy (nginx/Caddy) di
 // depan app -- TANPA ini, req.ip SELALU keliatan alamat proxy-nya
@@ -81,36 +71,11 @@ app.get('/api/config', (req, res) => {
     factoryCenter: {
       lat: Number(process.env.FACTORY_LAT) || -6.380064,
       lng: Number(process.env.FACTORY_LNG) || 106.8408239,
-    },
-    // Dipakai public/js/api.js buat nampilin/nyembunyiin link menu
-    // "Kelola Mitra" di sidebar SECARA DINAMIS -- HTML admin yang
-    // di-ship ke customer TETAP gak akan pernah punya halamannya sama
-    // sekali (dikecualikan dari build, lihat scripts/build-obfuscate.js),
-    // flag ini cuma nyegah link-nya nongol nyasar kalau ada yang salah
-    // konfigurasi VENDOR_MASTER_MODE di instalasi customer.
-    vendorMasterMode: VENDOR_MASTER_MODE,
+    }
   });
 });
 
-app.use('/api/license', licenseRoute);
-
-// Kelola mitra/partner (registrasi, generate token, scaffold paket
-// Docker) -- VENDOR-ONLY, lihat VENDOR_MASTER_MODE di atas. Dibungkus
-// try/catch: kalau file routes/mitra.route.js gak ada (situasi NORMAL
-// di image customer, lihat scripts/build-obfuscate.js), app TETAP
-// jalan normal, cuma nge-log peringatan -- gak boleh ikut crash.
-if (VENDOR_MASTER_MODE) {
-  try {
-    const mitraRoute = require('./routes/mitra.route');
-    const { requireAuth, requireAdmin } = require('./middleware/auth');
-    app.use('/api/mitra', requireAuth, requireAdmin, mitraRoute);
-    console.log('🛠️  VENDOR_MASTER_MODE aktif -- /api/mitra/* & menu Kelola Mitra kebuka.');
-  } catch (e) {
-    console.error('[MITRA] VENDOR_MASTER_MODE=true tapi routes/mitra.route.js gak ketemu (normal kalau ini instalasi CUSTOMER, bukan master vendor):', e.message);
-  }
-}
-
-// Login SENGAJA didaftarin SEBELUM gerbang lisensi -- admin HARUS
+// Login route
 // tetap bisa login walaupun lisensinya lagi invalid/expired, soalnya
 // justru itu jalan satu-satunya buat dia masuk dashboard & TEMPEL
 // TOKEN LISENSI BARU lewat menu Lisensi / halaman lock (lihat
@@ -118,10 +83,6 @@ if (VENDOR_MASTER_MODE) {
 // ikut keblokir, admin gak akan pernah bisa masukin lisensi baru sama
 // sekali tanpa akses SSH/file server -- itu bukan yang diminta.
 app.use('/api/auth', authRoute);
-
-// Gerbang lisensi -- SEMUA route /api/* LAINNYA di bawah ini ditolak
-// kalau lisensi gak valid/udah expired. Di-scope ke prefix '/api'
-// License middleware removed
 
 app.use('/api/users', userRoute);
 app.use('/api/tasks', taskRoute);
@@ -187,9 +148,6 @@ httpServer.listen(PORT, () => {
   console.log(`   GET    /api/kpi/ringkasan               (tabel kehadiran semua karyawan)`);
   console.log(`   GET    /api/kpi/heatmap/:teknisiId       (kalender ala GitHub)`);
   console.log(`   GET    /api/kpi/harian/:teknisiId        (detail 1 hari + sesi keluar-area)`);
-  console.log(`   GET    /api/license/status               (publik -- status lisensi)`);
   console.log(`🔌 Socket.IO aktif (register-dashboard / register-teknisi)`);
   console.log(`   GET    /health`);
-
-  require('./helpers/phone-home').start();
 });
