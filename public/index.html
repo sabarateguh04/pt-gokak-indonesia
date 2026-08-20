@@ -358,9 +358,8 @@
           errMsg.textContent = data.message || 'Username atau password salah';
           return;
         }
-        // Store token
-        localStorage.setItem('gokak_token', data.token);
-        localStorage.setItem('gokak_user', JSON.stringify(data.user));
+        // Store token using the API wrapper so all pages can read it
+        Api.setSession(data.token, data.user);
         // Redirect by role
         var role = data.user.role;
         if(role === 'MEKANIK') window.location.href = '/mekanik/home';
