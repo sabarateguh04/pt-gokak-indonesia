@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
   <meta charset="UTF-8">
@@ -315,10 +315,16 @@
     fetch('/api/settings/public')
       .then(function(r){ return r.json(); })
       .then(function(res){
-        if(res.success && res.app_name){
-          document.getElementById('appNameDisplay').textContent = res.app_name;
-          document.title = 'Login — ' + res.app_name;
-          document.getElementById('footerName').textContent = res.app_name;
+        if(res.success){
+          if(res.app_name) {
+            document.getElementById('appNameDisplay').textContent = res.app_name;
+            document.title = 'Login — ' + res.app_name;
+            document.getElementById('footerName').textContent = res.app_name;
+          }
+          if(res.logo_url) {
+            var img = document.querySelector('.logo-wrap img');
+            if (img) img.src = res.logo_url;
+          }
         }
       })
       .catch(function(){});
