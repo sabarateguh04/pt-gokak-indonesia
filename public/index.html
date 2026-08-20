@@ -1,163 +1,375 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="id">
-
 <head>
-    <title>Login — CMMS Gokak Indonesia</title>
-    <!-- Meta -->
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimal-ui">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <!-- Favicon icon -->
-    <link rel="icon" href="/libraries/assets/images/favicon.ico" type="image/x-icon">
-    <!-- Google font--><link href="https://fonts.googleapis.com/css?family=Open+Sans:400,600,800" rel="stylesheet">
-    <!-- Required Fremwork -->
-    <link rel="stylesheet" type="text/css" href="/libraries/bower_components/bootstrap/css/bootstrap.min.css">
-    <!-- themify-icons line icon -->
-    <link rel="stylesheet" type="text/css" href="/libraries/assets/icon/themify-icons/themify-icons.css">
-    <!-- ico font -->
-    <link rel="stylesheet" type="text/css" href="/libraries/assets/icon/icofont/css/icofont.css">
-    <!-- feather Awesome -->
-    <link rel="stylesheet" type="text/css" href="/libraries/assets/icon/feather/css/feather.css">
-    <!-- Style.css -->
-    <link rel="stylesheet" type="text/css" href="/libraries/assets/css/style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login — CMMS Gokak Indonesia</title>
+  <link rel="icon" href="/libraries/assets/images/favicon.ico" type="image/x-icon">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #050C1F;
+      color: #fff;
+      min-height: 100dvh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      overflow-x: hidden;
+    }
+
+    /* Background */
+    .bg-layer {
+      position: fixed; inset: 0; z-index: 0;
+      overflow: hidden;
+    }
+    .bg-image {
+      position: absolute; inset: 0;
+      background: url('https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?q=80&w=2070&auto=format&fit=crop') center/cover no-repeat;
+      opacity: 0.15;
+    }
+    .bg-overlay {
+      position: absolute; inset: 0;
+      background: linear-gradient(to bottom, rgba(4,10,28,.92) 0%, rgba(7,17,40,.82) 50%, rgba(10,22,53,.96) 100%);
+    }
+    .bg-line-1 {
+      position: absolute; top: 25%; left: -20%;
+      width: 50%; height: 1px;
+      background: linear-gradient(to right, transparent, rgba(99,179,237,.3));
+      transform: rotate(45deg);
+    }
+    .bg-line-2 {
+      position: absolute; bottom: 25%; right: -20%;
+      width: 50%; height: 1px;
+      background: linear-gradient(to left, transparent, rgba(99,179,237,.3));
+      transform: rotate(45deg);
+    }
+    .bg-glow {
+      position: absolute; top: 30%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 500px; height: 500px;
+      background: radial-gradient(circle, rgba(79,70,229,.12) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    /* Wrapper */
+    .wrapper {
+      position: relative; z-index: 10;
+      width: 100%; max-width: 400px;
+      display: flex; flex-direction: column; align-items: center;
+    }
+
+    /* Header */
+    .login-header { width: 100%; text-align: center; margin-bottom: 20px; }
+    .logo-wrap { margin-bottom: 14px; }
+    .logo-wrap img {
+      height: 80px; width: auto;
+      filter: drop-shadow(0 8px 24px rgba(79,70,229,.4));
+    }
+    .logo-fallback {
+      width: 72px; height: 72px; border-radius: 50%;
+      background: linear-gradient(135deg, #4f46e5, #7c3aed);
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto;
+      font-size: 28px; font-weight: 900; color: #fff;
+      box-shadow: 0 8px 32px rgba(79,70,229,.5);
+    }
+
+    /* Gold ornament row */
+    .ornament-row {
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      margin-bottom: 8px;
+    }
+    .ornament-line {
+      width: 48px; height: 1px;
+      background: linear-gradient(to right, transparent, #E1B155, transparent);
+    }
+    .ornament-diamond {
+      width: 6px; height: 6px;
+      background: #E1B155;
+      transform: rotate(45deg);
+      flex-shrink: 0;
+    }
+    .company-name {
+      font-size: 11px; font-weight: 800;
+      letter-spacing: .18em; text-transform: uppercase;
+      color: #E1B155;
+    }
+
+    /* App name */
+    .app-name {
+      font-size: 26px; font-weight: 900;
+      line-height: 1.1; letter-spacing: -.01em;
+      text-transform: uppercase;
+      background: linear-gradient(to bottom, #87B4FE, #396ED5);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+      filter: drop-shadow(0 2px 8px rgba(79,70,229,.3));
+    }
+
+    /* Card */
+    .login-card {
+      width: 100%;
+      background: #fff;
+      border-radius: 24px;
+      padding: 28px 24px;
+      box-shadow: 0 24px 64px rgba(0,0,0,.55);
+      position: relative;
+      overflow: hidden;
+    }
+    .login-card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(to right, #4f46e5, #7c3aed, #4f46e5);
+    }
+
+    /* Form heading */
+    .form-heading {
+      text-align: center; margin-bottom: 20px;
+    }
+    .form-heading h2 {
+      font-size: 14px; font-weight: 800;
+      letter-spacing: .08em; text-transform: uppercase;
+      color: #1e293b;
+    }
+    .form-heading-divider {
+      width: 32px; height: 3px; border-radius: 2px;
+      background: linear-gradient(to right, #4f46e5, #7c3aed);
+      margin: 8px auto 0;
+    }
+
+    /* Field */
+    .field { margin-bottom: 14px; }
+    .field label {
+      display: block;
+      font-size: 10px; font-weight: 700;
+      letter-spacing: .1em; text-transform: uppercase;
+      color: #475569; margin-bottom: 6px;
+    }
+    .input-wrap {
+      display: flex;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 12px;
+      overflow: hidden;
+      background: #fff;
+      transition: border-color .2s, box-shadow .2s;
+    }
+    .input-wrap:focus-within {
+      border-color: #4f46e5;
+      box-shadow: 0 0 0 3px rgba(79,70,229,.12);
+    }
+    .input-icon {
+      width: 46px;
+      display: flex; align-items: center; justify-content: center;
+      background: #f8fafc;
+      border-right: 1.5px solid #e2e8f0;
+      flex-shrink: 0;
+      transition: background .2s;
+      font-size: 17px; color: #64748b;
+    }
+    .input-wrap:focus-within .input-icon {
+      background: #fff;
+      color: #4f46e5;
+    }
+    .input-wrap input {
+      flex: 1;
+      height: 42px;
+      padding: 0 14px;
+      font-size: 14px; font-weight: 500;
+      color: #0f172a;
+      border: none; outline: none;
+      background: transparent;
+      font-family: 'Inter', sans-serif;
+    }
+    .input-wrap input::placeholder { color: #94a3b8; font-weight: 400; }
+
+    /* Error */
+    .err-msg {
+      min-height: 18px; margin-bottom: 8px;
+      font-size: 12px; font-weight: 600;
+      color: #ef4444; text-align: center;
+    }
+
+    /* Submit */
+    .btn-login {
+      width: 100%; height: 46px;
+      background: linear-gradient(135deg, #08132D, #040A18);
+      color: #fff;
+      border: none; border-radius: 12px;
+      font-family: 'Inter', sans-serif;
+      font-size: 13px; font-weight: 800;
+      letter-spacing: .14em; text-transform: uppercase;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      box-shadow: 0 8px 24px rgba(8,19,45,.35);
+      transition: opacity .15s, transform .12s;
+      margin-top: 4px;
+    }
+    .btn-login:hover { opacity: .88; }
+    .btn-login:active { transform: scale(.98); }
+    .btn-login:disabled { opacity: .6; cursor: not-allowed; }
+    .btn-arrow {
+      font-size: 16px; color: #E1B155;
+      transition: transform .18s;
+    }
+    .btn-login:hover .btn-arrow { transform: translateX(3px); }
+
+    /* Spinner */
+    .spinner {
+      width: 16px; height: 16px;
+      border: 2px solid rgba(255,255,255,.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Footer */
+    .login-footer {
+      margin-top: 20px; text-align: center;
+      font-size: 10px; letter-spacing: .1em;
+      color: rgba(124,151,196,.6);
+    }
+  </style>
 </head>
+<body>
 
-<body class="fix-menu">
-    <!-- Pre-loader start -->
-    <div class="theme-loader">
-        <div class="ball-scale">
-            <div class='contain'>
-                <div class="ring"><div class="frame"></div></div>
-                <div class="ring"><div class="frame"></div></div>
-                <div class="ring"><div class="frame"></div></div>
-                <div class="ring"><div class="frame"></div></div>
-                <div class="ring"><div class="frame"></div></div>
-                <div class="ring"><div class="frame"></div></div>
-                <div class="ring"><div class="frame"></div></div>
-                <div class="ring"><div class="frame"></div></div>
-                <div class="ring"><div class="frame"></div></div>
-                <div class="ring"><div class="frame"></div></div>
-            </div>
-        </div>
+  <!-- Background -->
+  <div class="bg-layer">
+    <div class="bg-image"></div>
+    <div class="bg-overlay"></div>
+    <div class="bg-line-1"></div>
+    <div class="bg-line-2"></div>
+    <div class="bg-glow"></div>
+  </div>
+
+  <!-- Content -->
+  <div class="wrapper">
+
+    <!-- Header -->
+    <div class="login-header">
+      <div class="logo-wrap">
+        <img src="/libraries/assets/images/logo.png" alt="Logo" onerror="this.style.display='none';document.getElementById('logoFallback').style.display='flex'">
+        <div class="logo-fallback" id="logoFallback" style="display:none">G</div>
+      </div>
+
+      <div class="ornament-row">
+        <div class="ornament-line"></div>
+        <div class="ornament-diamond"></div>
+        <span class="company-name">PT Gokak Indonesia</span>
+        <div class="ornament-diamond"></div>
+        <div class="ornament-line"></div>
+      </div>
+
+      <div class="app-name" id="appNameDisplay">CMMS Gokak</div>
     </div>
-    <!-- Pre-loader end -->
 
-    <section class="login-block">
-        <!-- Container-fluid starts -->
-        <div class="container">
-            <div class="row">
-                <div class="col-sm-12">
-                    <!-- Authentication card start -->
-                        <form id="loginForm" class="md-float-material form-material">
-                            <div class="text-center">
-                                <!-- Kita tambahkan id="appNameDisplay" agar bisa diubah dinamis oleh JS -->
-                                <h1 style="color: white; font-weight: 800; font-size: 32px;"><i class="feather icon-briefcase"></i> <span id="appNameDisplay">Memuat...</span></h1>
-                            </div>
-                            <div class="auth-box card">
-                                <div class="card-block">
-                                    <div class="row m-b-20">
-                                        <div class="col-md-12">
-                                            <h3 class="text-center">Sign In</h3>
-                                        </div>
-                                    </div>
-                                    <div class="form-group form-primary">
-                                        <input type="text" id="username" name="username" class="form-control" required="" placeholder="Username">
-                                        <span class="form-bar"></span>
-                                    </div>
-                                    <div class="form-group form-primary">
-                                        <input type="password" id="password" name="password" class="form-control" required="" placeholder="Password">
-                                        <span class="form-bar"></span>
-                                    </div>
-                                    
-                                    <div class="row m-t-30">
-                                        <div class="col-md-12">
-                                            <button type="submit" class="btn btn-primary btn-md btn-block waves-effect waves-light text-center m-b-20">Masuk</button>
-                                        </div>
-                                    </div>
-                                    <div id="errMsg" class="text-center text-danger m-b-20"></div>
-                                </div>
-                            </div>
-                        </form>
-                        <!-- end of form -->
-                </div>
-                <!-- end of col-sm-12 -->
-            </div>
-            <!-- end of row -->
+    <!-- Card -->
+    <div class="login-card">
+      <div class="form-heading">
+        <h2>Sign In</h2>
+        <div class="form-heading-divider"></div>
+      </div>
+
+      <form id="loginForm" autocomplete="off">
+        <div class="field">
+          <label>Username</label>
+          <div class="input-wrap">
+            <div class="input-icon">&#128100;</div>
+            <input type="text" id="username" placeholder="Masukkan username Anda" required autocomplete="username">
+          </div>
         </div>
-        <!-- end of container-fluid -->
-    </section>
+        <div class="field">
+          <label>Password</label>
+          <div class="input-wrap">
+            <div class="input-icon">&#128274;</div>
+            <input type="password" id="password" placeholder="••••••••" required autocomplete="current-password">
+          </div>
+        </div>
 
-    <!-- Required Jquery -->
-    <script type="text/javascript" src="/libraries/bower_components/jquery/js/jquery.min.js"></script>
-    <script type="text/javascript" src="/libraries/bower_components/jquery-ui/js/jquery-ui.min.js"></script>
-    <script type="text/javascript" src="/libraries/bower_components/popper.js/js/popper.min.js"></script>
-    <script type="text/javascript" src="/libraries/bower_components/bootstrap/js/bootstrap.min.js"></script>
-    <!-- jquery slimscroll js -->
-    <script type="text/javascript" src="/libraries/bower_components/jquery-slimscroll/js/jquery.slimscroll.js"></script>
-    <!-- modernizr js -->
-    <script type="text/javascript" src="/libraries/bower_components/modernizr/js/modernizr.js"></script>
-    <script type="text/javascript" src="/libraries/bower_components/modernizr/js/css-scrollbars.js"></script>
-    <!-- i18next.min.js -->
-    <script type="text/javascript" src="/libraries/bower_components/i18next/js/i18next.min.js"></script>
-    <!-- Custom js -->
-    <script src="/js/api.js"></script>
-    <script>
-        // Load App Name from Settings
-        fetch('/api/settings/public')
-            .then(res => res.json())
-            .then(res => {
-                if(res.success && res.app_name) {
-                    document.getElementById('appNameDisplay').textContent = res.app_name;
-                    document.title = 'Login — ' + res.app_name;
-                } else {
-                    document.getElementById('appNameDisplay').textContent = 'CMMS Gokak';
-                }
-            })
-            .catch(() => {
-                document.getElementById('appNameDisplay').textContent = 'CMMS Gokak';
-            });
-    </script>
+        <div class="err-msg" id="errMsg"></div>
 
-    <script type="text/javascript" src="/libraries/bower_components/i18next-xhr-backend/js/i18nextXHRBackend.min.js"></script>
-    <script type="text/javascript" src="/libraries/bower_components/i18next-browser-languagedetector/js/i18nextBrowserLanguageDetector.min.js"></script>
-    <script type="text/javascript" src="/libraries/bower_components/jquery-i18next/js/jquery-i18next.min.js"></script>
-    <script type="text/javascript" src="/libraries/assets/js/common-pages.js"></script>
+        <button type="submit" class="btn-login" id="btnLogin">
+          <span id="btnText">MASUK</span>
+          <span class="btn-arrow" id="btnArrow">&#10140;</span>
+          <span class="spinner" id="btnSpinner" style="display:none"></span>
+        </button>
+      </form>
+    </div>
 
-    <script src="/js/api.js"></script>
-    <script>
-        Api.init('auth');
-        document.getElementById('loginForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const errMsg = document.getElementById('errMsg');
-        errMsg.textContent = '';
-        const username = document.getElementById('username').value.trim();
-        const password = document.getElementById('password').value;
-        const res = await Api.post('/api/auth/login', { username, password });
-        if (!res.success) {
-            errMsg.textContent = res.message || 'Login gagal';
-            return;
+    <div class="login-footer">
+      <span id="copyrightYear"></span> &copy; <span id="footerName">PT Gokak Indonesia</span>. All rights reserved.
+    </div>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script>
+    document.getElementById('copyrightYear').textContent = new Date().getFullYear();
+
+    // Load App Name & Logo from Settings
+    fetch('/api/settings/public')
+      .then(function(r){ return r.json(); })
+      .then(function(res){
+        if(res.success && res.app_name){
+          document.getElementById('appNameDisplay').textContent = res.app_name;
+          document.title = 'Login — ' + res.app_name;
+          document.getElementById('footerName').textContent = res.app_name;
         }
-        
-        Api.setSession(res.token, res.user);
-        
-        // Redirect berdasarkan role
-        switch (res.user.role) {
-            case 'ADMIN':
-            window.location.href = '/admin/dashboard';
-            break;
-            case 'LEADER':
-            window.location.href = '/leader/dashboard';
-            break;
-            case 'MEKANIK':
-            window.location.href = '/mekanik/home';
-            break;
-            case 'EXECUTIVE':
-            window.location.href = '/executive/dashboard';
-            break;
-            default:
-            errMsg.textContent = 'Role tidak dikenal';
-        }
+      })
+      .catch(function(){});
+
+    // Login form
+    Api.init('auth');
+    document.getElementById('loginForm').addEventListener('submit', async function(e){
+      e.preventDefault();
+      var btn = document.getElementById('btnLogin');
+      var errMsg = document.getElementById('errMsg');
+      var spinner = document.getElementById('btnSpinner');
+      var arrow = document.getElementById('btnArrow');
+      var text = document.getElementById('btnText');
+
+      errMsg.textContent = '';
+      btn.disabled = true;
+      spinner.style.display = 'block';
+      arrow.style.display = 'none';
+      text.textContent = 'MEMPROSES...';
+
+      try {
+        var username = document.getElementById('username').value.trim();
+        var password = document.getElementById('password').value;
+        var res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: username, password: password })
         });
-    </script>
+        var data = await res.json();
+        if(!data.success){
+          errMsg.textContent = data.message || 'Username atau password salah';
+          return;
+        }
+        // Store token
+        localStorage.setItem('gokak_token', data.token);
+        localStorage.setItem('gokak_user', JSON.stringify(data.user));
+        // Redirect by role
+        var role = data.user.role;
+        if(role === 'MEKANIK') window.location.href = '/mekanik/home';
+        else if(role === 'EXECUTIVE') window.location.href = '/executive/dashboard';
+        else if(role === 'LEADER') window.location.href = '/leader/dashboard';
+        else window.location.href = '/admin/dashboard';
+      } catch(err) {
+        errMsg.textContent = 'Terjadi kesalahan. Coba lagi.';
+      } finally {
+        btn.disabled = false;
+        spinner.style.display = 'none';
+        arrow.style.display = 'block';
+        text.textContent = 'MASUK';
+      }
+    });
+  </script>
 </body>
 </html>
