@@ -1,96 +1,81 @@
-<!DOCTYPE html>
-<html lang="id">
+﻿<!DOCTYPE html>
+<html lang="id" data-theme="light">
 <head>
-<script src="/js/theme.js"></script>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Buat Laporan Tugas — CMMS Gokak</title>
-<link rel="stylesheet" href="/css/style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Lapor Masalah</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/mekanik.css">
 </head>
 <body>
-  <div class="teknisi-shell">
-    <div class="teknisi-topbar">
-      <a href="/mekanik/home" style="color:var(--text-dim)">← Kembali</a>
-      <button class="theme-toggle-btn" title="Ganti tema"><span class="theme-toggle-icon">🌙</span></button>
-    </div>
-
-    <div class="card">
-      <h3 style="margin-top:0">Lapor Masalah / Pekerjaan</h3>
-      <p style="color:var(--text-dim);font-size:12.5px;margin-top:-6px">Tugas yang Anda buat akan langsung ditugaskan ke Anda.</p>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="topbar-left">
+        <a href="/mekanik/home" class="back-btn">&#8592;</a>
+        <div class="topbar-name">Lapor Masalah</div>
+      </div>
+      <button class="icon-btn" id="themeToggle">&#9790;</button>
+    </header>
+    <div class="form-page">
+      <p class="form-desc">Tugas yang Anda buat akan langsung ditugaskan ke Anda.</p>
       <form id="tiketForm">
-        <label>Judul</label>
-        <input id="f_judul" required placeholder="cth. Perbaikan mesin mati mendadak">
-        
-        <label>Deskripsi</label>
-        <textarea id="f_deskripsi"></textarea>
-        
-        <div style="display:flex;gap:10px">
-          <div style="flex:1">
-            <label>Kategori</label>
-            <select id="f_category_id" required>
-              <option value="">Memuat...</option>
-            </select>
+        <div class="form-group">
+          <label>Judul *</label>
+          <input id="f_judul" required placeholder="cth. Perbaikan mesin mati mendadak">
+        </div>
+        <div class="form-group">
+          <label>Deskripsi</label>
+          <textarea id="f_deskripsi" placeholder="Detail pekerjaan..."></textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Kategori *</label>
+            <select id="f_category_id" required><option value="">Memuat...</option></select>
           </div>
-          <div style="flex:1">
-            <label>Priority</label>
+          <div class="form-group">
+            <label>Prioritas</label>
             <select id="f_priority">
-              <option value="LOW">Low</option>
-              <option value="MEDIUM" selected>Medium</option>
-              <option value="HIGH">High</option>
+              <option value="LOW">Rendah</option>
+              <option value="MEDIUM" selected>Sedang</option>
+              <option value="HIGH">Tinggi</option>
             </select>
           </div>
         </div>
-        
-        <label>Mesin (Opsional)</label>
-        <select id="f_machine_id">
-          <option value="">-- Pilih Mesin --</option>
-        </select>
-        
-        <button type="submit" style="width:100%;margin-top:18px">Buat Laporan</button>
-        <div class="auth-error" id="formErr"></div>
+        <div class="form-group">
+          <label>Mesin (Opsional)</label>
+          <select id="f_machine_id"><option value="">-- Pilih Mesin --</option></select>
+        </div>
+        <div class="form-error" id="formErr"></div>
+        <button type="submit" class="btn-submit" id="btnSubmit">Kirim Laporan</button>
       </form>
     </div>
   </div>
-
   <script src="/js/api.js"></script>
   <script>
-    Api.init('auth');
-    const me = Api.getUser();
-
-    (async () => {
-      // Load Categories
-      const catRes = await Api.get('/api/master/task-categories');
-      if (catRes.success) {
-        document.getElementById('f_category_id').innerHTML = '<option value="">-- Pilih Kategori --</option>' + 
-          catRes.data.map(c => `<option value="${c.id}">${c.nama}</option>`).join('');
-      }
-
-      // Load Machines (filter by my line)
-      const machRes = await Api.get('/api/master/machines');
-      if (machRes.success) {
-        const myMachines = machRes.data.filter(m => m.line_id === me.line_id);
-        document.getElementById('f_machine_id').innerHTML = '<option value="">-- Pilih Mesin (Opsional) --</option>' +
-          myMachines.map(m => `<option value="${m.id}">${m.kode} - ${m.nama}</option>`).join('');
-      }
+    Api.init("auth");var me=Api.getUser();if(!me)window.location.href="/";
+    var html=document.documentElement,themeBtn=document.getElementById("themeToggle");
+    function applyTheme(t){html.setAttribute("data-theme",t);themeBtn.innerHTML=t==="dark"?"&#9728;":"&#9790;";localStorage.setItem("mk_theme",t);}
+    applyTheme(localStorage.getItem("mk_theme")||"light");
+    themeBtn.onclick=function(){applyTheme(html.getAttribute("data-theme")==="dark"?"light":"dark");};
+    (async function(){
+      var cat=await Api.get("/api/master/task-categories");
+      if(cat.success)document.getElementById("f_category_id").innerHTML="<option value=''>-- Pilih Kategori --</option>"+cat.data.map(function(c){return "<option value='"+c.id+"'>"+c.nama+"</option>";}).join("");
+      var mch=await Api.get("/api/master/machines");
+      if(mch.success){var my=mch.data.filter(function(m){return m.line_id===me.line_id;});document.getElementById("f_machine_id").innerHTML="<option value=''>-- Pilih Mesin --</option>"+my.map(function(m){return "<option value='"+m.id+"'>"+m.kode+" - "+m.nama+"</option>";}).join("");}
     })();
-
-    document.getElementById('tiketForm').addEventListener('submit', async (e) => {
+    document.getElementById("tiketForm").addEventListener("submit",async function(e){
       e.preventDefault();
-      const body = {
-        judul: document.getElementById('f_judul').value.trim(),
-        deskripsi: document.getElementById('f_deskripsi').value.trim(),
-        category_id: document.getElementById('f_category_id').value || null,
-        priority: document.getElementById('f_priority').value,
-        machine_id: document.getElementById('f_machine_id').value || null
-      };
-      
-      const res = await Api.post('/api/tasks', body);
-      const errBox = document.getElementById('formErr');
-      if (!res.success) { 
-        errBox.textContent = res.message || 'Gagal membuat tugas'; 
-        return; 
-      }
-      window.location.href = `/mekanik/tiket-detail?id=${res.taskId}`;
+      var btn=document.getElementById("btnSubmit");btn.disabled=true;btn.textContent="Mengirim...";
+      var r=await Api.post("/api/tasks",{
+        judul:document.getElementById("f_judul").value.trim(),
+        deskripsi:document.getElementById("f_deskripsi").value.trim(),
+        category_id:document.getElementById("f_category_id").value||null,
+        priority:document.getElementById("f_priority").value,
+        machine_id:document.getElementById("f_machine_id").value||null
+      });
+      if(!r.success){document.getElementById("formErr").textContent=r.message||"Gagal membuat laporan";btn.disabled=false;btn.textContent="Kirim Laporan";return;}
+      window.location.href="/mekanik/tiket-detail?id="+r.taskId;
     });
   </script>
 </body>

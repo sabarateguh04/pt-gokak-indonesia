@@ -1,105 +1,81 @@
 ﻿<!DOCTYPE html>
-<html lang="id">
+<html lang="id" data-theme="light">
 <head>
-  <script src="/js/theme.js"></script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>Dashboard Mekanik - CMMS Gokak</title>
+  <title>Dashboard Mekanik</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
-  <link rel="stylesheet" href="/css/style.css">
-  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/mekanik.css">
 </head>
 <body>
-  <div class="teknisi-shell">
-    <div class="teknisi-topbar">
-      <div class="user-info">
-        <div class="user-name" id="namaUser">Memuat...</div>
-        <div class="user-role">Dashboard Mekanik</div>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="topbar-left">
+        <div class="avatar" id="userAvatar">M</div>
+        <div><div class="topbar-name" id="namaUser">Memuat...</div><div class="topbar-role">Mekanik</div></div>
       </div>
-      <div class="topbar-actions">
-        <button class="theme-toggle-btn" id="themeToggle" title="Ganti tema"><span class="theme-toggle-icon">moon</span></button>
-        <span class="logout" id="btnLogout">Logout</span>
+      <div class="topbar-right">
+        <button class="icon-btn" id="themeToggle" title="Tema">&#9790;</button>
+        <button class="icon-btn danger" id="btnLogout" title="Logout">Logout</button>
       </div>
+    </header>
+    <div class="status-bar">
+      <button class="status-pill" id="btnOnline">&#9679; Online</button>
+      <button class="status-pill" id="btnOffline">&#9679; Offline</button>
     </div>
-    <div class="status-toggle">
-      <button id="btnOnline"><i class="ph-fill ph-check-circle"></i> Online</button>
-      <button id="btnOffline"><i class="ph-fill ph-minus-circle"></i> Offline</button>
+    <div class="status-hint" id="statusHint"></div>
+    <div class="section-header">
+      <span>Tugas Saya</span>
+      <a class="btn-add" href="/mekanik/tiket-baru">+ Lapor</a>
     </div>
-    <div id="statusHint"></div>
-    <div class="card">
-      <div class="card-header">
-        <h3>Tugas Saya</h3>
-        <a class="btn-primary btn-sm" href="/mekanik/tiket-baru">+ Lapor Masalah</a>
-      </div>
-      <div class="card-body">
-        <div id="tiketList"><div class="loader">Memuat tugas</div></div>
-      </div>
+    <div class="task-list" id="tiketList">
+      <div class="loading-state">Memuat tugas...</div>
     </div>
   </div>
   <script src="/js/api.js"></script>
   <script src="/js/teknisi-tracker.js"></script>
   <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
   <script>
-    Api.init("auth");
-    const me = Api.getUser();
-    if (!me) window.location.href = "/";
-    document.getElementById("namaUser").textContent = me?.nama || "";
-    document.getElementById("btnLogout").onclick = function() { TeknisiTracker.stop(); Api.logout(); };
-    var themeBtn = document.getElementById("themeToggle");
-    var icon = themeBtn.querySelector(".theme-toggle-icon");
-    function applyTheme(t) {
-      document.documentElement.setAttribute("data-theme", t);
-      icon.textContent = t === "dark" ? "sun" : "moon";
-      localStorage.setItem("theme", t);
+    Api.init("auth");var me=Api.getUser();if(!me)window.location.href="/";
+    document.getElementById("namaUser").textContent=me.nama||"";
+    document.getElementById("userAvatar").textContent=(me.nama||"M").charAt(0).toUpperCase();
+    document.getElementById("btnLogout").onclick=function(){TeknisiTracker.stop();Api.logout();};
+    var html=document.documentElement,themeBtn=document.getElementById("themeToggle");
+    function applyTheme(t){html.setAttribute("data-theme",t);themeBtn.innerHTML=t==="dark"?"&#9728;":"&#9790;";localStorage.setItem("mk_theme",t);}
+    applyTheme(localStorage.getItem("mk_theme")||"light");
+    themeBtn.onclick=function(){applyTheme(html.getAttribute("data-theme")==="dark"?"light":"dark");};
+    var BADGE={OPEN:"Baru",IN_PROGRESS:"Proses",SELESAI:"Selesai",TERVERIFIKASI:"Verified",CANCELLED:"Batal"};
+    var PRIO={HIGH:"#ef4444",MEDIUM:"#f59e0b",LOW:"#10b981"};
+    function setToggleUi(status){
+      document.getElementById("btnOnline").classList.toggle("active",status!=="OFFLINE");
+      document.getElementById("btnOffline").classList.toggle("active",status==="OFFLINE");
+      var h=document.getElementById("statusHint");
+      if(status==="ONLINE"||status==="ON_TASK"){h.textContent="Online - lokasi terkirim tiap 30 detik.";h.className="status-hint green";}
+      else{h.textContent="Offline - lokasi tidak terkirim.";h.className="status-hint gray";}
     }
-    applyTheme(localStorage.getItem("theme") || "light");
-    themeBtn.onclick = function() { applyTheme(document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark"); };
-    function statusBadge(v) {
-      var labels = { OPEN:"Baru", IN_PROGRESS:"Proses", SELESAI:"Selesai", TERVERIFIKASI:"Terverifikasi", CANCELLED:"Dibatalkan" };
-      return '<span class="badge badge-' + v + '">' + (labels[v] || v) + "</span>";
-    }
-    function priorityDot(p) { return '<span class="prio-' + p + '"></span>'; }
-    function setToggleUi(status) {
-      document.getElementById("btnOnline").classList.toggle("active", status !== "OFFLINE");
-      document.getElementById("btnOffline").classList.toggle("active", status === "OFFLINE");
-      var hint = document.getElementById("statusHint");
-      if (status === "ON_TASK") { hint.textContent = "Anda sedang bertugas - lokasi terus terkirim."; hint.className = "online-hint"; }
-      else if (status === "ONLINE") { hint.textContent = "Anda online - lokasi terkirim tiap 30 detik."; hint.className = "online-hint"; }
-      else { hint.textContent = "Anda offline - lokasi tidak terkirim."; hint.className = "offline-hint"; }
-    }
-    async function setStatus(status) {
-      var res = await Api.post("/api/users/" + me.id + "/status", { status: status });
-      if (!res.success) return alert(res.message);
-      setToggleUi(status);
-      if (status === "OFFLINE") TeknisiTracker.stop(); else TeknisiTracker.start(me.id);
-    }
-    document.getElementById("btnOnline").onclick = function() { setStatus("ONLINE"); };
-    document.getElementById("btnOffline").onclick = function() { setStatus("OFFLINE"); };
-    async function loadTiket() {
-      var res = await Api.get("/api/tasks");
-      var list = document.getElementById("tiketList");
-      if (!res.success) { list.innerHTML = '<div class="empty-state">Gagal memuat tugas</div>'; return; }
-      if (!res.data || res.data.length === 0) { list.innerHTML = '<div class="empty-state">Belum ada tugas untuk Anda</div>'; return; }
-      list.innerHTML = res.data.map(function(t) {
-        return '<div class="tiket-item" onclick="window.location.href=\'/mekanik/tiket-detail?id=' + t.id + '\'">' +
-          '<div class="judul">' + priorityDot(t.priority) + t.judul + " " + statusBadge(t.status) + "</div>" +
-          '<div class="meta">' + t.task_no + " &middot; " + (t.machine_nama || t.line_nama || "Lokasi belum diisi") + "</div>" +
-          "</div>";
+    async function setStatus(s){var r=await Api.post("/api/users/"+me.id+"/status",{status:s});if(!r.success)return alert(r.message);setToggleUi(s);if(s==="OFFLINE")TeknisiTracker.stop();else TeknisiTracker.start(me.id);}
+    document.getElementById("btnOnline").onclick=function(){setStatus("ONLINE");};
+    document.getElementById("btnOffline").onclick=function(){setStatus("OFFLINE");};
+    async function loadTiket(){
+      var r=await Api.get("/api/tasks"),list=document.getElementById("tiketList");
+      if(!r.success||!r.data||!r.data.length){list.innerHTML="<div class='empty-state'>Tidak ada tugas aktif</div>";return;}
+      list.innerHTML=r.data.map(function(t){
+        var c=PRIO[t.priority]||"#888",l=BADGE[t.status]||t.status;
+        return "<div class='task-card' onclick=\"location.href='/mekanik/tiket-detail?id="+t.id+"'\">"
+          +"<div class='task-accent' style='background:"+c+"'></div>"
+          +"<div class='task-body'><div class='task-title'>"+t.judul+"</div>"
+          +"<div class='task-meta'>"+t.task_no+" &middot; "+(t.machine_nama||t.line_nama||"Lokasi belum diisi")+"</div></div>"
+          +"<span class='badge badge-"+t.status+"'>"+l+"</span></div>";
       }).join("");
     }
-    (async function() {
-      var detail = await Api.get("/api/users/" + me.id);
-      if (detail.success) {
-        setToggleUi(detail.user.status);
-        if (detail.user.status !== "OFFLINE") TeknisiTracker.start(me.id);
-      }
+    (async function(){
+      var d=await Api.get("/api/users/"+me.id);
+      if(d.success){setToggleUi(d.user.status);if(d.user.status!=="OFFLINE")TeknisiTracker.start(me.id);}
       await loadTiket();
-      var socket = io();
-      socket.emit("register-teknisi", me.id);
-      socket.on("task-baru", loadTiket);
-      socket.on("task-update", loadTiket);
-      setInterval(loadTiket, 20000);
+      var socket=io();socket.emit("register-teknisi",me.id);
+      socket.on("task-baru",loadTiket);socket.on("task-update",loadTiket);
+      setInterval(loadTiket,20000);
     })();
   </script>
 </body>
